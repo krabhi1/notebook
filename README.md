@@ -1,45 +1,79 @@
-# WebPad
-WebPad is your online web playground. With folders, pages, live preview, and cloud sync, you can organize and grow your design system effortlessly.
+# Welcome to React Router!
 
-## Feature List
+A modern, production-ready template for building full-stack React applications using React Router.
 
-### 🗂️ Organization
+## Features
 
-- **Folder System** → Create, rename, delete, and organize folders.
-- **Page Management** → Create, rename, duplicate, delete pages.
-- **Drag & Drop** → Reorder folders and pages easily.
-- **Search & Filter** → Find pages by name, tags, or last modified.
-- **Recent Pages** → Quick access to recently edited designs.
+- 🚀 Server-side rendering
+- ⚡️ Hot Module Replacement (HMR)
+- 📦 Asset bundling and optimization
+- 🔄 Data loading and mutations
+- 🔒 TypeScript by default
+- 🎉 TailwindCSS for styling
+- 📖 [React Router docs](https://reactrouter.com/)
 
-### 🎨 Design Editor
+## Getting Started
 
-- **Code Editor** → Monaco editor for HTML, CSS, JS with syntax highlighting.
-- **Live Preview** → Real-time iframe preview (no build step).
-- **Responsive Previews** → Desktop, Tablet, Mobile viewport toggles.
-- **Dark/Light Theme** → For both editor and preview.
-- **Auto-Save** → Never lose progress, saved instantly to Supabase.
+### Installation
 
-### ☁️ Cloud & Sharing
+Install the dependencies:
 
-- **Authentication** → Secure login/signup with Supabase Auth.
-- **Cloud Storage** → Pages & folders saved in Supabase DB.
-- **Public/Private Pages** → Toggle visibility per page.
-- **Shareable Links** → Publish a page and share with a unique URL.
+```bash
+npm install
+```
 
+### Development
 
-### 📦 Extras
+Start the development server with HMR:
 
-- **Trash Bin** → Restore accidentally deleted pages.
-- **Version History (future)** → Track changes over time.
-- **Tags** → Organize pages by categories (e.g., "Landing", "Component").
-- **Export/Import** → Export a folder as `.zip` with HTML/CSS/JS.
-- **Syntax Highlight & Linting** → Catch errors early.
-- **Performance Mode** → Lightweight preview for big projects.
-- **Collaboration (future)** → Invite others to edit/view a page.
+```bash
+npm run dev
+```
 
+Your application will be available at `http://localhost:5173`.
 
-## Tech Stack
-- **Fullstack** → React router v7 (REMIX), TypeScript
-- **UI** → TailwindCSS, shadcn/ui
-- **Deployment** → Cloudflare
-- **Supabase** → Auth, Database, Storage
+## Previewing the Production Build
+
+Preview the production build locally:
+
+```bash
+npm run preview
+```
+
+## Building for Production
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+## Deployment
+
+Deployment is done using the Wrangler CLI.
+
+To build and deploy directly to production:
+
+```sh
+npm run deploy
+```
+
+To deploy a preview URL:
+
+```sh
+npx wrangler versions upload
+```
+
+You can then promote a version to production after verification or roll it out progressively.
+
+```sh
+npx wrangler versions deploy
+```
+
+## Styling
+
+This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+
+---
+
+Built with ❤️ using React Router.
