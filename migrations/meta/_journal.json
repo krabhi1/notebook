@@ -15,6 +15,13 @@
       "when": 1759559692242,
       "tag": "0001_cultured_cargill",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1760624124424,
+      "tag": "0002_milky_exodus",
+      "breakpoints": true
     }
   ]
 }

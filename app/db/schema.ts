@@ -2,15 +2,24 @@ import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
+const timestamps = {
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .notNull()
+    .default(sql`(unixepoch() * 1000)`),
+};
+
+const isDeleted = integer("is_deleted", { mode: "boolean" }).default(false);
+
 export const users = sqliteTable("user", {
   id: text("id").primaryKey().notNull(),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   imageUrl: text("image_url"),
-  onboarded: integer("onboarded", { mode: "boolean" }).default(false),
-  createdAt: integer("created_at", { mode: "timestamp_ms" })
-    .notNull()
-    .default(sql`(unixepoch() * 1000)`),
+  onBoarded: integer("onboarded", { mode: "boolean" }).default(false),
+  ...timestamps,
 });
 
 export const folders = sqliteTable(
@@ -23,10 +32,8 @@ export const folders = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
-    isDeleted: integer("is_deleted", { mode: "boolean" }).default(false),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+    isDeleted,
+    ...timestamps,
   },
   (table) => ({
     userIdIdx: index("folder_user_id_idx").on(table.userId),
@@ -38,37 +45,44 @@ export const pages = sqliteTable(
   "page",
   {
     id: text("id").primaryKey(),
-    userId: text("user_id") // ← ADDED
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
     folderId: text("folder_id")
       .notNull()
       .references(() => folders.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
-    type: text("type", { enum: ["web", "code", "mermaid"] }).notNull(),
-    lang: text("lang", {
-      enum: ["javascript", "typescript", "rust", "sql", "text"],
-    }),
-    content: text("content"),
-    options: text("options", { mode: "json" }), // keep as JSON if storing objects
-    isDeleted: integer("is_deleted", { mode: "boolean" }).default(false), // ← ADDED
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .notNull()
-      .default(sql`(unixepoch() * 1000)`),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .notNull()
-      .default(sql`(unixepoch() * 1000)`),
+    type: text("type", {
+      enum: ["code", "web", "mermaid", "database", "editorjs", "circuit"],
+    }).notNull(),
+    isDeleted,
+    ...timestamps,
   },
   (table) => ({
-    userIdIdx: index("page_user_id_idx").on(table.userId),
     folderIdIdx: index("page_folder_id_idx").on(table.folderId),
     deletedIdx: index("page_deleted_idx").on(table.isDeleted),
   }),
 );
 
+export const files = sqliteTable(
+  "file",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => nanoid()),
+    pageId: text("page_id")
+      .notNull()
+      .references(() => pages.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    lang: text("lang"),
+    content: text("content"),
+    ...timestamps,
+  },
+  (table) => ({
+    pageIdIdx: index("file_page_id_idx").on(table.pageId),
+  }),
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
-export type UpdateUser = Partial<Pick<User, "name" | "imageUrl" | "onboarded">>;
+export type UpdateUser = Partial<Pick<User, "name" | "imageUrl" | "onBoarded">>;
 
 export type Folder = typeof folders.$inferSelect;
 export type NewFolder = typeof folders.$inferInsert;
@@ -76,12 +90,13 @@ export type UpdateFolder = Partial<Pick<Folder, "name">>;
 
 export type Page = typeof pages.$inferSelect;
 export type NewPage = typeof pages.$inferInsert;
-export type UpdatePage = Partial<
-  Pick<Page, "name" | "content" | "lang" | "options">
->;
+export type UpdatePage = Partial<Pick<Page, "name" | "type">>;
 
-// Your simple PageMeta (great as-is!)
+export type File = typeof files.$inferSelect;
+export type NewFile = typeof files.$inferInsert;
+export type UpdateFile = Partial<Pick<File, "name" | "lang" | "content">>;
+
 export type PageMeta = Pick<
   Page,
-  "id" | "name" | "type" | "lang" | "updatedAt" | "createdAt"
+  "id" | "name" | "type" | "updatedAt" | "createdAt"
 >;
