@@ -13,14 +13,15 @@ export const PageDAO = {
   },
 
   getByIdWithFiles: async (id: string) => {
-    return db().query.pages.findFirst({
-      where: and(eq(pages.id, id), eq(pages.isDeleted, false)),
-      with: {
-        files: {
-          orderBy: (files, { asc }) => [asc(files.name)],
-        },
-      },
-    });
+    // return db().query.pages.findFirst({
+    //   where: and(eq(pages.id, id), eq(pages.isDeleted, false)),
+    //   with: {
+    //     files: {
+    //       orderBy: (files, { asc }) => [asc(files.name)],
+    //     },
+    //   },
+    // });
+    throw new Error("Not implemented");
   },
 
   getByFolder: async (folderId: string): Promise<Page[]> => {
@@ -32,15 +33,16 @@ export const PageDAO = {
   },
 
   getByFolderWithFiles: async (folderId: string) => {
-    return db().query.pages.findMany({
-      where: and(eq(pages.folderId, folderId), eq(pages.isDeleted, false)),
-      with: {
-        files: {
-          orderBy: (files, { asc }) => [asc(files.name)],
-        },
-      },
-      orderBy: (pages, { desc }) => [desc(pages.updatedAt)],
-    });
+    // return db().query.pages.findMany({
+    //   where: and(eq(pages.folderId, folderId), eq(pages.isDeleted, false)),
+    //   with: {
+    //     files: {
+    //       orderBy: (files, { asc }) => [asc(files.name)],
+    //     },
+    //   },
+    //   orderBy: (pages, { desc }) => [desc(pages.updatedAt)],
+    // });
+    th;
   },
 
   getAll: async (): Promise<Page[]> => {

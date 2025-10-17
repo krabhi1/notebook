@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 
-export type Db = ReturnType<typeof drizzle<typeof schema>>;
+export type Db = ReturnType<typeof drizzle>;
 let _db: Db;
 function setDb(database: Db) {
   _db = database;

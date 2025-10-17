@@ -6,8 +6,12 @@ import {
   type Folder,
   type NewFolder,
   type UpdateFolder,
+  type Page,
 } from "../schema";
 
+export type FolderWithPages = Folder & {
+  pages: Page[];
+};
 export const FolderDAO = {
   getById: async (id: string): Promise<Folder | undefined> => {
     const result = await db()
@@ -25,17 +29,30 @@ export const FolderDAO = {
       .orderBy(folders.updatedAt);
   },
 
-  getByUserWithPages: async (userId: string) => {
-    return db().query.folders.findMany({
-      where: and(eq(folders.userId, userId), eq(folders.isDeleted, false)),
-      with: {
-        pages: {
-          where: (pages, { eq }) => eq(pages.isDeleted, false),
-          orderBy: (pages, { desc }) => [desc(pages.updatedAt)],
-        },
-      },
-      orderBy: (folders, { desc }) => [desc(folders.updatedAt)],
+  getByUserWithPages: async (userId: string): Promise<FolderWithPages[]> => {
+    const rows = await db()
+      .select({
+        folder: folders,
+        page: pages,
+      })
+      .from(folders)
+      .leftJoin(pages, eq(pages.folderId, folders.id))
+      .where(and(eq(folders.userId, userId), eq(folders.isDeleted, false)));
+
+    // Map rows into nested structure
+    const foldersMap = new Map<string, FolderWithPages>();
+
+    rows.forEach(({ folder, page }) => {
+      if (!foldersMap.has(folder.id)) {
+        foldersMap.set(folder.id, { ...folder, pages: [] });
+      }
+
+      if (page && !page.isDeleted) {
+        foldersMap.get(folder.id)!.pages.push(page);
+      }
     });
+
+    return Array.from(foldersMap.values());
   },
 
   getAll: async (): Promise<Folder[]> => {

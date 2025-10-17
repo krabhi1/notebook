@@ -1,7 +1,16 @@
 import { Outlet } from "react-router";
 import type { Route } from "./+types/layout";
+import { FolderService } from "~/db/services/folderService";
 
-export default function Page({}: Route.ComponentProps) {
+export async function loader({ request }: Route.LoaderArgs) {
+  const userId = "abhi";
+  const folders = await FolderService.getFoldersWithPages(userId);
+  return { folders };
+}
+
+export default function Page({ loaderData }: Route.ComponentProps) {
+  const { folders } = loaderData;
+  console.log(folders);
   return (
     <div className="h-screen flex flex-col">
       <header className="h-10 shrink-0 border-b bg-gray-100">Header</header>

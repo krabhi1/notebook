@@ -162,53 +162,7 @@ export const FolderService = {
     newName: string,
     userId?: string,
   ): Promise<Folder> => {
-    const folder = await FolderDAO.getById(id);
-    if (!folder) {
-      throw new Error(`Folder with id ${id} not found`);
-    }
-
-    // If userId provided, validate ownership
-    if (userId && folder.userId !== userId) {
-      throw new Error(`Unauthorized: Folder does not belong to user ${userId}`);
-    }
-
-    // Create new folder
-    const [newFolder] = await FolderDAO.create({
-      userId: folder.userId,
-      name: newName,
-      isDeleted: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    // Duplicate all pages and their files
-    const pages = await PageDAO.getByFolderWithFiles(id);
-    for (const page of pages) {
-      const [newPage] = await PageDAO.create({
-        folderId: newFolder.id,
-        name: page.name,
-        type: page.type,
-      });
-
-      // Duplicate all files for this page
-      if (page.files && page.files.length > 0) {
-        const fileData = page.files.map((file) => ({
-          name: file.name,
-          lang: file.lang,
-          content: file.content,
-        }));
-        await FileDAO.createMany(
-          newPage.id,
-          fileData.map((f) => ({
-            ...f,
-            lang: f.lang ?? undefined,
-            content: f.content ?? undefined,
-          })),
-        );
-      }
-    }
-
-    return newFolder;
+    throw new Error("Not implemented");
   },
 
   getFolderStats: async (id: string, userId?: string) => {
