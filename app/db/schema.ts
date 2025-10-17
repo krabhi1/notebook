@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
+import { relations } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
@@ -90,13 +91,43 @@ export type UpdateFolder = Partial<Pick<Folder, "name">>;
 
 export type Page = typeof pages.$inferSelect;
 export type NewPage = typeof pages.$inferInsert;
-export type UpdatePage = Partial<Pick<Page, "name" | "type">>;
+export type UpdatePage = Partial<Pick<Page, "name" | "type" | "folderId">>;
 
 export type File = typeof files.$inferSelect;
 export type NewFile = typeof files.$inferInsert;
-export type UpdateFile = Partial<Pick<File, "name" | "lang" | "content">>;
+export type UpdateFile = Partial<
+  Pick<File, "name" | "lang" | "content" | "pageId">
+>;
 
 export type PageMeta = Pick<
   Page,
   "id" | "name" | "type" | "updatedAt" | "createdAt"
 >;
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  folders: many(folders),
+}));
+
+export const foldersRelations = relations(folders, ({ one, many }) => ({
+  user: one(users, {
+    fields: [folders.userId],
+    references: [users.id],
+  }),
+  pages: many(pages),
+}));
+
+export const pagesRelations = relations(pages, ({ one, many }) => ({
+  folder: one(folders, {
+    fields: [pages.folderId],
+    references: [folders.id],
+  }),
+  files: many(files),
+}));
+
+export const filesRelations = relations(files, ({ one }) => ({
+  page: one(pages, {
+    fields: [files.pageId],
+    references: [pages.id],
+  }),
+}));

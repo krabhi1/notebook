@@ -104,7 +104,6 @@ export async function deleteFolder(
 // PAGE
 // ==============
 export async function createPage(
-  userId: string,
   folderId: string,
   data: NewPage,
 ): Promise<Page> {
@@ -112,7 +111,6 @@ export async function createPage(
     .insert(pages)
     .values({
       ...data,
-      userId,
       folderId,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -120,81 +118,52 @@ export async function createPage(
     .returning();
   return page;
 }
-export async function getPages(
-  folderId: string,
-  userId: string,
-): Promise<PageMeta[]> {
+export async function getPages(folderId: string): Promise<PageMeta[]> {
   const pageList = await db()
     .select({
       id: pages.id,
       name: pages.name,
       type: pages.type,
-      lang: pages.lang,
       updatedAt: pages.updatedAt,
       createdAt: pages.createdAt,
-      // ⚠️ intentionally omit: content, options, userId, folderId, isDeleted
+      // ⚠️ intentionally omit: content, options, folderId, isDeleted
     })
     .from(pages)
-    .where(
-      and(
-        eq(pages.folderId, folderId),
-        eq(pages.userId, userId),
-        eq(pages.isDeleted, false),
-      ),
-    )
+    .where(and(eq(pages.folderId, folderId), eq(pages.isDeleted, false)))
     .orderBy(desc(pages.createdAt));
   return pageList;
 } // meta only
-export async function getPage(
-  pageId: string,
-  userId: string,
-): Promise<Page | null> {
+export async function getPage(pageId: string): Promise<Page | null> {
   const page = await db()
     .select()
     .from(pages)
-    .where(
-      and(
-        eq(pages.id, pageId),
-        eq(pages.userId, userId),
-        eq(pages.isDeleted, false),
-      ),
-    )
+    .where(and(eq(pages.id, pageId), eq(pages.isDeleted, false)))
     .limit(1)
     .get();
   return page || null;
 } // full content
 export async function updatePage(
   pageId: string,
-  userId: string,
   data: UpdatePage,
 ): Promise<void> {
   await db()
     .update(pages)
     .set({ ...data, updatedAt: new Date() })
-    .where(and(eq(pages.id, pageId), eq(pages.userId, userId)));
+    .where(eq(pages.id, pageId));
 }
-export async function deletePage(
-  pageId: string,
-  userId: string,
-): Promise<void> {
+export async function deletePage(pageId: string): Promise<void> {
   // soft-delete
-  await db()
-    .update(pages)
-    .set({ isDeleted: true })
-    .where(and(eq(pages.id, pageId), eq(pages.userId, userId)));
+  await db().update(pages).set({ isDeleted: true }).where(eq(pages.id, pageId));
 }
 
 // ==============
 // TRASH (restore)
 // ==============
-export async function restorePage(
-  pageId: string,
-  userId: string,
-): Promise<void> {
+export async function restorePage(pageId: string): Promise<void> {
   await db()
     .update(pages)
     .set({ isDeleted: false })
-    .where(and(eq(pages.id, pageId), eq(pages.userId, userId)));
+    .where(eq(pages.id, pageId));
 }
 export async function restoreFolder(
   folderId: string,
@@ -205,16 +174,15 @@ export async function restoreFolder(
     .set({ isDeleted: false })
     .where(and(eq(folders.id, folderId), eq(folders.userId, userId)));
 }
-export async function getDeletedPages(userId: string): Promise<PageMeta[]> {
+export async function getDeletedPages(): Promise<PageMeta[]> {
   return db()
     .select({
       id: pages.id,
       name: pages.name,
       type: pages.type,
-      lang: pages.lang,
       updatedAt: pages.updatedAt,
       createdAt: pages.createdAt,
     })
     .from(pages)
-    .where(and(eq(pages.userId, userId), eq(pages.isDeleted, true)));
+    .where(eq(pages.isDeleted, true));
 }
