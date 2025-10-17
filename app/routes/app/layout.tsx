@@ -1,6 +1,8 @@
 import { Outlet } from "react-router";
 import type { Route } from "./+types/layout";
 import { FolderService } from "~/db/services/folderService";
+import { MoreHorizontal, Plus } from "lucide-react";
+import FolderList from "~/components/sidebar/FolderList";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const userId = "abhi";
@@ -10,12 +12,30 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { folders } = loaderData;
-  console.log(folders);
   return (
     <div className="h-screen flex flex-col">
-      <header className="h-10 shrink-0 border-b bg-gray-100">Header</header>
+      <header className="h-10 shrink-0 border-b ">Header</header>
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-64 shrink-0 bg-gray-100 border-r overflow-auto"></aside>
+        <aside className="shrink-0  border-r overflow-auto">
+          <div className="flex-1 overflow-y-auto">
+            {/* Designs Section Header */}
+            <div className="group flex items-center justify-between px-1 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 rounded mx-2">
+              <span>Pages</span>
+              <div className="flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                  title="New Folder"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+                {/*<button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>*/}
+              </div>
+            </div>
+            <FolderList folders={folders} />
+          </div>
+        </aside>
 
         <main className="flex-1 overflow-auto">
           <Outlet />
