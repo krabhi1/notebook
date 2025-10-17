@@ -4,10 +4,9 @@ import type { Page } from "~/db/schema";
 
 interface PageListProps {
   pages: Page[];
-  onPageSelect?: (id: string) => void;
 }
 
-export default function PageList({ pages, onPageSelect }: PageListProps) {
+export default function PageList({ pages }: PageListProps) {
   return (
     <div className="ml-5 space-y-1">
       {pages.map((page) => (
@@ -23,7 +22,6 @@ export default function PageList({ pages, onPageSelect }: PageListProps) {
                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
             }`
           }
-          onClick={() => onPageSelect?.(page.id)}
         >
           <div className="flex items-center space-x-2 flex-1 min-w-0">
             <File className="w-4 h-4 flex-shrink-0" />

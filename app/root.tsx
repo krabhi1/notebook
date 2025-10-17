@@ -9,6 +9,9 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { FolderService } from "./db/services/folderService";
+import { PageService } from "./db/services/pageService";
+import type { Page } from "./db/schema";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -22,6 +25,41 @@ export const links: Route.LinksFunction = () => [
     href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
+const userId = "abhi";
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData();
+  const action = formData.get("action");
+  if (action === "createFolder") {
+    const name = formData.get("name") as string;
+    if (typeof name !== "string" || name.trim() === "") {
+      throw new Error("Folder name is required");
+    }
+    await FolderService.createFolder({
+      userId,
+      name: name.trim(),
+    });
+  }
+  if (action == "createPage") {
+    const folderId = formData.get("folderId") as string;
+    const name = formData.get("name") as string;
+    const type = formData.get("type") as string;
+    if (typeof folderId !== "string" || folderId.trim() === "") {
+      throw new Error("Folder ID is required");
+    }
+    if (typeof name !== "string" || name.trim() === "") {
+      throw new Error("Page name is required");
+    }
+    if (typeof type !== "string" || type.trim() === "") {
+      throw new Error("Page type is required");
+    }
+    await PageService.createPageWithDefaultFiles(
+      folderId,
+      name,
+      type as Page["type"],
+    );
+  }
+  return null;
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

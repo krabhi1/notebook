@@ -3,15 +3,24 @@ import type { Route } from "./+types/layout";
 import { FolderService } from "~/db/services/folderService";
 import { MoreHorizontal, Plus } from "lucide-react";
 import FolderList from "~/components/sidebar/FolderList";
+import { useFetcher } from "react-router";
 
+const userId = "abhi";
 export async function loader({ request }: Route.LoaderArgs) {
-  const userId = "abhi";
   const folders = await FolderService.getFoldersWithPages(userId);
   return { folders };
 }
 
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { folders } = loaderData;
+  const createFolderFetcher = useFetcher();
+  function handleCreateFolder() {
+    const folderName = new Date().toLocaleTimeString();
+    const formData = new FormData();
+    formData.append("action", "createFolder");
+    formData.append("name", folderName);
+    createFolderFetcher.submit(formData, { method: "post" });
+  }
   return (
     <div className="h-screen flex flex-col">
       <header className="h-10 shrink-0 border-b ">Header</header>
@@ -25,6 +34,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                 <button
                   className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
                   title="New Folder"
+                  onClick={handleCreateFolder}
                 >
                   <Plus className="w-4 h-4" />
                 </button>

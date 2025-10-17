@@ -23,17 +23,17 @@ export const PageService = {
       );
     }
 
-    // Check for duplicate page names in the folder
-    const existingPages = await PageDAO.getByFolder(data.folderId);
-    const duplicateName = existingPages.some(
-      (page) => page.name.toLowerCase() === data.name.toLowerCase(),
-    );
+    // // Check for duplicate page names in the folder
+    // const existingPages = await PageDAO.getByFolder(data.folderId);
+    // const duplicateName = existingPages.some(
+    //   (page) => page.name.toLowerCase() === data.name.toLowerCase(),
+    // );
 
-    if (duplicateName) {
-      throw new Error(
-        `Page with name "${data.name}" already exists in this folder`,
-      );
-    }
+    // if (duplicateName) {
+    //   throw new Error(
+    //     `Page with name "${data.name}" already exists in this folder`,
+    //   );
+    // }
 
     const [page] = await PageDAO.create({
       folderId: data.folderId,
@@ -196,20 +196,11 @@ CREATE TABLE users (
     return page;
   },
 
-  getPageWithFiles: async (id: string, userId?: string) => {
+  getPageWithFiles: async (id: string) => {
     const page = await PageDAO.getByIdWithFiles(id);
     if (!page) {
       throw new Error(`Page with id ${id} not found`);
     }
-
-    // If userId provided, validate access through folder ownership
-    if (userId) {
-      const folder = await FolderDAO.getById(page.folderId);
-      if (!folder || folder.userId !== userId) {
-        throw new Error(`Unauthorized: Page does not belong to user ${userId}`);
-      }
-    }
-
     return page;
   },
 
@@ -302,44 +293,6 @@ CREATE TABLE users (
     userId?: string,
   ): Promise<void> => {
     await PageService.deletePage(pageId, userId, { hardDelete: true });
-  },
-
-  duplicatePage: async (
-    id: string,
-    newName: string,
-    userId?: string,
-  ): Promise<Page> => {
-    const pageWithFiles = await PageDAO.getByIdWithFiles(id);
-    if (!pageWithFiles) {
-      throw new Error(`Page with id ${id} not found`);
-    }
-
-    // If userId provided, validate access through folder ownership
-    if (userId) {
-      const folder = await FolderDAO.getById(pageWithFiles.folderId);
-      if (!folder || folder.userId !== userId) {
-        throw new Error(`Unauthorized: Page does not belong to user ${userId}`);
-      }
-    }
-
-    // Create new page
-    const [newPage] = await PageDAO.create({
-      folderId: pageWithFiles.folderId,
-      name: newName,
-      type: pageWithFiles.type,
-    });
-
-    // Duplicate all files
-    if (pageWithFiles.files && pageWithFiles.files.length > 0) {
-      const fileData = pageWithFiles.files.map((file) => ({
-        name: file.name,
-        lang: file.lang ?? undefined,
-        content: file.content ?? undefined,
-      }));
-      await FileDAO.createMany(newPage.id, fileData);
-    }
-
-    return newPage;
   },
 
   movePage: async (

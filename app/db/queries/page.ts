@@ -1,8 +1,17 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "../index";
-import { pages, type Page, type NewPage, type UpdatePage } from "../schema";
+import {
+  pages,
+  files,
+  type Page,
+  type File,
+  type NewPage,
+  type UpdatePage,
+} from "../schema";
 import { nanoid } from "nanoid";
-
+export type PageWithFiles = Page & {
+  files: File[];
+};
 export const PageDAO = {
   getById: async (id: string): Promise<Page | undefined> => {
     const result = await db()
@@ -12,16 +21,20 @@ export const PageDAO = {
     return result[0];
   },
 
-  getByIdWithFiles: async (id: string) => {
-    // return db().query.pages.findFirst({
-    //   where: and(eq(pages.id, id), eq(pages.isDeleted, false)),
-    //   with: {
-    //     files: {
-    //       orderBy: (files, { asc }) => [asc(files.name)],
-    //     },
-    //   },
-    // });
-    throw new Error("Not implemented");
+  getByIdWithFiles: async (id: string): Promise<PageWithFiles> => {
+    const page = await PageDAO.getById(id);
+    if (!page) {
+      throw new Error("Page not found");
+    }
+    const filesList = await db()
+      .select()
+      .from(files)
+      .where(eq(files.pageId, id))
+      .orderBy(files.createdAt);
+    return {
+      ...page,
+      files: filesList,
+    };
   },
 
   getByFolder: async (folderId: string): Promise<Page[]> => {
@@ -29,7 +42,7 @@ export const PageDAO = {
       .select()
       .from(pages)
       .where(and(eq(pages.folderId, folderId), eq(pages.isDeleted, false)))
-      .orderBy(pages.updatedAt);
+      .orderBy(pages.createdAt);
   },
 
   getByFolderWithFiles: async (folderId: string) => {
@@ -42,7 +55,6 @@ export const PageDAO = {
     //   },
     //   orderBy: (pages, { desc }) => [desc(pages.updatedAt)],
     // });
-    th;
   },
 
   getAll: async (): Promise<Page[]> => {

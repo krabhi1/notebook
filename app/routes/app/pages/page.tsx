@@ -1,11 +1,25 @@
+import { PageService } from "~/db/services/pageService";
 import type { Route } from "./+types/page";
 export async function loader({
   request,
   params: { pageId },
 }: Route.LoaderArgs) {
-  return { pageId };
+  const page = await PageService.getPageWithFiles(pageId);
+  if (!page) {
+    throw new Response("Page Not Found", { status: 404 });
+  }
+  return { page };
 }
 export default function Page({ loaderData }: Route.ComponentProps) {
-  const { pageId } = loaderData;
-  return <div>Page id {pageId}</div>;
+  const { page } = loaderData;
+  return (
+    <div>
+      {page.files.map((file) => (
+        <div key={file.id}>
+          <h2>{file.name}</h2>
+          <pre>{file.content}</pre>
+        </div>
+      ))}
+    </div>
+  );
 }

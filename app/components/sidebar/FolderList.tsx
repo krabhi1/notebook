@@ -9,21 +9,17 @@ import {
   File,
 } from "lucide-react";
 import PageList from "./PageList";
+import { useFetcher } from "react-router";
 
 interface FolderListProps {
   folders: FolderWithPages[];
-  onPageCreate?: () => void;
-  onPageSelect?: (id: string) => void;
 }
 
-export default function FolderList({
-  folders,
-  onPageCreate,
-  onPageSelect,
-}: FolderListProps) {
+export default function FolderList({ folders }: FolderListProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
     new Set(),
   );
+  const createPageFetch = useFetcher();
 
   const toggleFolder = (id: string) => {
     setExpandedFolders((prev) => {
@@ -36,6 +32,15 @@ export default function FolderList({
       return newSet;
     });
   };
+  const createPage = (folderId: string) => {
+    const pageName = new Date().toLocaleTimeString();
+    const formData = new FormData();
+    formData.append("action", "createPage");
+    formData.append("name", pageName);
+    formData.append("folderId", folderId);
+    formData.append("type", "code");
+    createPageFetch.submit(formData, { method: "post" });
+  };
 
   return (
     <div className="px-2 space-y-1 ">
@@ -46,11 +51,11 @@ export default function FolderList({
         return (
           <div key={folder.id}>
             {/* Folder Row */}
-            <div className="group flex items-center justify-between px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer">
-              <div
-                className="flex items-center space-x-1 flex-1 min-w-0"
-                onClick={() => toggleFolder(folder.id)}
-              >
+            <div
+              onClick={() => toggleFolder(folder.id)}
+              className="group flex items-center justify-between px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer"
+            >
+              <div className="flex items-center space-x-1 flex-1 min-w-0">
                 <ChevronRight
                   className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${
                     isExpanded ? "rotate-90" : ""
@@ -67,7 +72,7 @@ export default function FolderList({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onPageCreate?.();
+                    createPage(folder.id);
                   }}
                   className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
                   title="New page in folder"
@@ -84,9 +89,7 @@ export default function FolderList({
             </div>
 
             {/* Folder Pages */}
-            {isExpanded && (
-              <PageList pages={folder.pages} onPageSelect={onPageSelect} />
-            )}
+            {isExpanded && <PageList pages={folder.pages} />}
           </div>
         );
       })}
