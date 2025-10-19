@@ -72,8 +72,8 @@ export const files = sqliteTable(
       .notNull()
       .references(() => pages.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
-    lang: text("lang"),
-    content: text("content"),
+    lang: text("lang").notNull().default("plaintext"),
+    content: text("content").notNull().default(""),
     ...timestamps,
   },
   (table) => ({

@@ -1,9 +1,8 @@
 import { lazy, Suspense } from "react";
 import ClientOnly from "~/components/ClientOnly";
-
+import { type OnMount } from "@monaco-editor/react";
 // Lazy load the Monaco Editor to prevent SSR issues
-const Editor = lazy(() => import("@monaco-editor/react"));
-
+const MonacoEditor = lazy(() => import("@monaco-editor/react"));
 const CodeEditor = ({
   language,
   value,
@@ -15,7 +14,7 @@ const CodeEditor = ({
   language: string;
   value: string;
   onChange?: (value: string | undefined) => void;
-  onMount?: (editor: any, monaco: any) => void;
+  onMount?: OnMount;
   theme: string; // default to "vs-dark" , "light"
   loadingText: string;
 }) => (
@@ -33,7 +32,7 @@ const CodeEditor = ({
         </div>
       }
     >
-      <Editor
+      <MonacoEditor
         height="100%"
         language={language}
         value={value}

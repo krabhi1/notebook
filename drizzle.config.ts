@@ -3,7 +3,7 @@ import { defineConfig } from "drizzle-kit";
 config({ path: ".dev.vars" });
 
 export default defineConfig({
-  schema: "./app/db/schema.ts",
+  schema: "./app/.server/db/schema.ts",
   out: "./migrations",
   dialect: "turso",
   dbCredentials: {

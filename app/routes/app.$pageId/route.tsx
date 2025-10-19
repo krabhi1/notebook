@@ -1,6 +1,7 @@
 import { PageService } from "~/.server/services/pageService";
 import type { Route } from "../app.$pageId/+types/route";
 import CodeEditor from "~/components/CodeEditor";
+import WebPage from "./web/WebPage";
 export async function loader({
   request,
   params: { pageId },
@@ -13,15 +14,10 @@ export async function loader({
 }
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { page } = loaderData;
-  const htmlFile = page.files.find((file) => file.lang === "html");
+  console.log("Loaded page:", page);
   return (
-    <div className="flex-1">
-      <CodeEditor
-        language="html"
-        value={htmlFile?.content || ""}
-        loadingText="Loading..."
-        theme="light"
-      />
+    <div className="flex-1 flex">
+      <WebPage page={page} />
       {/*{page.files.map((file) => (
         <div key={file.id}>
           <h2>{file.name}</h2>
