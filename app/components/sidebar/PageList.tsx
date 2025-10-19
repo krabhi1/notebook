@@ -1,6 +1,12 @@
-import { MoreHorizontal, File } from "lucide-react";
-import { Link, NavLink } from "react-router";
+import { MoreHorizontal, File, Edit, Trash2 } from "lucide-react";
+import { NavLink } from "react-router";
 import type { Page } from "~/db/schema";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 
 interface PageListProps {
   pages: Page[];
@@ -29,9 +35,23 @@ export default function PageList({ pages }: PageListProps) {
             <File className="w-4 h-4 flex-shrink-0" />
             <span className="truncate text-sm">{page.name}</span>
           </NavLink>
-          <button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Edit className="w-4 h-4 mr-2" />
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600 dark:text-red-400">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ))}
     </div>

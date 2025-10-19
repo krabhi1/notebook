@@ -6,8 +6,13 @@ import {
   Folder,
   Plus,
   MoreHorizontal,
-  File,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import PageList from "./PageList";
 import { useFetcher } from "react-router";
 
@@ -79,12 +84,25 @@ export default function FolderList({ folders }: FolderListProps) {
                 >
                   <Plus className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={(e) => e.stopPropagation()}
-                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <DropdownMenuItem>Rename folder</DropdownMenuItem>
+                    <DropdownMenuItem>Delete folder</DropdownMenuItem>
+                    <DropdownMenuItem>Add subfolder</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 
