@@ -81,7 +81,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
           </div>
         </aside>
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto flex">
           <Outlet />
         </main>
       </div>

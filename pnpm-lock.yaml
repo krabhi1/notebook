@@ -10,6 +10,9 @@ importers:
       "@libsql/client":
         specifier: ^0.15.15
         version: 0.15.15
+      "@monaco-editor/react":
+        specifier: ^4.7.0
+        version: 4.7.0(monaco-editor@0.54.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       "@radix-ui/react-dropdown-menu":
         specifier: ^2.1.16
         version: 2.1.16(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -1510,6 +1513,22 @@ packages:
         integrity: sha512-EMlH1e30yzmTpGLQjlFmaDAjyOeZhng1/XCd7DExR8PNAnG/G1tyruZxEoUe11ClnwGhGrtsdnyyUx1frSzjng==,
       }
 
+  "@monaco-editor/loader@1.6.1":
+    resolution:
+      {
+        integrity: sha512-w3tEnj9HYEC73wtjdpR089AqkUPskFRcdkxsiSFt3SoUc3OHpmu+leP94CXBm4mHfefmhsdfI0ZQu6qJ0wgtPg==,
+      }
+
+  "@monaco-editor/react@4.7.0":
+    resolution:
+      {
+        integrity: sha512-cyzXQCtO47ydzxpQtCGSQGOC8Gk3ZUeBXFAxD+CWXYFo5OqZyZUonFl0DwUlTyAfRHntBfw2p3w4s9R6oe1eCA==,
+      }
+    peerDependencies:
+      monaco-editor: ">= 0.25.0 < 1"
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   "@neon-rs/load@0.0.4":
     resolution:
       {
@@ -2682,6 +2701,12 @@ packages:
         integrity: sha512-UDsjUbpQn9kvm68slnrs+mfxwFkIflOhkanmyabZ8zOYk8SMEIbJ3TK+88g70hSIeytu4y18f0z/hYHMTrXIWw==,
       }
 
+  dompurify@3.1.7:
+    resolution:
+      {
+        integrity: sha512-VaTstWtsneJY8xzy7DekmYWEOZcmzIe3Qb3zPd4STve1OBTa+e+WmS1ITQec1fZYXI3HCsOZZiSMpG6oxoWMWQ==,
+      }
+
   dotenv@17.2.3:
     resolution:
       {
@@ -3280,6 +3305,14 @@ packages:
         integrity: sha512-2N21sPY9Ws53PZvsEpVtNuSW+ScYbQdp4b9qUaL+9QkHUrGFKo56Lg9Emg5s9V/qrtNBmiR01sYhUOwu3H+VOw==,
       }
 
+  marked@14.0.0:
+    resolution:
+      {
+        integrity: sha512-uIj4+faQ+MgHgwUW1l2PsPglZLOLOT1uErt06dAPtx2kjteLAkbsd/0FiYg/MGS+i7ZKLb7w2WClxHkzOOuryQ==,
+      }
+    engines: { node: ">= 18" }
+    hasBin: true
+
   mime@3.0.0:
     resolution:
       {
@@ -3324,6 +3357,12 @@ packages:
         integrity: sha512-KZxYo1BUkWD2TVFLr0MQoM8vUUigWD3LlD83a/75BqC+4qE0Hb1Vo5v1FgcfaNXvfXzr+5EhQ6ing/CaBijTlw==,
       }
     engines: { node: ">= 18" }
+
+  monaco-editor@0.54.0:
+    resolution:
+      {
+        integrity: sha512-hx45SEUoLatgWxHKCmlLJH81xBo0uXP4sRkESUpmDQevfi+e7K1VuiSprK6UpQ8u4zOcKNiH0pMvHvlMWA/4cw==,
+      }
 
   mri@1.2.0:
     resolution:
@@ -3760,6 +3799,12 @@ packages:
     resolution:
       {
         integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==,
+      }
+
+  state-local@1.0.7:
+    resolution:
+      {
+        integrity: sha512-HTEHMNieakEnoe33shBYcZ7NX83ACUjCu8c40iOGEZsngj9zRnkqS9j1pqQPXwobB0ZcVTk27REb7COQ0UR59w==,
       }
 
   std-env@3.9.0:
@@ -4954,6 +4999,17 @@ snapshots:
 
   "@mjackson/node-fetch-server@0.2.0": {}
 
+  "@monaco-editor/loader@1.6.1":
+    dependencies:
+      state-local: 1.0.7
+
+  "@monaco-editor/react@4.7.0(monaco-editor@0.54.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)":
+    dependencies:
+      "@monaco-editor/loader": 1.6.1
+      monaco-editor: 0.54.0
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
+
   "@neon-rs/load@0.0.4": {}
 
   "@npmcli/git@4.1.0":
@@ -5644,6 +5700,8 @@ snapshots:
 
   devalue@5.3.2: {}
 
+  dompurify@3.1.7: {}
+
   dotenv@17.2.3: {}
 
   drizzle-kit@0.31.5:
@@ -5957,6 +6015,8 @@ snapshots:
     dependencies:
       "@jridgewell/sourcemap-codec": 1.5.5
 
+  marked@14.0.0: {}
+
   mime@3.0.0: {}
 
   miniflare@4.20250923.0:
@@ -6004,6 +6064,11 @@ snapshots:
   minizlib@3.1.0:
     dependencies:
       minipass: 7.1.2
+
+  monaco-editor@0.54.0:
+    dependencies:
+      dompurify: 3.1.7
+      marked: 14.0.0
 
   mri@1.2.0: {}
 
@@ -6257,6 +6322,8 @@ snapshots:
   spdx-license-ids@3.0.22: {}
 
   stackback@0.0.2: {}
+
+  state-local@1.0.7: {}
 
   std-env@3.9.0: {}
 
