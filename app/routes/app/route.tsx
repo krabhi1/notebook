@@ -1,9 +1,9 @@
 import { Outlet } from "react-router";
-import type { Route } from "./+types/layout";
 import { FolderService } from "~/db/services/folderService";
 import { MoreHorizontal, Plus } from "lucide-react";
-import FolderList from "~/components/sidebar/FolderList";
+import FolderList from "~/routes/app/FolderList";
 import { useFetcher } from "react-router";
+import type { Route } from "../app/+types/route";
 
 const userId = "abhi";
 export async function loader({ request }: Route.LoaderArgs) {

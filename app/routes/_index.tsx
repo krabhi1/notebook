@@ -1,5 +1,5 @@
 import { Button } from "~/components/ui/button";
-import type { Route } from "./+types/home";
+import type { Route } from "./+types/_index";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "WebBook" }, { name: "description", content: "" }];

@@ -1,5 +1,5 @@
 import { PageService } from "~/db/services/pageService";
-import type { Route } from "./+types/page";
+import type { Route } from "../app.$pageId/+types/route";
 export async function loader({
   request,
   params: { pageId },

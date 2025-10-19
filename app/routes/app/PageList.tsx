@@ -21,7 +21,7 @@ export default function PageList({ pages }: PageListProps) {
           className="group flex items-center justify-between px-2 py-1 text-sm rounded"
         >
           <NavLink
-            to={`page/${page.id}`}
+            to={`/app/${page.id}`}
             className={({ isActive, isPending }) =>
               `flex items-center space-x-2 flex-1 min-w-0 cursor-pointer ${
                 isActive

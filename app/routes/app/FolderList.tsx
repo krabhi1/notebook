@@ -43,7 +43,7 @@ export default function FolderList({ folders }: FolderListProps) {
     formData.append("action", "createPage");
     formData.append("name", pageName);
     formData.append("folderId", folderId);
-    formData.append("type", "code");
+    formData.append("type", "web");
     createPageFetch.submit(formData, { method: "post" });
   };
 
