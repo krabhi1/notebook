@@ -1,6 +1,6 @@
 import { MoreHorizontal, File, Edit, Trash2 } from "lucide-react";
 import { NavLink } from "react-router";
-import type { Page } from "~/db/schema";
+import type { Page } from "~/.server/db/schema";
 import {
   DropdownMenu,
   DropdownMenuContent,

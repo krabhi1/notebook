@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { FolderWithPages } from "~/db/queries/folder";
+import type { FolderWithPages } from "~/.server/db/queries/folder";
 import {
   ChevronRight,
   FolderOpen,

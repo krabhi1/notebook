@@ -1,7 +1,7 @@
-import { FileDAO } from "../queries/file";
-import { PageDAO } from "../queries/page";
-import { FolderDAO } from "../queries/folder";
-import { type File, type NewFile, type UpdateFile } from "../schema";
+import { FileDAO } from "../db/queries/file";
+import { PageDAO } from "../db/queries/page";
+import { FolderDAO } from "../db/queries/folder";
+import { type File, type NewFile, type UpdateFile } from "../db/schema";
 
 export const FileService = {
   createFile: async (data: {

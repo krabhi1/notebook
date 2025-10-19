@@ -1,8 +1,8 @@
-import { FolderDAO } from "../queries/folder";
-import { PageDAO } from "../queries/page";
-import { FileDAO } from "../queries/file";
-import { UserDAO } from "../queries/user";
-import { type Folder, type NewFolder, type UpdateFolder } from "../schema";
+import { FolderDAO } from "../db/queries/folder";
+import { PageDAO } from "../db/queries/page";
+import { FileDAO } from "../db/queries/file";
+import { UserDAO } from "../db/queries/user";
+import { type Folder, type NewFolder, type UpdateFolder } from "../db/schema";
 
 export const FolderService = {
   createFolder: async (data: {

@@ -1,7 +1,7 @@
-import { PageDAO } from "../queries/page";
-import { FileDAO } from "../queries/file";
-import { FolderDAO } from "../queries/folder";
-import { type Page, type NewPage, type UpdatePage } from "../schema";
+import { PageDAO } from "../db/queries/page";
+import { FileDAO } from "../db/queries/file";
+import { FolderDAO } from "../db/queries/folder";
+import { type Page, type NewPage, type UpdatePage } from "../db/schema";
 
 export const PageService = {
   createPage: async (data: {

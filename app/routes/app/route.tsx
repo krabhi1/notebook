@@ -1,5 +1,5 @@
 import { Outlet } from "react-router";
-import { FolderService } from "~/db/services/folderService";
+import { FolderService } from "~/.server/services/folderService";
 import { MoreHorizontal, Plus } from "lucide-react";
 import FolderList from "~/routes/app/FolderList";
 import { useFetcher } from "react-router";

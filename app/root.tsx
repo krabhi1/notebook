@@ -9,9 +9,9 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { FolderService } from "./db/services/folderService";
-import { PageService } from "./db/services/pageService";
-import type { Page } from "./db/schema";
+import { FolderService } from "./.server/services/folderService";
+import { PageService } from "./.server/services/pageService";
+import type { Page } from "./.server/db/schema";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },

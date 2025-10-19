@@ -1,6 +1,6 @@
-import { UserDAO } from "../queries/user";
-import { FolderDAO } from "../queries/folder";
-import { type User, type NewUser, type UpdateUser } from "../schema";
+import { UserDAO } from "../db/queries/user";
+import { FolderDAO } from "../db/queries/folder";
+import { type User, type NewUser, type UpdateUser } from "../db/schema";
 
 export const UserService = {
   createUser: async (userData: {
