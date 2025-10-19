@@ -1,16 +1,50 @@
 import { Outlet } from "react-router";
-import { FolderService } from "~/.server/services/folderService";
 import { MoreHorizontal, Plus } from "lucide-react";
 import FolderList from "~/routes/app/FolderList";
 import { useFetcher } from "react-router";
 import type { Route } from "../app/+types/route";
-
+import { FolderService } from "~/.server/services/folderService";
+import { PageService } from "~/.server/services/pageService";
+import type { Page } from "~/.server/db/schema";
 const userId = "abhi";
 export async function loader({ request }: Route.LoaderArgs) {
   const folders = await FolderService.getFoldersWithPages(userId);
   return { folders };
 }
-
+export async function action({ request }: Route.ActionArgs) {
+  const formData = await request.formData();
+  const action = formData.get("action");
+  if (action === "createFolder") {
+    const name = formData.get("name") as string;
+    if (typeof name !== "string" || name.trim() === "") {
+      throw new Error("Folder name is required");
+    }
+    await FolderService.createFolder({
+      userId,
+      name: name.trim(),
+    });
+  }
+  if (action == "createPage") {
+    const folderId = formData.get("folderId") as string;
+    const name = formData.get("name") as string;
+    const type = formData.get("type") as string;
+    if (typeof folderId !== "string" || folderId.trim() === "") {
+      throw new Error("Folder ID is required");
+    }
+    if (typeof name !== "string" || name.trim() === "") {
+      throw new Error("Page name is required");
+    }
+    if (typeof type !== "string" || type.trim() === "") {
+      throw new Error("Page type is required");
+    }
+    await PageService.createPageWithDefaultFiles(
+      folderId,
+      name,
+      type as Page["type"],
+    );
+  }
+  return null;
+}
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { folders } = loaderData;
   const createFolderFetcher = useFetcher();
