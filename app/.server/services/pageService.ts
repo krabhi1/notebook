@@ -2,6 +2,14 @@ import { PageDAO } from "../db/queries/page";
 import { FileDAO } from "../db/queries/file";
 import { FolderDAO } from "../db/queries/folder";
 import { type Page, type NewPage, type UpdatePage } from "../db/schema";
+import {
+  defaultJsContent,
+  defaultWebContent,
+  defaultMermaidContent,
+  defaultDatabaseContent,
+  defaultEditorJsContent,
+  defaultCircuitContent,
+} from "~/lib/constants";
 
 export const PageService = {
   createPage: async (data: {
@@ -58,44 +66,17 @@ export const PageService = {
         {
           name: "index.html",
           lang: "html",
-          content: `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${name}</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <h1>Hello World!</h1>
-    <script src="script.js"></script>
-</body>
-</html>`,
+          content: defaultWebContent.html,
         },
         {
           name: "style.css",
           lang: "css",
-          content: `body {
-    margin: 0;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-}
-
-h1 {
-    color: #333;
-    text-align: center;
-}`,
+          content: defaultWebContent.css,
         },
         {
           name: "script.js",
           lang: "javascript",
-          content: `console.log('Hello, World!');
-
-// Add your JavaScript code here
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded successfully!');
-});`,
+          content: defaultWebContent.js,
         },
       ]);
     } else if (type === "code") {
@@ -103,76 +84,35 @@ document.addEventListener('DOMContentLoaded', function() {
         pageId: page.id,
         name: "main.js",
         lang: "javascript",
-        content: `// Welcome to your new code page
-console.log('Hello, World!');
-
-// Start coding here...`,
+        content: defaultJsContent,
       });
     } else if (type === "mermaid") {
       await FileDAO.create({
         pageId: page.id,
         name: "diagram.mmd",
         lang: "mermaid",
-        content: `graph TD
-    A[Start] --> B{Is it working?}
-    B -->|Yes| C[Great!]
-    B -->|No| D[Debug]
-    D --> B`,
+        content: defaultMermaidContent,
       });
     } else if (type === "database") {
       await FileDAO.create({
         pageId: page.id,
         name: "schema.sql",
         lang: "sql",
-        content: `-- Database schema
-CREATE TABLE users (
-    id INTEGER PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Add your tables here...`,
+        content: defaultDatabaseContent,
       });
     } else if (type === "editorjs") {
       await FileDAO.create({
         pageId: page.id,
         name: "content.json",
         lang: "json",
-        content: `{
-  "time": ${Date.now()},
-  "blocks": [
-    {
-      "type": "header",
-      "data": {
-        "text": "Welcome to Editor.js!",
-        "level": 1
-      }
-    },
-    {
-      "type": "paragraph",
-      "data": {
-        "text": "Start writing your content here..."
-      }
-    }
-  ],
-  "version": "2.28.2"
-}`,
+        content: defaultEditorJsContent(),
       });
     } else if (type === "circuit") {
       await FileDAO.create({
         pageId: page.id,
         name: "circuit.json",
         lang: "json",
-        content: `{
-  "components": [],
-  "connections": [],
-  "metadata": {
-    "name": "${name}",
-    "description": "Circuit diagram",
-    "created": "${new Date().toISOString()}"
-  }
-}`,
+        content: defaultCircuitContent(name),
       });
     }
 
