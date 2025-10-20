@@ -26,6 +26,9 @@ export function useFiles<T extends string>(
   ) as Record<T, { value: string; id: string; lang: T }>;
 
   const [files, setFiles] = useState(initialState);
+  useEffect(() => {
+    setFiles(initialState);
+  }, [page]);
 
   // Setter for a specific language
   const setFile = (lang: T, content: string) => {

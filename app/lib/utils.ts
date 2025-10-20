@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 export function getFiles<T extends string>(
   page: PageWithFiles,
   languages: T[],
-): Record<T, string> {
+) {
   return Object.fromEntries(
     languages.map((lang) => {
       const file = page.files.find((f) => f.lang === lang);
@@ -18,7 +18,26 @@ export function getFiles<T extends string>(
           `Required file with language "${lang}" is missing in the page.`,
         );
       }
-      return [lang, file.content];
+      return [
+        lang,
+        {
+          value: file.content,
+          id: file.id,
+          lang: file.lang,
+        },
+      ];
     }),
-  ) as Record<T, string>;
+  ) as Record<T, { value: string; id: string; lang: T }>;
+}
+
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number,
+): (...args: Parameters<T>) => void {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), wait);
+  };
 }

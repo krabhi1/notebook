@@ -1,13 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { OnMount, EditorProps, Monaco } from "@monaco-editor/react";
 // Simple debounce utility
-const debounce = (func: Function, delay: number) => {
-  let timeout: NodeJS.Timeout;
-  return (...args: any[]) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), delay);
-  };
-};
+
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -26,8 +20,7 @@ import EditorTabBar from "./EditorTabBar";
 import PreviewPanel from "./PreviewPanel";
 import CodeEditor, { type MonacoEditorInstance } from "~/components/CodeEditor";
 import type { PageWithFiles } from "~/.server/db/queries/page";
-import { getFiles } from "~/lib/utils";
-import { useFiles } from "~/lib/hooks";
+import { debounce, getFiles } from "~/lib/utils";
 type WebPageProps = {
   page: PageWithFiles;
 };
@@ -38,77 +31,124 @@ export default function WebPage({ page }: WebPageProps) {
   const [isConsoleVisible, setIsConsoleVisible] = useState(true);
   const [autoClearOnEdit, setAutoClearOnEdit] = useState(true);
   const [isUpdatingPreview, setIsUpdatingPreview] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [previewMode, setPreviewMode] = useState<
     "mobile" | "tablet" | "desktop" | "full"
   >("full");
 
-  const { files: defaultFiles } = useFiles(page, ["html", "css", "javascript"]);
+  const files = useMemo(
+    () => getFiles(page, ["html", "css", "javascript"]),
+    [page],
+  );
   const editorInstance = useRef<MonacoEditorInstance | null>(null);
+
+  const htmlFile = files.html;
+  const cssFile = files.css;
+  const jsFile = files.javascript;
+
+  const monacoTheme = false ? "vs-dark" : "light";
+
+  const onMount = useCallback<OnMount>((editor, monaco) => {
+    editorInstance.current = { editor, monaco };
+    reloadPreview();
+  }, []);
+  const onChange = useCallback((value: string | undefined) => {
+    debounce(reloadPreview, 1000)();
+    if (autoClearOnEdit) {
+      clearConsole();
+    }
+  }, []);
+  const handleTabSwitch = useCallback(
+    (newTab: EditorTab) => {
+      if (newTab === activeTab) return;
+      setActiveTab(newTab);
+      updatePreview();
+      if (autoClearOnEdit) {
+        clearConsole();
+      }
+    },
+    [activeTab],
+  );
+  // on files change by page change
+  useEffect(() => {
+    reloadPreview();
+  }, [files]);
 
   const getEditorValues = () => {
     if (!editorInstance.current) {
+      console.error("Editor instance not available");
       return {
-        html: defaultFiles.html.value,
-        css: defaultFiles.css.value,
-        javascript: defaultFiles.javascript.value,
+        html: files.html.value,
+        css: files.css.value,
+        javascript: files.javascript.value,
       };
     }
 
     const models = editorInstance.current.monaco.editor.getModels();
-    const getModelValue = (language: string, defaultValue: string) =>
-      models.find((model) => model.getLanguageId() === language)?.getValue() ??
-      defaultValue;
+    const getModelValue = (
+      language: string,
+      path: string,
+      defaultValue: string,
+    ) =>
+      models
+        .find((model) => {
+          return (
+            model.getLanguageId() === language && model.uri.path.includes(path)
+          );
+        })
+        ?.getValue() ?? defaultValue;
 
     return {
-      html: getModelValue("html", defaultFiles.html.value),
-      css: getModelValue("css", defaultFiles.css.value),
-      javascript: getModelValue("javascript", defaultFiles.javascript.value),
+      html: getModelValue(
+        "html",
+        `${page.id}/${htmlFile.id}/index.html`,
+        files.html.value,
+      ),
+      css: getModelValue(
+        "css",
+        `${page.id}/${cssFile.id}/styles.css`,
+        files.css.value,
+      ),
+      javascript: getModelValue(
+        "javascript",
+        `${page.id}/${jsFile.id}/script.js`,
+        files.javascript.value,
+      ),
     };
   };
 
-  const htmlFile = defaultFiles.html;
-  const cssFile = defaultFiles.css;
-  const jsFile = defaultFiles.javascript;
-
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  // Convert resolvedTheme to Monaco theme format
-  const monacoTheme = false ? "vs-dark" : "light";
-
-  // Debounced preview update function
   const updatePreview = useCallback(
-    debounce(() => {
-      if (iframeRef.current && iframeRef.current.contentWindow) {
-        const { html, css, javascript: js } = getEditorValues();
-        iframeRef.current.contentWindow.postMessage(
-          {
-            html,
-            css,
-            js,
-          },
-          "*",
-        );
+    (immediate = false) => {
+      setIsUpdatingPreview(true);
+      const doUpdate = () => {
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+          const { html, css, javascript: js } = getEditorValues();
+          console.log("Updating preview with:", { html, css, js });
+          iframeRef.current.contentWindow.postMessage(
+            {
+              html,
+              css,
+              js,
+            },
+            "*",
+          );
+        }
+        setIsUpdatingPreview(false);
+      };
+
+      if (immediate) {
+        doUpdate();
+      } else {
+        debounce(doUpdate, 1000)();
       }
-      setIsUpdatingPreview(false);
-    }, 1000),
-    [],
+    },
+    [getEditorValues],
   );
 
   // Immediate preview update function
   const updatePreviewImmediate = useCallback(() => {
-    if (iframeRef.current && iframeRef.current.contentWindow) {
-      const { html, css, javascript: js } = getEditorValues();
-      iframeRef.current.contentWindow.postMessage(
-        {
-          html,
-          css,
-          js,
-        },
-        "*",
-      );
-    }
-    setIsUpdatingPreview(false);
-  }, []);
+    updatePreview(true);
+  }, [updatePreview]);
 
   // Format code in active editor
   const formatCode = useCallback(() => {
@@ -223,32 +263,28 @@ export default function WebPage({ page }: WebPageProps) {
     }
   }, []);
 
-  const onMount = useCallback<OnMount>((editor, monaco) => {
-    editorInstance.current = { editor, monaco };
-    const models = monaco.editor.getModels();
-  }, []);
-  const onChange = useCallback((value: string | undefined) => {
-    console.log("Editor content changed", value);
-  }, []);
+  const current = useMemo(() => {
+    const fileMap = {
+      html: {
+        language: "html" as const,
+        value: htmlFile.value,
+        path: `${page.id}/${htmlFile.id}/index.html`,
+      },
+      css: {
+        language: "css" as const,
+        value: cssFile.value,
+        path: `${page.id}/${cssFile.id}/styles.css`,
+      },
+      js: {
+        language: "javascript" as const,
+        value: jsFile.value,
+        path: `${page.id}/${jsFile.id}/script.js`,
+      },
+    };
 
-  const current = {
-    language: "",
-    value: "",
-    path: "",
-  };
-  if (activeTab === "html") {
-    current.language = "html";
-    current.value = htmlFile.value;
-    current.path = htmlFile.id + "/index.html";
-  } else if (activeTab === "css") {
-    current.language = "css";
-    current.value = cssFile.value;
-    current.path = cssFile.id + "/styles.css";
-  } else if (activeTab === "js") {
-    current.language = "javascript";
-    current.value = jsFile.value;
-    current.path = jsFile.id + "/script.js";
-  }
+    return fileMap[activeTab];
+  }, [activeTab, files]);
+  console.log("current", current.path, current.language);
 
   return (
     <div className="flex-1 flex flex-col">
@@ -272,7 +308,7 @@ export default function WebPage({ page }: WebPageProps) {
                 <div className="h-full flex flex-col bg-slate-50 dark:bg-gray-800">
                   <EditorTabBar
                     activeTab={activeTab}
-                    setActiveTab={setActiveTab}
+                    setActiveTab={handleTabSwitch}
                     setIsConsoleVisible={setIsConsoleVisible}
                     isConsoleVisible={isConsoleVisible}
                     formatCode={formatCode}

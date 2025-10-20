@@ -2,6 +2,7 @@ import { PageService } from "~/.server/services/pageService";
 import type { Route } from "../app.$pageId/+types/route";
 import CodeEditor from "~/components/CodeEditor";
 import WebPage from "./web/WebPage";
+import { useEffect } from "react";
 export async function loader({
   request,
   params: { pageId },
@@ -14,7 +15,9 @@ export async function loader({
 }
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { page } = loaderData;
-  console.log("Loaded page:", page);
+  useEffect(() => {
+    console.log("Loaded page:", page);
+  }, [page]);
   return (
     <div className="flex-1 flex">
       <WebPage page={page} />
