@@ -7,16 +7,12 @@ const EditorTabBar = ({
   setIsConsoleVisible,
   isConsoleVisible,
   formatCode,
-  isSidebarOpen,
-  onSidebarToggle,
 }: {
   activeTab: EditorTab;
   setActiveTab: (tab: EditorTab) => void;
   setIsConsoleVisible: (visible: boolean) => void;
   isConsoleVisible: boolean;
   formatCode: () => void;
-  isSidebarOpen: boolean;
-  onSidebarToggle: () => void;
 }) => {
   const tabs = [
     { id: "html" as EditorTab, label: "HTML", icon: "📄" },
@@ -27,28 +23,6 @@ const EditorTabBar = ({
   return (
     <div className="h-8 shrink-0 bg-slate-200 dark:bg-gray-700 border-b border-slate-200 dark:border-gray-600 flex items-center justify-between">
       <div className="flex h-full">
-        <button
-          onClick={onSidebarToggle}
-          className={twMerge(
-            "px-3 h-full flex items-center text-sm font-medium border-r border-slate-200 dark:border-gray-600",
-            "text-slate-600 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-gray-600",
-          )}
-          title={isSidebarOpen ? "Hide Sidebar" : "Show Sidebar"}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`transition-transform ${isSidebarOpen ? "rotate-180" : ""}`}
-          >
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
         {tabs.map((tab) => (
           <button
             key={tab.id}

@@ -13,7 +13,6 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "~/components/ui/resizable";
-import { emmetHTML } from "emmet-monaco-es";
 import { twMerge } from "tailwind-merge";
 import {
   tailwindClasses,
@@ -25,7 +24,7 @@ import {
 import ConsolePanel from "./ConsolePanel";
 import EditorTabBar from "./EditorTabBar";
 import PreviewPanel from "./PreviewPanel";
-import CodeEditor from "~/components/CodeEditor";
+import CodeEditor, { type MonacoEditorInstance } from "~/components/CodeEditor";
 import type { PageWithFiles } from "~/.server/db/queries/page";
 import { getFiles } from "~/lib/utils";
 import { useFiles } from "~/lib/hooks";
@@ -33,15 +32,8 @@ type WebPageProps = {
   page: PageWithFiles;
 };
 export default function WebPage({ page }: WebPageProps) {
-  // Sidebar state
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [currentPageId, setCurrentPageId] = useState<string>("page-1");
-
   // Multi-file content state
   const [activeTab, setActiveTab] = useState<EditorTab>("html");
-  const htmlEditorRef = useRef<any>(null);
-  const cssEditorRef = useRef<any>(null);
-  const jsEditorRef = useRef<any>(null);
   const [consoleLogs, setConsoleLogs] = useState<ConsoleLog[]>([]);
   const [isConsoleVisible, setIsConsoleVisible] = useState(true);
   const [autoClearOnEdit, setAutoClearOnEdit] = useState(true);
@@ -50,18 +42,35 @@ export default function WebPage({ page }: WebPageProps) {
     "mobile" | "tablet" | "desktop" | "full"
   >("full");
 
-  const { files, setFile } = useFiles(page, ["html", "css", "javascript"]);
+  const { files: defaultFiles } = useFiles(page, ["html", "css", "javascript"]);
+  const editorInstance = useRef<MonacoEditorInstance | null>(null);
 
-  const htmlContent = files.html;
-  const cssContent = files.css;
-  const jsContent = files.javascript;
+  const getEditorValues = () => {
+    if (!editorInstance.current) {
+      return {
+        html: defaultFiles.html.value,
+        css: defaultFiles.css.value,
+        javascript: defaultFiles.javascript.value,
+      };
+    }
+
+    const models = editorInstance.current.monaco.editor.getModels();
+    const getModelValue = (language: string, defaultValue: string) =>
+      models.find((model) => model.getLanguageId() === language)?.getValue() ??
+      defaultValue;
+
+    return {
+      html: getModelValue("html", defaultFiles.html.value),
+      css: getModelValue("css", defaultFiles.css.value),
+      javascript: getModelValue("javascript", defaultFiles.javascript.value),
+    };
+  };
+
+  const htmlFile = defaultFiles.html;
+  const cssFile = defaultFiles.css;
+  const jsFile = defaultFiles.javascript;
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  // Refs for editor change listeners disposables
-  const htmlDisposableRef = useRef<any>(null);
-  const cssDisposableRef = useRef<any>(null);
-  const jsDisposableRef = useRef<any>(null);
 
   // Convert resolvedTheme to Monaco theme format
   const monacoTheme = false ? "vs-dark" : "light";
@@ -70,9 +79,7 @@ export default function WebPage({ page }: WebPageProps) {
   const updatePreview = useCallback(
     debounce(() => {
       if (iframeRef.current && iframeRef.current.contentWindow) {
-        const html = htmlEditorRef.current?.getValue() || "";
-        const css = cssEditorRef.current?.getValue() || "";
-        const js = jsEditorRef.current?.getValue() || "";
+        const { html, css, javascript: js } = getEditorValues();
         iframeRef.current.contentWindow.postMessage(
           {
             html,
@@ -90,9 +97,7 @@ export default function WebPage({ page }: WebPageProps) {
   // Immediate preview update function
   const updatePreviewImmediate = useCallback(() => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
-      const html = htmlEditorRef.current?.getValue() || "";
-      const css = cssEditorRef.current?.getValue() || "";
-      const js = jsEditorRef.current?.getValue() || "";
+      const { html, css, javascript: js } = getEditorValues();
       iframeRef.current.contentWindow.postMessage(
         {
           html,
@@ -105,177 +110,15 @@ export default function WebPage({ page }: WebPageProps) {
     setIsUpdatingPreview(false);
   }, []);
 
-  // Setup Monaco Editor with Tailwind autocomplete
-  const setupTailwindAutocomplete = useCallback((monaco: any) => {
-    // Register completion item provider
-    monaco.languages.registerCompletionItemProvider("html", {
-      provideCompletionItems: (model: any, position: any) => {
-        // Get the content of the current line up to the cursor position
-        const lineContent = model.getLineContent(position.lineNumber);
-        const beforeCursor = lineContent.substring(0, position.column - 1);
-
-        // Check if we're inside a class attribute
-        const classMatch = beforeCursor.match(/class\s*=\s*["']([^"']*)$/);
-        if (!classMatch) {
-          return { suggestions: [] };
-        }
-
-        const currentClasses = classMatch[1];
-        const lastSpaceIndex = currentClasses.lastIndexOf(" ");
-        const currentClass = currentClasses.substring(lastSpaceIndex + 1);
-
-        // Filter tailwind classes based on current input
-        const suggestions = tailwindClasses
-          .filter((className) =>
-            className.toLowerCase().includes(currentClass.toLowerCase()),
-          )
-          .map((className) => ({
-            label: className,
-            kind: monaco.languages.CompletionItemKind.Class,
-            insertText: className,
-            detail: "Tailwind CSS",
-            documentation: `Tailwind CSS class: ${className}`,
-            range: {
-              startLineNumber: position.lineNumber,
-              endLineNumber: position.lineNumber,
-              startColumn: position.column - currentClass.length,
-              endColumn: position.column,
-            },
-          }));
-
-        return { suggestions };
-      },
-    });
-  }, []);
-
-  const setupEmmet = useCallback((monaco: any) => {
-    emmetHTML(monaco);
-  }, []);
-
-  const setupEnhancedEditor = useCallback<OnMount>(
-    (editor, monaco) => {
-      // Add Ctrl+S override
-      editor.addAction({
-        id: "save.content",
-        label: "Save Content",
-        keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
-        run: () => {
-          // Save all content from editors
-          const allContent = {
-            html: htmlEditorRef.current?.getValue() || "",
-            css: cssEditorRef.current?.getValue() || "",
-            js: jsEditorRef.current?.getValue() || "",
-            timestamp: new Date().toISOString(),
-          };
-
-          // Save to localStorage
-          localStorage.setItem("webui-playground", JSON.stringify(allContent));
-        },
-      });
-    },
-    [], // No dependencies, uses refs
-  );
-
-  const handleEditorMount = useCallback(
-    (editor: any, monaco: any, type: "html" | "css" | "js") => {
-      // Store monaco globally for consistency
-      (window as any).monaco = monaco;
-
-      // Setup based on type
-      if (type === "html") {
-        setupTailwindAutocomplete(monaco);
-        setupEmmet(monaco);
-      }
-      setupEnhancedEditor(editor, monaco);
-    },
-    [setupTailwindAutocomplete, setupEmmet, setupEnhancedEditor],
-  );
-
-  // Handle tab switching
-  const handleTabSwitch = useCallback(
-    (newTab: EditorTab) => {
-      if (newTab === activeTab) return;
-      setActiveTab(newTab);
-    },
-    [activeTab],
-  );
-
-  // Memoized mount handlers for editors
-  const handleHtmlMount = useCallback<OnMount>(
-    (editor, monaco) => {
-      htmlEditorRef.current = editor;
-      editor.setValue(htmlContent);
-      handleEditorMount(editor, monaco, "html");
-      // Dispose previous listener
-      if (htmlDisposableRef.current) htmlDisposableRef.current.dispose();
-      // Add change listener
-      htmlDisposableRef.current = editor.onDidChangeModelContent(() => {
-        setIsUpdatingPreview(true);
-        updatePreview();
-        if (autoClearOnEdit) {
-          clearConsole();
-        }
-      });
-    },
-    [handleEditorMount, htmlContent, updatePreview],
-  );
-
-  const handleCssMount = useCallback(
-    (editor: any, monaco: any) => {
-      cssEditorRef.current = editor;
-      editor.setValue(cssContent);
-      handleEditorMount(editor, monaco, "css");
-      // Dispose previous listener
-      if (cssDisposableRef.current) cssDisposableRef.current.dispose();
-      // Add change listener
-      cssDisposableRef.current = editor.onDidChangeModelContent(() => {
-        setIsUpdatingPreview(true);
-        updatePreview();
-        if (autoClearOnEdit) {
-          clearConsole();
-        }
-      });
-    },
-    [handleEditorMount, cssContent, updatePreview],
-  );
-
-  const handleJsMount = useCallback(
-    (editor: any, monaco: any) => {
-      jsEditorRef.current = editor;
-      editor.setValue(jsContent);
-      handleEditorMount(editor, monaco, "js");
-      // Dispose previous listener
-      if (jsDisposableRef.current) jsDisposableRef.current.dispose();
-      // Add change listener
-      jsDisposableRef.current = editor.onDidChangeModelContent(() => {
-        setIsUpdatingPreview(true);
-        updatePreview();
-      });
-    },
-    [handleEditorMount, jsContent, updatePreview],
-  );
-
   // Format code in active editor
   const formatCode = useCallback(() => {
-    let currentEditor;
-    switch (activeTab) {
-      case "html":
-        currentEditor = htmlEditorRef.current;
-        break;
-      case "css":
-        currentEditor = cssEditorRef.current;
-        break;
-      case "js":
-        currentEditor = jsEditorRef.current;
-        break;
-      default:
-        return;
+    if (editorInstance.current != null) {
+      console.log(getEditorValues());
+      editorInstance.current.editor
+        .getAction("editor.action.formatDocument")
+        ?.run();
     }
-
-    if (currentEditor) {
-      currentEditor.getAction("editor.action.formatDocument").run();
-    }
-  }, [activeTab]);
+  }, []);
 
   // Listen for console messages from iframe
   useEffect(() => {
@@ -336,21 +179,6 @@ export default function WebPage({ page }: WebPageProps) {
     updatePreviewImmediate();
   }, [updatePreviewImmediate]);
 
-  // Prevent body scrolling
-  useEffect(() => {
-    document.body.style.margin = "0";
-    document.body.style.padding = "0";
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.margin = "0";
-    document.documentElement.style.padding = "0";
-    document.documentElement.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = "";
-      document.documentElement.style.overflow = "";
-    };
-  }, []);
-
   // Clear console logs
   const clearConsole = useCallback(() => {
     setConsoleLogs([]);
@@ -395,21 +223,32 @@ export default function WebPage({ page }: WebPageProps) {
     }
   }, []);
 
-  // Sidebar handlers
-  const toggleSidebar = useCallback(() => {
-    setIsSidebarOpen((prev) => !prev);
+  const onMount = useCallback<OnMount>((editor, monaco) => {
+    editorInstance.current = { editor, monaco };
+    const models = monaco.editor.getModels();
+  }, []);
+  const onChange = useCallback((value: string | undefined) => {
+    console.log("Editor content changed", value);
   }, []);
 
-  const handlePageSelect = useCallback((pageId: string) => {
-    setCurrentPageId(pageId);
-    // TODO: Load page content from storage
-    console.log("Selected page:", pageId);
-  }, []);
-
-  const handlePageCreate = useCallback(() => {
-    // TODO: Create new page and switch to it
-    console.log("Create new page");
-  }, []);
+  const current = {
+    language: "",
+    value: "",
+    path: "",
+  };
+  if (activeTab === "html") {
+    current.language = "html";
+    current.value = htmlFile.value;
+    current.path = htmlFile.id + "/index.html";
+  } else if (activeTab === "css") {
+    current.language = "css";
+    current.value = cssFile.value;
+    current.path = cssFile.id + "/styles.css";
+  } else if (activeTab === "js") {
+    current.language = "javascript";
+    current.value = jsFile.value;
+    current.path = jsFile.id + "/script.js";
+  }
 
   return (
     <div className="flex-1 flex flex-col">
@@ -437,43 +276,19 @@ export default function WebPage({ page }: WebPageProps) {
                     setIsConsoleVisible={setIsConsoleVisible}
                     isConsoleVisible={isConsoleVisible}
                     formatCode={formatCode}
-                    isSidebarOpen={isSidebarOpen}
-                    onSidebarToggle={toggleSidebar}
                   />
 
                   {/* Editors */}
                   <div className="flex-1 relative">
-                    <div
-                      className={`h-full ${activeTab === "html" ? "block" : "hidden"}`}
-                    >
+                    <div className="h-full">
                       <CodeEditor
-                        language="html"
-                        value={htmlContent}
-                        onMount={handleHtmlMount}
+                        defaultLanguage={current.language}
+                        defaultValue={current.value}
+                        path={current.path}
                         theme={monacoTheme}
                         loadingText="Loading HTML editor..."
-                      />
-                    </div>
-                    <div
-                      className={`h-full ${activeTab === "css" ? "block" : "hidden"}`}
-                    >
-                      <CodeEditor
-                        language="css"
-                        value={cssContent}
-                        onMount={handleCssMount}
-                        theme={monacoTheme}
-                        loadingText="Loading CSS editor..."
-                      />
-                    </div>
-                    <div
-                      className={`h-full ${activeTab === "js" ? "block" : "hidden"}`}
-                    >
-                      <CodeEditor
-                        language="javascript"
-                        value={jsContent}
-                        onMount={handleJsMount}
-                        theme={monacoTheme}
-                        loadingText="Loading JS editor..."
+                        onMount={onMount}
+                        onChange={onChange}
                       />
                     </div>
                   </div>

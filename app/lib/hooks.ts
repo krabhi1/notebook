@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PageWithFiles } from "~/.server/db/queries/page";
 
 export function useFiles<T extends string>(
@@ -14,9 +14,16 @@ export function useFiles<T extends string>(
           `Required file with language "${lang}" is missing in the page.`,
         );
       }
-      return [lang, file.content];
+      return [
+        lang,
+        {
+          value: file.content,
+          id: file.id,
+          lang: file.lang,
+        },
+      ];
     }),
-  ) as Record<T, string>;
+  ) as Record<T, { value: string; id: string; lang: T }>;
 
   const [files, setFiles] = useState(initialState);
 
