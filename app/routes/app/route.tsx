@@ -57,7 +57,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
   }
   return (
     <div className="h-screen flex flex-col">
-      <header className="h-10 shrink-0 border-b ">Header</header>
+      {/*<header className="h-10 shrink-0 border-b ">Header</header>*/}
       <div className="flex flex-1 overflow-hidden">
         <aside className="shrink-0  border-r overflow-auto">
           <div className="flex-1 overflow-y-auto">

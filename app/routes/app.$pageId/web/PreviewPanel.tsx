@@ -1,9 +1,9 @@
 import { RotateCcwIcon, RotateCwIcon } from "lucide-react";
 import { twMerge } from "tailwind-merge";
+import { iframeHtml } from "./utils";
 
 const PreviewPanel = ({
   iframeRef,
-  iframeHtml,
   handleIframeLoad,
   isUpdatingPreview,
   previewMode,
@@ -11,7 +11,6 @@ const PreviewPanel = ({
   onReload,
 }: {
   iframeRef: React.RefObject<HTMLIFrameElement | null>;
-  iframeHtml: string;
   handleIframeLoad: () => void;
   isUpdatingPreview: boolean;
   previewMode: "mobile" | "tablet" | "desktop" | "full";

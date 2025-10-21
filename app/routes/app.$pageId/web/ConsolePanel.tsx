@@ -1,20 +1,16 @@
 import { twMerge } from "tailwind-merge";
-import type { ConsoleLog } from "./utils";
+import { getLogStyle, type ConsoleLog } from "./utils";
 
 const ConsolePanel = ({
   consoleLogs,
   clearConsole,
   autoClearOnEdit,
   setAutoClearOnEdit,
-  formatConsoleArgs,
-  getLogStyle,
 }: {
   consoleLogs: ConsoleLog[];
   clearConsole: () => void;
   autoClearOnEdit: boolean;
   setAutoClearOnEdit: (value: boolean) => void;
-  formatConsoleArgs: (args: any[]) => string;
-  getLogStyle: (type: string) => { icon: string; color: string };
 }) => (
   <div className="h-full flex flex-col bg-black dark:bg-gray-900">
     <div className="h-8 shrink-0 bg-gray-900 dark:bg-gray-800 border-b border-gray-800 dark:border-gray-700 flex items-center justify-between px-4">

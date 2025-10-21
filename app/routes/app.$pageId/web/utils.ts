@@ -12,6 +12,32 @@ export interface ConsoleLog {
   content: string; // For duplicate detection
 }
 
+export const formatConsoleArgs = (args: any[]) => {
+  return args
+    .map((arg) => {
+      if (typeof arg === "object" && arg !== null) {
+        try {
+          return JSON.stringify(arg, null, 2);
+        } catch {
+          return String(arg);
+        }
+      }
+      return String(arg);
+    })
+    .join(" ");
+};
+export const getLogStyle = (type: string) => {
+  switch (type) {
+    case "error":
+      return { icon: "×", color: "text-red-400" };
+    case "warn":
+      return { icon: "!", color: "text-yellow-400" };
+    case "info":
+      return { icon: "i", color: "text-blue-400" };
+    default:
+      return { icon: ">", color: "text-gray-300" };
+  }
+};
 // Static iframe HTML (similar to Tailwind Play)
 export const iframeHtml = `<!doctype html>
 <html>
