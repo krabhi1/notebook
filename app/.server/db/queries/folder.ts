@@ -14,7 +14,7 @@ export type FolderWithPages = Folder & {
 };
 export const FolderDAO = {
   getById: async (id: string): Promise<Folder | undefined> => {
-    const result = await db()
+    const result = await db
       .select()
       .from(folders)
       .where(and(eq(folders.id, id), eq(folders.isDeleted, false)));
@@ -22,7 +22,7 @@ export const FolderDAO = {
   },
 
   getByUser: async (userId: string): Promise<Folder[]> => {
-    return db()
+    return db
       .select()
       .from(folders)
       .where(and(eq(folders.userId, userId), eq(folders.isDeleted, false)))
@@ -30,7 +30,7 @@ export const FolderDAO = {
   },
 
   getByUserWithPages: async (userId: string): Promise<FolderWithPages[]> => {
-    const rows = await db()
+    const rows = await db
       .select({
         folder: folders,
         page: pages,
@@ -56,11 +56,11 @@ export const FolderDAO = {
   },
 
   getAll: async (): Promise<Folder[]> => {
-    return db().select().from(folders).where(eq(folders.isDeleted, false));
+    return db.select().from(folders).where(eq(folders.isDeleted, false));
   },
 
   create: async (data: NewFolder): Promise<Folder[]> => {
-    return db()
+    return db
       .insert(folders)
       .values({
         ...data,
@@ -72,7 +72,7 @@ export const FolderDAO = {
   },
 
   update: async (id: string, data: UpdateFolder): Promise<void> => {
-    await db()
+    await db
       .update(folders)
       .set({
         ...data,
@@ -82,7 +82,7 @@ export const FolderDAO = {
   },
 
   softDelete: async (id: string): Promise<void> => {
-    await db()
+    await db
       .update(folders)
       .set({
         isDeleted: true,
@@ -92,11 +92,11 @@ export const FolderDAO = {
   },
 
   hardDelete: async (id: string): Promise<void> => {
-    await db().delete(folders).where(eq(folders.id, id));
+    await db.delete(folders).where(eq(folders.id, id));
   },
 
   exists: async (id: string): Promise<boolean> => {
-    const result = await db()
+    const result = await db
       .select({ id: folders.id })
       .from(folders)
       .where(and(eq(folders.id, id), eq(folders.isDeleted, false)));
@@ -104,7 +104,7 @@ export const FolderDAO = {
   },
 
   belongsToUser: async (id: string, userId: string): Promise<boolean> => {
-    const result = await db()
+    const result = await db
       .select({ id: folders.id })
       .from(folders)
       .where(

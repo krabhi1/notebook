@@ -4,12 +4,12 @@ import { files, type File, type NewFile, type UpdateFile } from "../schema";
 
 export const FileDAO = {
   getById: async (id: string): Promise<File | undefined> => {
-    const result = await db().select().from(files).where(eq(files.id, id));
+    const result = await db.select().from(files).where(eq(files.id, id));
     return result[0];
   },
 
   getByPage: async (pageId: string): Promise<File[]> => {
-    return db()
+    return db
       .select()
       .from(files)
       .where(eq(files.pageId, pageId))
@@ -20,7 +20,7 @@ export const FileDAO = {
     pageId: string,
     name: string,
   ): Promise<File | undefined> => {
-    const result = await db()
+    const result = await db
       .select()
       .from(files)
       .where(and(eq(files.pageId, pageId), eq(files.name, name)));
@@ -28,7 +28,7 @@ export const FileDAO = {
   },
 
   getAll: async (): Promise<File[]> => {
-    return db().select().from(files).orderBy(files.updatedAt);
+    return db.select().from(files).orderBy(files.updatedAt);
   },
 
   create: async (data: {
@@ -37,7 +37,7 @@ export const FileDAO = {
     lang?: string;
     content?: string;
   }): Promise<File[]> => {
-    return db()
+    return db
       .insert(files)
       .values({
         ...data,
@@ -62,11 +62,11 @@ export const FileDAO = {
       updatedAt: new Date(),
     }));
 
-    return db().insert(files).values(filesToInsert).returning();
+    return db.insert(files).values(filesToInsert).returning();
   },
 
   update: async (id: string, data: UpdateFile): Promise<void> => {
-    await db()
+    await db
       .update(files)
       .set({
         ...data,
@@ -76,7 +76,7 @@ export const FileDAO = {
   },
 
   updateContent: async (id: string, content: string): Promise<void> => {
-    await db()
+    await db
       .update(files)
       .set({
         content,
@@ -86,20 +86,20 @@ export const FileDAO = {
   },
 
   delete: async (id: string): Promise<void> => {
-    await db().delete(files).where(eq(files.id, id));
+    await db.delete(files).where(eq(files.id, id));
   },
 
   deleteByPage: async (pageId: string): Promise<void> => {
-    await db().delete(files).where(eq(files.pageId, pageId));
+    await db.delete(files).where(eq(files.pageId, pageId));
   },
 
   deleteMany: async (ids: string[]): Promise<void> => {
     if (ids.length === 0) return;
-    await db().delete(files).where(inArray(files.id, ids));
+    await db.delete(files).where(inArray(files.id, ids));
   },
 
   exists: async (id: string): Promise<boolean> => {
-    const result = await db()
+    const result = await db
       .select({ id: files.id })
       .from(files)
       .where(eq(files.id, id));
@@ -107,7 +107,7 @@ export const FileDAO = {
   },
 
   existsByName: async (pageId: string, name: string): Promise<boolean> => {
-    const result = await db()
+    const result = await db
       .select({ id: files.id })
       .from(files)
       .where(and(eq(files.pageId, pageId), eq(files.name, name)));
@@ -115,7 +115,7 @@ export const FileDAO = {
   },
 
   belongsToPage: async (id: string, pageId: string): Promise<boolean> => {
-    const result = await db()
+    const result = await db
       .select({ id: files.id })
       .from(files)
       .where(and(eq(files.id, id), eq(files.pageId, pageId)));
@@ -123,7 +123,7 @@ export const FileDAO = {
   },
 
   getByLanguage: async (lang: string): Promise<File[]> => {
-    return db()
+    return db
       .select()
       .from(files)
       .where(eq(files.lang, lang))
@@ -131,7 +131,7 @@ export const FileDAO = {
   },
 
   countByPage: async (pageId: string): Promise<number> => {
-    const result = await db()
+    const result = await db
       .select({ count: count() })
       .from(files)
       .where(eq(files.pageId, pageId));

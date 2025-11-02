@@ -1,6 +1,5 @@
 import { createRequestHandler } from "react-router";
-import { drizzle } from "drizzle-orm/libsql";
-import { type Db, setDb } from "~/.server/db";
+import { setEnv } from "~/.server/env";
 
 declare module "react-router" {
   export interface AppLoadContext {
@@ -8,7 +7,6 @@ declare module "react-router" {
       env: Env;
       ctx: ExecutionContext;
     };
-    db: Db;
   }
 }
 
@@ -19,16 +17,10 @@ const requestHandler = createRequestHandler(
 
 export default {
   async fetch(request, env, ctx) {
-    const _db = drizzle({
-      connection: {
-        url: env.TURSO_CONNECTION_URL!,
-        authToken: env.TURSO_AUTH_TOKEN!,
-      },
-    });
-    setDb(_db);
+    console.log("--fetch", request.method, request.url);
+    setEnv(env);
     return requestHandler(request, {
       cloudflare: { env, ctx },
-      db: _db,
     });
   },
 } satisfies ExportedHandler<Env>;

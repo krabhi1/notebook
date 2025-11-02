@@ -2,7 +2,7 @@ import { sqliteTable, text, integer, index } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
-
+import { users } from "../auth/schema";
 const timestamps = {
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .notNull()
@@ -13,15 +13,6 @@ const timestamps = {
 };
 
 const isDeleted = integer("is_deleted", { mode: "boolean" }).default(false);
-
-export const users = sqliteTable("user", {
-  id: text("id").primaryKey().notNull(),
-  email: text("email").notNull().unique(),
-  name: text("name").notNull(),
-  imageUrl: text("image_url"),
-  onBoarded: integer("onboarded", { mode: "boolean" }).default(false),
-  ...timestamps,
-});
 
 export const folders = sqliteTable(
   "folder",
@@ -83,7 +74,7 @@ export const files = sqliteTable(
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
-export type UpdateUser = Partial<Pick<User, "name" | "imageUrl" | "onBoarded">>;
+export type UpdateUser = Partial<Pick<User, "name">>;
 
 export type Folder = typeof folders.$inferSelect;
 export type NewFolder = typeof folders.$inferInsert;
@@ -105,7 +96,7 @@ export type PageMeta = Pick<
 >;
 
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const userRelations = relations(users, ({ many }) => ({
   folders: many(folders),
 }));
 
@@ -131,3 +122,5 @@ export const filesRelations = relations(files, ({ one }) => ({
     references: [pages.id],
   }),
 }));
+
+export * from "../auth/schema";

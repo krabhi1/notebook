@@ -14,7 +14,7 @@ export type PageWithFiles = Page & {
 };
 export const PageDAO = {
   getById: async (id: string): Promise<Page | undefined> => {
-    const result = await db()
+    const result = await db
       .select()
       .from(pages)
       .where(and(eq(pages.id, id), eq(pages.isDeleted, false)));
@@ -26,7 +26,7 @@ export const PageDAO = {
     if (!page) {
       throw new Error("Page not found");
     }
-    const filesList = await db()
+    const filesList = await db
       .select()
       .from(files)
       .where(eq(files.pageId, id))
@@ -38,7 +38,7 @@ export const PageDAO = {
   },
 
   getByFolder: async (folderId: string): Promise<Page[]> => {
-    return db()
+    return db
       .select()
       .from(pages)
       .where(and(eq(pages.folderId, folderId), eq(pages.isDeleted, false)))
@@ -46,7 +46,7 @@ export const PageDAO = {
   },
 
   getByFolderWithFiles: async (folderId: string) => {
-    // return db().query.pages.findMany({
+    // return db.query.pages.findMany({
     //   where: and(eq(pages.folderId, folderId), eq(pages.isDeleted, false)),
     //   with: {
     //     files: {
@@ -58,7 +58,7 @@ export const PageDAO = {
   },
 
   getAll: async (): Promise<Page[]> => {
-    return db().select().from(pages).where(eq(pages.isDeleted, false));
+    return db.select().from(pages).where(eq(pages.isDeleted, false));
   },
 
   create: async (data: {
@@ -66,7 +66,7 @@ export const PageDAO = {
     name: string;
     type: "code" | "web" | "mermaid" | "database" | "editorjs" | "circuit";
   }): Promise<Page[]> => {
-    return db()
+    return db
       .insert(pages)
       .values({
         id: nanoid(),
@@ -79,7 +79,7 @@ export const PageDAO = {
   },
 
   update: async (id: string, data: UpdatePage): Promise<void> => {
-    await db()
+    await db
       .update(pages)
       .set({
         ...data,
@@ -89,7 +89,7 @@ export const PageDAO = {
   },
 
   softDelete: async (id: string): Promise<void> => {
-    await db()
+    await db
       .update(pages)
       .set({
         isDeleted: true,
@@ -99,11 +99,11 @@ export const PageDAO = {
   },
 
   hardDelete: async (id: string): Promise<void> => {
-    await db().delete(pages).where(eq(pages.id, id));
+    await db.delete(pages).where(eq(pages.id, id));
   },
 
   exists: async (id: string): Promise<boolean> => {
-    const result = await db()
+    const result = await db
       .select({ id: pages.id })
       .from(pages)
       .where(and(eq(pages.id, id), eq(pages.isDeleted, false)));
@@ -111,7 +111,7 @@ export const PageDAO = {
   },
 
   belongsToFolder: async (id: string, folderId: string): Promise<boolean> => {
-    const result = await db()
+    const result = await db
       .select({ id: pages.id })
       .from(pages)
       .where(
@@ -127,7 +127,7 @@ export const PageDAO = {
   getByType: async (
     type: "code" | "web" | "mermaid" | "database" | "editorjs" | "circuit",
   ): Promise<Page[]> => {
-    return db()
+    return db
       .select()
       .from(pages)
       .where(and(eq(pages.type, type), eq(pages.isDeleted, false)))

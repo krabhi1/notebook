@@ -12,16 +12,15 @@ import type {
   UpdatePage,
 } from "./schema";
 import { users, folders, pages } from "./schema";
-
 // ==============
 // USER
 // ==============
 export async function createUser(data: NewUser): Promise<User> {
-  const [user] = await db().insert(users).values(data).returning();
+  const [user] = await db.insert(users).values(data).returning();
   return user;
 }
 export async function getUser(id: string): Promise<User | null> {
-  const user = await db()
+  const user = await db
     .select()
     .from(users)
     .where(eq(users.id, id))
@@ -30,7 +29,7 @@ export async function getUser(id: string): Promise<User | null> {
   return user || null;
 }
 export async function updateUser(id: string, data: UpdateUser): Promise<User> {
-  const [user] = await db()
+  const [user] = await db
     .update(users)
     .set(data)
     .where(eq(users.id, id))
@@ -45,14 +44,14 @@ export async function createFolder(
   userId: string,
   name: string,
 ): Promise<Folder> {
-  const [folder] = await db()
+  const [folder] = await db
     .insert(folders)
     .values({ userId, name, createdAt: new Date() })
     .returning();
   return folder;
 }
 export async function getFolders(userId: string): Promise<Folder[]> {
-  const folderList = await db()
+  const folderList = await db
     .select()
     .from(folders)
     .where(and(eq(folders.userId, userId), eq(folders.isDeleted, false)))
@@ -63,7 +62,7 @@ export async function getFolder(
   folderId: string,
   userId: string,
 ): Promise<Folder | null> {
-  const folder = await db()
+  const folder = await db
     .select()
     .from(folders)
     .where(
@@ -82,7 +81,7 @@ export async function updateFolder(
   userId: string,
   data: UpdateFolder,
 ): Promise<Folder> {
-  const [folder] = await db()
+  const [folder] = await db
     .update(folders)
     .set(data)
     .where(and(eq(folders.id, folderId), eq(folders.userId, userId)))
@@ -94,7 +93,7 @@ export async function deleteFolder(
   userId: string,
 ): Promise<void> {
   // soft-delete
-  await db()
+  await db
     .update(folders)
     .set({ isDeleted: true })
     .where(and(eq(folders.id, folderId), eq(folders.userId, userId)));
@@ -107,7 +106,7 @@ export async function createPage(
   folderId: string,
   data: NewPage,
 ): Promise<Page> {
-  const [page] = await db()
+  const [page] = await db
     .insert(pages)
     .values({
       ...data,
@@ -119,7 +118,7 @@ export async function createPage(
   return page;
 }
 export async function getPages(folderId: string): Promise<PageMeta[]> {
-  const pageList = await db()
+  const pageList = await db
     .select({
       id: pages.id,
       name: pages.name,
@@ -134,7 +133,7 @@ export async function getPages(folderId: string): Promise<PageMeta[]> {
   return pageList;
 } // meta only
 export async function getPage(pageId: string): Promise<Page | null> {
-  const page = await db()
+  const page = await db
     .select()
     .from(pages)
     .where(and(eq(pages.id, pageId), eq(pages.isDeleted, false)))
@@ -146,36 +145,33 @@ export async function updatePage(
   pageId: string,
   data: UpdatePage,
 ): Promise<void> {
-  await db()
+  await db
     .update(pages)
     .set({ ...data, updatedAt: new Date() })
     .where(eq(pages.id, pageId));
 }
 export async function deletePage(pageId: string): Promise<void> {
   // soft-delete
-  await db().update(pages).set({ isDeleted: true }).where(eq(pages.id, pageId));
+  await db.update(pages).set({ isDeleted: true }).where(eq(pages.id, pageId));
 }
 
 // ==============
 // TRASH (restore)
 // ==============
 export async function restorePage(pageId: string): Promise<void> {
-  await db()
-    .update(pages)
-    .set({ isDeleted: false })
-    .where(eq(pages.id, pageId));
+  await db.update(pages).set({ isDeleted: false }).where(eq(pages.id, pageId));
 }
 export async function restoreFolder(
   folderId: string,
   userId: string,
 ): Promise<void> {
-  await db()
+  await db
     .update(folders)
     .set({ isDeleted: false })
     .where(and(eq(folders.id, folderId), eq(folders.userId, userId)));
 }
 export async function getDeletedPages(): Promise<PageMeta[]> {
-  return db()
+  return db
     .select({
       id: pages.id,
       name: pages.name,
