@@ -64,8 +64,6 @@ export function useConsoleLogs() {
   return { logs, clear };
 }
 
-// hooks/useEditor.ts
-
 export function useEditor(page: PageWithFiles, onUpdatePreview: () => void) {
   const editorInstance = useRef<MonacoEditorInstance | null>(null);
   const [activeTab, setActiveTab] = useState<EditorTab>("html");

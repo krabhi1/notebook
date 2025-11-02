@@ -6,8 +6,10 @@ import type { Route } from "../app/+types/route";
 import { FolderService } from "~/.server/services/folderService";
 import { PageService } from "~/.server/services/pageService";
 import type { Page } from "~/.server/db/schema";
+import { FileService } from "~/.server/services/fileService";
 const userId = "abhi";
 export async function loader({ request }: Route.LoaderArgs) {
+  console.log("Loader called for /app route");
   const folders = await FolderService.getFoldersWithPages(userId);
   return { folders };
 }
@@ -42,6 +44,18 @@ export async function action({ request }: Route.ActionArgs) {
       name,
       type as Page["type"],
     );
+  }
+  // save File
+  if (action === "saveFile") {
+    const fileId = formData.get("fileId") as string;
+    const content = formData.get("content") as string;
+    if (typeof fileId !== "string" || fileId.trim() === "") {
+      throw new Error("File ID is required");
+    }
+    if (typeof content !== "string") {
+      throw new Error("Content is required");
+    }
+    await FileService.updateFileContent(fileId, content);
   }
   return null;
 }
