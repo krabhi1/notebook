@@ -37,13 +37,13 @@ export default function FolderList({ folders }: FolderListProps) {
       return newSet;
     });
   };
-  const createPage = (folderId: string) => {
+  const createPage = (folderId: string, type: string) => {
     const pageName = new Date().toLocaleTimeString();
     const formData = new FormData();
     formData.append("action", "createPage");
-    formData.append("name", pageName);
+    formData.append("name", type + "-" + pageName);
     formData.append("folderId", folderId);
-    formData.append("type", "web");
+    formData.append("type", type);
     createPageFetch.submit(formData, { method: "post" });
   };
 
@@ -74,16 +74,43 @@ export default function FolderList({ folders }: FolderListProps) {
                 <span className="truncate text-sm">{folder.name}</span>
               </div>
               <div className="flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    createPage(folder.id);
-                  }}
-                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-                  title="New page in folder"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                      title="New page in folder"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <DropdownMenuItem
+                      onClick={() => createPage(folder.id, "web")}
+                    >
+                      Web
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => createPage(folder.id, "code")}
+                    >
+                      Code
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => createPage(folder.id, "mermaid")}
+                    >
+                      Mermaid
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => createPage(folder.id, "database")}
+                    >
+                      Database
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
