@@ -1,5 +1,47 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { PageWithFiles } from "~/.server/db/queries/page";
+import { debounce } from "./utils";
+import type { File } from "~/.server/db/schema";
+import { useFetcher } from "react-router";
+export function useFile(file: File) {
+  const [value, setValue] = useState(file.content);
+  const [updatedAt, setUpdatedAt] = useState<Date>(file.updatedAt);
+  const fetcher = useFetcher();
+  const path = `${file.pageId}/${file.id}`;
+
+  // Debounced cloud save
+  const saveToCloud = useCallback(
+    debounce(async (content: string) => {
+      try {
+        const formData = new FormData();
+        formData.append("action", "saveFile");
+        formData.append("content", content);
+        formData.append("fileId", file.id);
+        await fetcher.submit(formData, { method: "post" });
+        setUpdatedAt(new Date());
+      } catch (error) {
+        //TODO: show toast
+        console.error("Failed to save to cloud:", error);
+      }
+    }, 1000),
+    [file.id, fetcher],
+  );
+
+  const updateValue = useCallback(
+    (newValue: string) => {
+      setValue(newValue);
+      saveToCloud(newValue);
+    },
+    [saveToCloud],
+  );
+
+  return {
+    value,
+    updateValue,
+    isSaving: fetcher.state === "submitting",
+    path,
+  };
+}
 
 export function useFiles<T extends string>(
   page: PageWithFiles,

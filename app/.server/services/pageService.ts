@@ -86,6 +86,18 @@ export const PageService = {
         lang: "javascript",
         content: defaultJsContent,
       });
+      await FileDAO.create({
+        pageId: page.id,
+        name: "main.html",
+        lang: "html",
+        content: "<!-- HTML File -->",
+      });
+      await FileDAO.create({
+        pageId: page.id,
+        name: "main.css",
+        lang: "css",
+        content: "/* CSS File */",
+      });
     } else if (type === "mermaid") {
       await FileDAO.create({
         pageId: page.id,
