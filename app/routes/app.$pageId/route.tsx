@@ -1,26 +1,27 @@
-import { PageService } from "~/.server/services/pageService";
 import type { Route } from "../app.$pageId/+types/route";
 import WebPage from "./web/WebPage";
 import { useEffect } from "react";
-import type { PageWithFiles } from "~/.server/db/queries/page";
-import CodePage from "./code/CodePage";
 import CodePageV2 from "./code/CodePageV2";
-import { FileService } from "~/.server/services/fileService";
 import type { ShouldRevalidateFunction } from "react-router";
+import type { PageWithFiles } from "~/.server/repos/pageRepository";
 export async function loader({
-  request,
   params: { pageId },
+  context: { services },
 }: Route.LoaderArgs) {
   console.log("Loader called for /app/:pageId route with pageId:", pageId);
-  const page = await PageService.getPageWithFiles(pageId);
+  const page = await services.pageService.getPageWithFiles(pageId);
   if (!page) {
     throw new Response("Page Not Found", { status: 404 });
   }
   return { page };
 }
-export async function action({ request }: Route.ActionArgs) {
+export async function action({
+  request,
+  context: { services },
+}: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
+  const fileService = services.fileService;
 
   if (intent === "save-file") {
     const fileId = formData.get("fileId") as string;
@@ -43,7 +44,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     try {
-      const updatedFile = await FileService.updateFileContentWithVersion(
+      const updatedFile = await fileService.updateFileContentWithVersion(
         fileId,
         content,
         expectedVersion,
@@ -58,30 +59,30 @@ export async function action({ request }: Route.ActionArgs) {
         },
       };
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message.includes("Conflict detected")
-      ) {
-        // Get detailed conflict information
-        const conflictInfo = await FileService.getConflictInfo(
-          fileId,
-          expectedVersion,
-        );
+      // if (
+      //   error instanceof Error &&
+      //   error.message.includes("Conflict detected")
+      // ) {
+      //   // Get detailed conflict information
+      //   const conflictInfo = await fileService.getConflictInfo(
+      //     fileId,
+      //     expectedVersion,
+      //   );
 
-        return {
-          ok: false,
-          error:
-            "Conflict detected. The file has been updated by another source.",
-          conflictInfo: {
-            expectedVersion: conflictInfo.expectedVersion,
-            currentVersion: conflictInfo.currentVersion,
-            currentContent: conflictInfo.currentFile?.content,
-            hasConflict: conflictInfo.hasConflict,
-            lastModified: conflictInfo.currentFile?.updatedAt,
-          },
-          revalidate: true,
-        };
-      }
+      //   return {
+      //     ok: false,
+      //     error:
+      //       "Conflict detected. The file has been updated by another source.",
+      //     conflictInfo: {
+      //       expectedVersion: conflictInfo.expectedVersion,
+      //       currentVersion: conflictInfo.currentVersion,
+      //       currentContent: conflictInfo.currentFile?.content,
+      //       hasConflict: conflictInfo.hasConflict,
+      //       lastModified: conflictInfo.currentFile?.updatedAt,
+      //     },
+      //     revalidate: true,
+      //   };
+      // }
       throw error;
     }
   }
@@ -110,34 +111,33 @@ export async function action({ request }: Route.ActionArgs) {
       throw new Error("Invalid version number");
     }
 
-    try {
-      const updatedFile =
-        await FileService.updateFileContentWithConflictResolution(
-          fileId,
-          content,
-          expectedVersion,
-          resolution as "force-overwrite" | "merge-attempt",
-        );
+    //   try {
+    //     const updatedFile =
+    //       await fileService.updateFileContentWithConflictResolution(
+    //         fileId,
+    //         content,
+    //         expectedVersion,
+    //         resolution as "force-overwrite" | "merge-attempt",
+    //       );
 
-      return {
-        ok: true,
-        resolved: true,
-        savedFile: {
-          id: fileId,
-          content: updatedFile.content,
-          version: updatedFile.version,
-        },
-        resolutionStrategy: resolution,
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error:
-          error instanceof Error ? error.message : "Failed to resolve conflict",
-      };
-    }
+    //     return {
+    //       ok: true,
+    //       resolved: true,
+    //       savedFile: {
+    //         id: fileId,
+    //         content: updatedFile.content,
+    //         version: updatedFile.version,
+    //       },
+    //       resolutionStrategy: resolution,
+    //     };
+    //   } catch (error) {
+    //     return {
+    //       ok: false,
+    //       error:
+    //         error instanceof Error ? error.message : "Failed to resolve conflict",
+    //     };
+    //   }
   }
-
   // Legacy support for old saveFile action
   if (formData.get("action") === "saveFile") {
     const fileId = formData.get("fileId") as string;
@@ -148,7 +148,7 @@ export async function action({ request }: Route.ActionArgs) {
     if (typeof content !== "string") {
       throw new Error("Content is required");
     }
-    await FileService.updateFileContent(fileId, content);
+    await fileService.updateFileContent(fileId, content);
   }
 
   return null;

@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 config({ path: ".dev.vars" });
-
+console.log("hello abhi");
 export default defineConfig({
   schema: "./app/.server/db/schema.ts",
   out: "./migrations",

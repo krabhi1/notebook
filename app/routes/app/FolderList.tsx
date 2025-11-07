@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { FolderWithPages } from "~/.server/db/queries/folder";
+
 import {
   ChevronRight,
   FolderOpen,
@@ -15,6 +15,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import PageList from "./PageList";
 import { useFetcher } from "react-router";
+import type { FolderWithPages } from "~/.server/repos/folderRepository";
 
 interface FolderListProps {
   folders: FolderWithPages[];

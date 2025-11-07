@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
-import type { PageWithFiles } from "~/.server/db/queries/page";
 import { debounce } from "./utils";
 import type { File } from "~/.server/db/schema";
 import { useFetcher } from "react-router";
+import type { PageWithFiles } from "~/.server/repos/pageRepository";
 export function useFile(file: File) {
   const [value, setValue] = useState(file.content);
   const [updatedAt, setUpdatedAt] = useState<Date>(file.updatedAt);

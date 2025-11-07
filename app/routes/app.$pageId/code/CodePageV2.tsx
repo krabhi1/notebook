@@ -1,6 +1,5 @@
 import { useState, useReducer, useEffect } from "react";
 import { useFetcher, useRevalidator } from "react-router";
-import type { PageWithFiles } from "~/.server/db/queries/page";
 import type { File } from "~/.server/db/schema";
 import { Editor } from "~/components/Editor";
 import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
@@ -13,6 +12,7 @@ import {
   ConflictResolutionDialog,
   type ConflictInfo,
 } from "~/components/ConflictResolutionDialog";
+import type { PageWithFiles } from "~/.server/repos/pageRepository";
 
 // Types for draft state management
 type DraftAction =

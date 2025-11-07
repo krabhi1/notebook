@@ -9,8 +9,8 @@ import ConsolePanel from "./ConsolePanel";
 import EditorTabBar from "./EditorTabBar";
 import PreviewPanel from "./PreviewPanel";
 import CodeEditor from "~/components/CodeEditor";
-import type { PageWithFiles } from "~/.server/db/queries/page";
 import { useConsoleLogs, useEditor, usePreview } from "./hooks";
+import type { PageWithFiles } from "~/.server/repos/pageRepository";
 type WebPageProps = {
   page: PageWithFiles;
 };

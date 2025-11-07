@@ -1,8 +1,8 @@
 import { getDb } from "./db";
 import { ServiceLocator } from "./services";
-import { auth } from "./auth";
 import { RepositoryLocator } from "./repos";
-import type { AppLoadContext } from "react-router";
+import { type AppLoadContext } from "react-router";
+import { createAuth } from "./auth";
 
 export interface AppServices {
   fileService: ServiceLocator["fileService"];
@@ -11,32 +11,18 @@ export interface AppServices {
   userService: ServiceLocator["userService"];
 }
 
-export function createAppContext(
+export async function createAppContext(
   env: Env,
   ctx: ExecutionContext,
-): AppLoadContext {
+): Promise<AppLoadContext> {
+  const appContext = { cloudflare: { env, ctx } } as AppLoadContext;
   const db = getDb({
     turso: {
       url: env.TURSO_CONNECTION_URL,
       authToken: env.TURSO_AUTH_TOKEN,
     },
   });
-  const repositoryLocator = new RepositoryLocator(db);
-  const serviceLocator = new ServiceLocator(repositoryLocator);
-
-  const services: AppServices = {
-    fileService: serviceLocator.fileService,
-    folderService: serviceLocator.folderService,
-    pageService: serviceLocator.pageService,
-    userService: serviceLocator.userService,
-  };
-
-  return {
-    db,
-    services,
-    auth,
-    session: {},
-    user: {},
-    cloudflare: { env, ctx },
-  } as unknown as AppLoadContext;
+  appContext.auth = createAuth(db, env);
+  appContext.services = new ServiceLocator(new RepositoryLocator(db));
+  return appContext;
 }

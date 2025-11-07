@@ -36,7 +36,7 @@ export function useRetry<T extends (...args: any[]) => Promise<any>>(
     canRetry: true,
   });
 
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   const calculateDelay = useCallback(
     (attempt: number): number => {

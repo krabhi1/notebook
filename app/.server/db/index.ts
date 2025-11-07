@@ -1,13 +1,13 @@
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
 
-interface GetDbParams {
+export type GetDbParams = {
   filePath?: string;
   turso?: {
     url: string;
     authToken: string;
   };
-}
+};
 
 export type DrizzleClient = ReturnType<typeof drizzle<typeof schema>>;
 

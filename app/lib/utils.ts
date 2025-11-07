@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { PageWithFiles } from "~/.server/db/queries/page";
+import type { PageWithFiles } from "~/.server/repos/pageRepository";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

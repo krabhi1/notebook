@@ -5,7 +5,7 @@ export function useThrottle<T extends (...args: any[]) => any>(
   delay: number,
 ): T {
   const lastCall = useRef<number>(0);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   const throttledCallback = useCallback(
     (...args: Parameters<T>) => {
@@ -41,7 +41,7 @@ export function useThrottle<T extends (...args: any[]) => any>(
 export function useThrottleValue<T>(value: T, delay: number): T {
   const [throttledValue, setThrottledValue] = useState(value);
   const lastUpdate = useRef<number>(0);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const now = Date.now();

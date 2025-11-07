@@ -1,5 +1,5 @@
-import type { PageWithFiles } from "~/.server/db/queries/page";
 import type { File } from "~/.server/db/schema";
+import type { PageWithFiles } from "~/.server/repos/pageRepository";
 import CodeEditor from "~/components/CodeEditor";
 import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";

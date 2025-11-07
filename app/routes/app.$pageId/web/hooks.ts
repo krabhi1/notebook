@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ConsoleLog, EditorTab } from "./utils";
 import type { OnMount, Monaco } from "@monaco-editor/react";
-import type { PageWithFiles } from "~/.server/db/queries/page";
 import type { MonacoEditorInstance } from "~/components/CodeEditor";
 import { debounce, getFiles } from "~/lib/utils";
+import type { PageWithFiles } from "~/.server/repos/pageRepository";
 
 export function useConsoleLogs() {
   const [logs, setLogs] = useState<ConsoleLog[]>([]);
