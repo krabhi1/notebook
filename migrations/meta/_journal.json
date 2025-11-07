@@ -36,6 +36,13 @@
       "when": 1762095781912,
       "tag": "0004_cold_ender_wiggin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1762527397695,
+      "tag": "0005_cool_anthem",
+      "breakpoints": true
     }
   ]
 }

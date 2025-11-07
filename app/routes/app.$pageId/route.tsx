@@ -4,6 +4,7 @@ import WebPage from "./web/WebPage";
 import { useEffect } from "react";
 import type { PageWithFiles } from "~/.server/db/queries/page";
 import CodePage from "./code/CodePage";
+import CodePageV2 from "./code/CodePageV2";
 import { FileService } from "~/.server/services/fileService";
 import type { ShouldRevalidateFunction } from "react-router";
 export async function loader({
@@ -19,9 +20,61 @@ export async function loader({
 }
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const action = formData.get("action");
+  const intent = formData.get("intent");
 
-  if (action === "saveFile") {
+  if (intent === "save-file") {
+    const fileId = formData.get("fileId") as string;
+    const content = formData.get("content") as string;
+    const version = formData.get("version") as string;
+
+    if (typeof fileId !== "string" || fileId.trim() === "") {
+      throw new Error("File ID is required");
+    }
+    if (typeof content !== "string") {
+      throw new Error("Content is required");
+    }
+    if (typeof version !== "string") {
+      throw new Error("Version is required");
+    }
+
+    const expectedVersion = parseInt(version, 10);
+    if (isNaN(expectedVersion)) {
+      throw new Error("Invalid version number");
+    }
+
+    try {
+      const updatedFile = await FileService.updateFileContentWithVersion(
+        fileId,
+        content,
+        expectedVersion,
+      );
+
+      return {
+        ok: true,
+        savedFile: {
+          id: fileId,
+          content: updatedFile.content,
+          version: updatedFile.version,
+        },
+      };
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.includes("Conflict detected")
+      ) {
+        return {
+          ok: false,
+          error:
+            "Conflict detected. The file has been updated by another source.",
+          revalidate: true,
+        };
+      }
+      throw error;
+    }
+  }
+
+  // Legacy support for old saveFile action
+  if (formData.get("action") === "saveFile") {
     const fileId = formData.get("fileId") as string;
     const content = formData.get("content") as string;
     if (typeof fileId !== "string" || fileId.trim() === "") {
@@ -32,6 +85,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
     await FileService.updateFileContent(fileId, content);
   }
+
   return null;
 }
 export const shouldRevalidate: ShouldRevalidateFunction = ({ formData }) => {
@@ -58,7 +112,7 @@ function PageView({ page }: { page: PageWithFiles }) {
     return <WebPage page={page} />;
   }
   if (page.type == "code") {
-    return <CodePage page={page} />;
+    return <CodePageV2 page={page} />;
   }
   return <div>Unsupported page type: {page.type}</div>;
 }

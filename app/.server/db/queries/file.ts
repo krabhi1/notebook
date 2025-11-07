@@ -85,6 +85,28 @@ export const FileDAO = {
       .where(eq(files.id, id));
   },
 
+  updateContentWithVersion: async (
+    id: string,
+    content: string,
+    expectedVersion: number,
+  ): Promise<File> => {
+    const result = await db
+      .update(files)
+      .set({
+        content,
+        version: expectedVersion + 1,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(files.id, id), eq(files.version, expectedVersion)))
+      .returning();
+
+    if (result.length === 0) {
+      throw new Error("Version conflict or file not found");
+    }
+
+    return result[0];
+  },
+
   delete: async (id: string): Promise<void> => {
     await db.delete(files).where(eq(files.id, id));
   },

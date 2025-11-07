@@ -189,6 +189,49 @@ export const FileService = {
     await FileDAO.updateContent(id, content);
   },
 
+  updateFileContentWithVersion: async (
+    id: string,
+    content: string,
+    expectedVersion: number,
+    userId?: string,
+  ): Promise<File> => {
+    const file = await FileDAO.getById(id);
+    if (!file) {
+      throw new Error(`File with id ${id} not found`);
+    }
+
+    // If userId provided, validate access through page/folder ownership
+    if (userId) {
+      const page = await PageDAO.getById(file.pageId);
+      if (!page) {
+        throw new Error(`Associated page not found`);
+      }
+
+      const folder = await FolderDAO.getById(page.folderId);
+      if (!folder || folder.userId !== userId) {
+        throw new Error(`Unauthorized: File does not belong to user ${userId}`);
+      }
+    }
+
+    try {
+      return await FileDAO.updateContentWithVersion(
+        id,
+        content,
+        expectedVersion,
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === "Version conflict or file not found"
+      ) {
+        throw new Error(
+          "Conflict detected. The file has been updated by another source.",
+        );
+      }
+      throw error;
+    }
+  },
+
   deleteFile: async (id: string, userId?: string): Promise<void> => {
     const file = await FileDAO.getById(id);
     if (!file) {

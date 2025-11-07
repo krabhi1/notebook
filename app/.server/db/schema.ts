@@ -65,6 +65,7 @@ export const files = sqliteTable(
     name: text("name").notNull(),
     lang: text("lang").notNull().default("plaintext"),
     content: text("content").notNull().default(""),
+    version: integer("version").notNull().default(1),
     ...timestamps,
   },
   (table) => ({
@@ -87,7 +88,7 @@ export type UpdatePage = Partial<Pick<Page, "name" | "type" | "folderId">>;
 export type File = typeof files.$inferSelect;
 export type NewFile = typeof files.$inferInsert;
 export type UpdateFile = Partial<
-  Pick<File, "name" | "lang" | "content" | "pageId">
+  Pick<File, "name" | "lang" | "content" | "pageId" | "version">
 >;
 
 export type PageMeta = Pick<
