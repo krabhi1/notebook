@@ -79,7 +79,7 @@ export type UpdateUser = Partial<Pick<User, "name">>;
 
 export type Folder = typeof folders.$inferSelect;
 export type NewFolder = typeof folders.$inferInsert;
-export type UpdateFolder = Partial<Pick<Folder, "name">>;
+export type UpdateFolder = Partial<Pick<Folder, "name" | "isDeleted">>;
 
 export type Page = typeof pages.$inferSelect;
 export type NewPage = typeof pages.$inferInsert;

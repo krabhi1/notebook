@@ -1,19 +1,19 @@
 import { Outlet } from "react-router";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import FolderList from "~/routes/app/FolderList";
 import { useFetcher } from "react-router";
 import type { Route } from "../app/+types/route";
-import { FolderService } from "~/.server/services/folderService";
-import { PageService } from "~/.server/services/pageService";
 import type { Page } from "~/.server/db/schema";
-import { FileService } from "~/.server/services/fileService";
 const userId = "hQHg8eOjyiRYcEfJhJrLMReJmFQEaWrk";
-export async function loader({ request }: Route.LoaderArgs) {
+export async function loader({ context: { services } }: Route.LoaderArgs) {
   console.log("Loader called for /app route");
-  const folders = await FolderService.getFoldersWithPages(userId);
+  const folders = await services.folderService.getFoldersWithPages(userId);
   return { folders };
 }
-export async function action({ request }: Route.ActionArgs) {
+export async function action({
+  request,
+  context: { services },
+}: Route.ActionArgs) {
   const formData = await request.formData();
   const action = formData.get("action");
   if (action === "createFolder") {
@@ -21,7 +21,7 @@ export async function action({ request }: Route.ActionArgs) {
     if (typeof name !== "string" || name.trim() === "") {
       throw new Error("Folder name is required");
     }
-    await FolderService.createFolder({
+    await services.folderService.createFolder({
       userId,
       name: name.trim(),
     });
@@ -39,7 +39,7 @@ export async function action({ request }: Route.ActionArgs) {
     if (typeof type !== "string" || type.trim() === "") {
       throw new Error("Page type is required");
     }
-    await PageService.createPageWithDefaultFiles(
+    await services.pageService.createPageWithDefaultFiles(
       folderId,
       name,
       type as Page["type"],
@@ -55,7 +55,7 @@ export async function action({ request }: Route.ActionArgs) {
     if (typeof content !== "string") {
       throw new Error("Content is required");
     }
-    await FileService.updateFileContent(fileId, content);
+    await services.fileService.updateFileContent(fileId, content);
   }
   return null;
 }

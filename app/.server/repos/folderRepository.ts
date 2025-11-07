@@ -1,5 +1,5 @@
 import { eq, and } from "drizzle-orm";
-import { db } from "../index";
+import type { DrizzleClient } from "../db";
 import {
   folders,
   pages,
@@ -7,34 +7,34 @@ import {
   type NewFolder,
   type UpdateFolder,
   type Page,
-} from "../schema";
+} from "~/.server/db/schema";
 
 export type FolderWithPages = Folder & {
   pages: Page[];
 };
-export const FolderDAO = {
-  getById: async (id: string): Promise<Folder | undefined> => {
-    const result = await db
+
+export class FolderRepository {
+  constructor(private db: DrizzleClient) {}
+
+  async getById(id: string): Promise<Folder | undefined> {
+    const result = await this.db
       .select()
       .from(folders)
       .where(and(eq(folders.id, id), eq(folders.isDeleted, false)));
     return result[0];
-  },
+  }
 
-  getByUser: async (userId: string): Promise<Folder[]> => {
-    return db
+  async getByUser(userId: string): Promise<Folder[]> {
+    return this.db
       .select()
       .from(folders)
       .where(and(eq(folders.userId, userId), eq(folders.isDeleted, false)))
       .orderBy(folders.updatedAt);
-  },
+  }
 
-  getByUserWithPages: async (userId: string): Promise<FolderWithPages[]> => {
-    const rows = await db
-      .select({
-        folder: folders,
-        page: pages,
-      })
+  async getByUserWithPages(userId: string): Promise<FolderWithPages[]> {
+    const rows = await this.db
+      .select()
       .from(folders)
       .leftJoin(pages, eq(pages.folderId, folders.id))
       .where(and(eq(folders.userId, userId), eq(folders.isDeleted, false)));
@@ -53,14 +53,18 @@ export const FolderDAO = {
     });
 
     return Array.from(foldersMap.values());
-  },
+  }
 
-  getAll: async (): Promise<Folder[]> => {
-    return db.select().from(folders).where(eq(folders.isDeleted, false));
-  },
+  async getAll(): Promise<Folder[]> {
+    return this.db
+      .select()
+      .from(folders)
+      .where(eq(folders.isDeleted, false))
+      .orderBy(folders.createdAt);
+  }
 
-  create: async (data: NewFolder): Promise<Folder[]> => {
-    return db
+  async create(data: NewFolder): Promise<Folder[]> {
+    return this.db
       .insert(folders)
       .values({
         ...data,
@@ -69,43 +73,43 @@ export const FolderDAO = {
         updatedAt: new Date(),
       })
       .returning();
-  },
+  }
 
-  update: async (id: string, data: UpdateFolder): Promise<void> => {
-    await db
+  async update(id: string, data: UpdateFolder): Promise<void> {
+    await this.db
       .update(folders)
       .set({
         ...data,
         updatedAt: new Date(),
       })
       .where(eq(folders.id, id));
-  },
+  }
 
-  softDelete: async (id: string): Promise<void> => {
-    await db
+  async softDelete(id: string): Promise<void> {
+    await this.db
       .update(folders)
       .set({
         isDeleted: true,
         updatedAt: new Date(),
       })
       .where(eq(folders.id, id));
-  },
+  }
 
-  hardDelete: async (id: string): Promise<void> => {
-    await db.delete(folders).where(eq(folders.id, id));
-  },
+  async hardDelete(id: string): Promise<void> {
+    await this.db.delete(folders).where(eq(folders.id, id));
+  }
 
-  exists: async (id: string): Promise<boolean> => {
-    const result = await db
-      .select({ id: folders.id })
+  async exists(id: string): Promise<boolean> {
+    const result = await this.db
+      .select()
       .from(folders)
       .where(and(eq(folders.id, id), eq(folders.isDeleted, false)));
     return result.length > 0;
-  },
+  }
 
-  belongsToUser: async (id: string, userId: string): Promise<boolean> => {
-    const result = await db
-      .select({ id: folders.id })
+  async belongsToUser(id: string, userId: string): Promise<boolean> {
+    const result = await this.db
+      .select()
       .from(folders)
       .where(
         and(
@@ -115,5 +119,5 @@ export const FolderDAO = {
         ),
       );
     return result.length > 0;
-  },
-};
+  }
+}

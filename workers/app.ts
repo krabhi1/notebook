@@ -1,5 +1,8 @@
 import { createRequestHandler } from "react-router";
-import { setEnv } from "~/.server/env";
+import { createAppContext } from "~/.server/context";
+import type { AppServices } from "~/.server/context";
+import type { User, Session } from "better-auth";
+import type { BetterAuth } from "~/.server/auth";
 
 declare module "react-router" {
   export interface AppLoadContext {
@@ -7,6 +10,10 @@ declare module "react-router" {
       env: Env;
       ctx: ExecutionContext;
     };
+    auth: BetterAuth;
+    session: Session;
+    user: User;
+    services: AppServices;
   }
 }
 
@@ -17,10 +24,7 @@ const requestHandler = createRequestHandler(
 
 export default {
   async fetch(request, env, ctx) {
-    console.log("--fetch", request.method, request.url);
-    setEnv(env);
-    return requestHandler(request, {
-      cloudflare: { env, ctx },
-    });
+    console.log(request.method, request.url);
+    return requestHandler(request, createAppContext(env, ctx));
   },
 } satisfies ExportedHandler<Env>;

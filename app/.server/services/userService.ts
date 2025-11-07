@@ -1,133 +1,137 @@
-// import { UserDAO } from "../db/queries/user";
-// import { FolderDAO } from "../db/queries/folder";
-// import { type User, type NewUser, type UpdateUser } from "../db/schema";
+import { UserRepository } from "../repos/userRepository";
+import { FolderRepository } from "../repos/folderRepository";
+import { type User, type NewUser, type UpdateUser } from "~/.server/db/schema";
 
-// export const UserService = {
-//   createUser: async (userData: {
-//     id: string;
-//     email: string;
-//     name: string;
-//     imageUrl?: string;
-//   }): Promise<User> => {
-//     // Check if user already exists
-//     const existingUser = await UserDAO.getByEmail(userData.email);
-//     if (existingUser) {
-//       throw new Error(`User with email ${userData.email} already exists`);
-//     }
+export class UserService {
+  constructor(
+    private userRepository: UserRepository,
+    private folderRepository: FolderRepository,
+  ) {}
 
-//     const [user] = await UserDAO.create({
-//       ...userData,
-//       onBoarded: false,
-//       createdAt: new Date(),
-//       updatedAt: new Date(),
-//     });
+  // async createUser(userData: {
+  //   id: string;
+  //   email: string;
+  //   name: string;
+  //   imageUrl?: string;
+  // }): Promise<User> {
+  //   // Check if user already exists by email
+  //   const existingUser = await this.userRepository.getByEmail(userData.email);
+  //   if (existingUser) {
+  //     throw new Error(`User with email ${userData.email} already exists`);
+  //   }
 
-//     return user;
-//   },
+  //   // Check if user ID already exists
+  //   const existingById = await this.userRepository.exists(userData.id);
+  //   if (existingById) {
+  //     throw new Error(`User with ID ${userData.id} already exists`);
+  //   }
 
-//   getUserById: async (id: string): Promise<User> => {
-//     const user = await UserDAO.getById(id);
-//     if (!user) {
-//       throw new Error(`User with id ${id} not found`);
-//     }
-//     return user;
-//   },
+  //   const [user] = await this.userRepository.create({
+  //     id: userData.id,
+  //     email: userData.email,
+  //     name: userData.name,
+  //     imageUrl: userData.imageUrl,
+  //     createdAt: new Date(),
+  //     updatedAt: new Date(),
+  //   });
 
-//   getUserByEmail: async (email: string): Promise<User> => {
-//     const user = await UserDAO.getByEmail(email);
-//     if (!user) {
-//       throw new Error(`User with email ${email} not found`);
-//     }
-//     return user;
-//   },
+  //   return user;
+  // }
 
-//   updateUser: async (id: string, data: UpdateUser): Promise<void> => {
-//     const userExists = await UserDAO.exists(id);
-//     if (!userExists) {
-//       throw new Error(`User with id ${id} not found`);
-//     }
+  async getUserById(id: string): Promise<User> {
+    const user = await this.userRepository.getById(id);
+    if (!user) {
+      throw new Error(`User with id ${id} not found`);
+    }
+    return user;
+  }
 
-//     await UserDAO.update(id, data);
-//   },
+  async getUserByEmail(email: string): Promise<User> {
+    const user = await this.userRepository.getByEmail(email);
+    if (!user) {
+      throw new Error(`User with email ${email} not found`);
+    }
+    return user;
+  }
 
-//   completeOnboarding: async (id: string): Promise<void> => {
-//     await UserService.updateUser(id, { onBoarded: true });
-//   },
+  async getAllUsers(): Promise<User[]> {
+    return this.userRepository.getAll();
+  }
 
-//   updateProfile: async (
-//     id: string,
-//     data: {
-//       name?: string;
-//       imageUrl?: string;
-//     },
-//   ): Promise<void> => {
-//     await UserService.updateUser(id, data);
-//   },
+  async updateUser(id: string, data: UpdateUser): Promise<void> {
+    const userExists = await this.userRepository.exists(id);
+    if (!userExists) {
+      throw new Error(`User with id ${id} not found`);
+    }
 
-//   deleteUser: async (
-//     id: string,
-//     options?: {
-//       hardDelete?: boolean;
-//     },
-//   ): Promise<void> => {
-//     const userExists = await UserDAO.exists(id);
-//     if (!userExists) {
-//       throw new Error(`User with id ${id} not found`);
-//     }
+    await this.userRepository.update(id, data);
+  }
 
-//     if (options?.hardDelete) {
-//       // Delete all user's folders and their content first
-//       const folders = await FolderDAO.getByUser(id);
-//       for (const folder of folders) {
-//         await FolderDAO.hardDelete(folder.id);
-//       }
+  async deleteUser(id: string): Promise<void> {
+    const user = await this.userRepository.getById(id);
+    if (!user) {
+      throw new Error(`User with id ${id} not found`);
+    }
 
-//       await UserDAO.delete(id);
-//     } else {
-//       // Soft delete - mark user folders as deleted
-//       const folders = await FolderDAO.getByUser(id);
-//       for (const folder of folders) {
-//         await FolderDAO.softDelete(folder.id);
-//       }
+    // Note: This will cascade delete all folders, pages, and files
+    // due to database foreign key constraints
+    await this.userRepository.delete(id);
+  }
 
-//       // Note: We don't have soft delete for users in schema,
-//       // so this would need to be implemented if required
-//       throw new Error("Soft delete not implemented for users");
-//     }
-//   },
+  async userExists(id: string): Promise<boolean> {
+    return this.userRepository.exists(id);
+  }
 
-//   getUserWithFolders: async (id: string) => {
-//     const user = await UserService.getUserById(id);
-//     const folders = await FolderDAO.getByUserWithPages(id);
+  async emailExists(email: string): Promise<boolean> {
+    return this.userRepository.existsByEmail(email);
+  }
 
-//     return {
-//       ...user,
-//       folders,
-//     };
-//   },
+  // async findOrCreateUser(userData: {
+  //   id: string;
+  //   email: string;
+  //   name: string;
+  //   imageUrl?: string;
+  // }): Promise<User> {
+  //   // Try to find existing user by ID first
+  //   const existingUser = await this.userRepository.getById(userData.id);
+  //   if (existingUser) {
+  //     // Update user data if needed
+  //     if (
+  //       existingUser.email !== userData.email ||
+  //       existingUser.name !== userData.name ||
+  //       existingUser.imageUrl !== userData.imageUrl
+  //     ) {
+  //       await this.userRepository.update(userData.id, {
+  //         name: userData.name,
+  //         // Note: We typically don't update email as it's used for identity
+  //       });
+  //       return this.getUserById(userData.id);
+  //     }
+  //     return existingUser;
+  //   }
 
-//   validateUserAccess: async (
-//     userId: string,
-//     resourceUserId: string,
-//   ): Promise<boolean> => {
-//     return userId === resourceUserId;
-//   },
+  //   // Create new user if not found
+  //   return this.createUser(userData);
+  // }
 
-//   isOnboarded: async (id: string): Promise<boolean> => {
-//     const user = await UserService.getUserById(id);
-//     return !!user.onBoarded;
-//   },
+  async getUserStats(id: string): Promise<{
+    id: string;
+    name: string;
+    email: string;
+    folderCount: number;
+    createdAt: Date;
+    updatedAt: Date;
+  }> {
+    const user = await this.getUserById(id);
+    const folders = await this.folderRepository.getByUser(id);
 
-//   getAllUsers: async (): Promise<User[]> => {
-//     return UserDAO.getAll();
-//   },
-
-//   searchUsersByEmail: async (emailQuery: string): Promise<User[]> => {
-//     // This would need to be implemented in DAO if needed
-//     // For now, get all users and filter (not efficient for large datasets)
-//     const allUsers = await UserDAO.getAll();
-//     return allUsers.filter((user) =>
-//       user.email.toLowerCase().includes(emailQuery.toLowerCase()),
-//     );
-//   },
-// };
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      folderCount: folders.length,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+}

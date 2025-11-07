@@ -1,12 +1,30 @@
-import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
-import env from "../env";
+import { drizzle } from "drizzle-orm/libsql";
 
-const db = drizzle({
-  connection: {
-    url: env.TURSO_CONNECTION_URL!,
-    authToken: env.TURSO_AUTH_TOKEN!,
-  },
-  schema,
-});
-export { db };
+interface GetDbParams {
+  filePath?: string;
+  turso?: {
+    url: string;
+    authToken: string;
+  };
+}
+
+export type DrizzleClient = ReturnType<typeof drizzle<typeof schema>>;
+
+export const getDb = ({ filePath, turso }: GetDbParams) => {
+  if (turso) {
+    return drizzle({
+      connection: {
+        url: turso.url,
+        authToken: turso.authToken,
+      },
+      schema,
+    });
+  }
+  if (filePath) {
+    return drizzle(`file:${filePath}`, { schema });
+  }
+  throw new Error(
+    `No database binding provided ${JSON.stringify({ filePath, turso })}`,
+  );
+};

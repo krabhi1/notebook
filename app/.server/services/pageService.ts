@@ -1,7 +1,8 @@
-import { PageDAO } from "../db/queries/page";
-import { FileDAO } from "../db/queries/file";
-import { FolderDAO } from "../db/queries/folder";
-import { type Page, type NewPage, type UpdatePage } from "../db/schema";
+import { PageRepository } from "../repos/pageRepository";
+import { FileRepository } from "../repos/fileRepository";
+import { FolderRepository } from "../repos/folderRepository";
+import { type Page, type NewPage, type UpdatePage } from "~/.server/db/schema";
+import type { PageWithFiles } from "../repos/pageRepository";
 import {
   defaultJsContent,
   defaultWebContent,
@@ -11,15 +12,21 @@ import {
   defaultCircuitContent,
 } from "~/lib/constants";
 
-export const PageService = {
-  createPage: async (data: {
+export class PageService {
+  constructor(
+    private pageRepository: PageRepository,
+    private fileRepository: FileRepository,
+    private folderRepository: FolderRepository,
+  ) {}
+
+  async createPage(data: {
     folderId: string;
     name: string;
     type: "code" | "web" | "mermaid" | "database" | "editorjs" | "circuit";
     userId?: string;
-  }): Promise<Page> => {
+  }): Promise<Page> {
     // Validate folder exists
-    const folder = await FolderDAO.getById(data.folderId);
+    const folder = await this.folderRepository.getById(data.folderId);
     if (!folder) {
       throw new Error(`Folder with id ${data.folderId} not found`);
     }
@@ -31,329 +38,347 @@ export const PageService = {
       );
     }
 
-    // // Check for duplicate page names in the folder
-    // const existingPages = await PageDAO.getByFolder(data.folderId);
-    // const duplicateName = existingPages.some(
-    //   (page) => page.name.toLowerCase() === data.name.toLowerCase(),
-    // );
-
-    // if (duplicateName) {
-    //   throw new Error(
-    //     `Page with name "${data.name}" already exists in this folder`,
-    //   );
-    // }
-
-    const [page] = await PageDAO.create({
+    const [page] = await this.pageRepository.create({
       folderId: data.folderId,
       name: data.name,
       type: data.type,
     });
 
     return page;
-  },
+  }
 
-  createPageWithDefaultFiles: async (
+  async createPageWithDefaultFiles(
     folderId: string,
     name: string,
     type: "code" | "web" | "mermaid" | "database" | "editorjs" | "circuit",
     userId?: string,
-  ): Promise<Page> => {
-    const page = await PageService.createPage({ folderId, name, type, userId });
+  ): Promise<Page> {
+    // Create the page first
+    const page = await this.createPage({ folderId, name, type, userId });
 
-    // Create default files based on type
-    if (type === "web") {
-      await FileDAO.createMany(page.id, [
-        {
-          name: "index.html",
-          lang: "html",
-          content: defaultWebContent.html,
-        },
-        {
-          name: "style.css",
-          lang: "css",
-          content: defaultWebContent.css,
-        },
-        {
-          name: "script.js",
-          lang: "javascript",
-          content: defaultWebContent.js,
-        },
-      ]);
-    } else if (type === "code") {
-      await FileDAO.create({
-        pageId: page.id,
-        name: "main.js",
-        lang: "javascript",
-        content: defaultJsContent,
-      });
-      await FileDAO.create({
-        pageId: page.id,
-        name: "main.html",
-        lang: "html",
-        content: "<!-- HTML File -->",
-      });
-      await FileDAO.create({
-        pageId: page.id,
-        name: "main.css",
-        lang: "css",
-        content: "/* CSS File */",
-      });
-    } else if (type === "mermaid") {
-      await FileDAO.create({
-        pageId: page.id,
-        name: "diagram.mmd",
-        lang: "mermaid",
-        content: defaultMermaidContent,
-      });
-    } else if (type === "database") {
-      await FileDAO.create({
-        pageId: page.id,
-        name: "schema.sql",
-        lang: "sql",
-        content: defaultDatabaseContent,
-      });
-    } else if (type === "editorjs") {
-      await FileDAO.create({
-        pageId: page.id,
-        name: "content.json",
-        lang: "json",
-        content: defaultEditorJsContent(),
-      });
-    } else if (type === "circuit") {
-      await FileDAO.create({
-        pageId: page.id,
-        name: "circuit.json",
-        lang: "json",
-        content: defaultCircuitContent(name),
-      });
+    // Create default files based on page type
+    const defaultFiles = this.getDefaultFilesForType(type);
+
+    if (defaultFiles.length > 0) {
+      await this.fileRepository.createMany(page.id, defaultFiles);
     }
 
     return page;
-  },
+  }
 
-  getPageById: async (id: string, userId?: string): Promise<Page> => {
-    const page = await PageDAO.getById(id);
+  async getPageById(id: string, userId?: string): Promise<Page> {
+    const page = await this.pageRepository.getById(id);
     if (!page) {
       throw new Error(`Page with id ${id} not found`);
     }
 
     // If userId provided, validate access through folder ownership
     if (userId) {
-      const folder = await FolderDAO.getById(page.folderId);
+      const folder = await this.folderRepository.getById(page.folderId);
       if (!folder || folder.userId !== userId) {
         throw new Error(`Unauthorized: Page does not belong to user ${userId}`);
       }
     }
 
     return page;
-  },
+  }
 
-  getPageWithFiles: async (id: string) => {
-    const page = await PageDAO.getByIdWithFiles(id);
-    if (!page) {
+  async getPageWithFiles(id: string, userId?: string): Promise<PageWithFiles> {
+    // Validate access first
+    if (userId) {
+      await this.getPageById(id, userId);
+    }
+
+    const pageWithFiles = await this.pageRepository.getByIdWithFiles(id);
+    if (!pageWithFiles) {
       throw new Error(`Page with id ${id} not found`);
     }
-    return page;
-  },
 
-  getPagesByFolder: async (
-    folderId: string,
-    userId?: string,
-  ): Promise<Page[]> => {
-    const folder = await FolderDAO.getById(folderId);
-    if (!folder) {
-      throw new Error(`Folder with id ${folderId} not found`);
-    }
+    return pageWithFiles;
+  }
 
+  async getPagesByFolder(folderId: string, userId?: string): Promise<Page[]> {
     // If userId provided, validate folder ownership
-    if (userId && folder.userId !== userId) {
-      throw new Error(`Unauthorized: Folder does not belong to user ${userId}`);
-    }
-
-    return PageDAO.getByFolder(folderId);
-  },
-
-  updatePage: async (
-    id: string,
-    data: UpdatePage,
-    userId?: string,
-  ): Promise<void> => {
-    const page = await PageDAO.getById(id);
-    if (!page) {
-      throw new Error(`Page with id ${id} not found`);
-    }
-
-    // If userId provided, validate access through folder ownership
     if (userId) {
-      const folder = await FolderDAO.getById(page.folderId);
+      const folder = await this.folderRepository.getById(folderId);
       if (!folder || folder.userId !== userId) {
-        throw new Error(`Unauthorized: Page does not belong to user ${userId}`);
-      }
-    }
-
-    // Check for duplicate names if name is being updated
-    if (data.name) {
-      const siblingPages = await PageDAO.getByFolder(page.folderId);
-      const duplicateName = siblingPages.some(
-        (sibling) =>
-          sibling.id !== id &&
-          sibling.name.toLowerCase() === data.name!.toLowerCase(),
-      );
-
-      if (duplicateName) {
         throw new Error(
-          `Page with name "${data.name}" already exists in this folder`,
+          `Unauthorized: Folder does not belong to user ${userId}`,
         );
       }
     }
 
-    await PageDAO.update(id, data);
-  },
+    return this.pageRepository.getByFolder(folderId);
+  }
 
-  deletePage: async (
+  async updatePage(
     id: string,
+    data: UpdatePage,
     userId?: string,
-    options?: {
-      hardDelete?: boolean;
-    },
-  ): Promise<void> => {
-    const page = await PageDAO.getById(id);
+  ): Promise<void> {
+    const page = await this.pageRepository.getById(id);
     if (!page) {
       throw new Error(`Page with id ${id} not found`);
     }
 
     // If userId provided, validate access through folder ownership
     if (userId) {
-      const folder = await FolderDAO.getById(page.folderId);
+      const folder = await this.folderRepository.getById(page.folderId);
+      if (!folder || folder.userId !== userId) {
+        throw new Error(`Unauthorized: Page does not belong to user ${userId}`);
+      }
+
+      // If moving to a new folder, validate access to destination folder
+      if (data.folderId && data.folderId !== page.folderId) {
+        const destinationFolder = await this.folderRepository.getById(
+          data.folderId,
+        );
+        if (!destinationFolder || destinationFolder.userId !== userId) {
+          throw new Error(
+            `Unauthorized: Destination folder does not belong to user ${userId}`,
+          );
+        }
+      }
+    }
+
+    await this.pageRepository.update(id, data);
+  }
+
+  async deletePage(id: string, userId?: string): Promise<void> {
+    const page = await this.pageRepository.getById(id);
+    if (!page) {
+      throw new Error(`Page with id ${id} not found`);
+    }
+
+    // If userId provided, validate access through folder ownership
+    if (userId) {
+      const folder = await this.folderRepository.getById(page.folderId);
       if (!folder || folder.userId !== userId) {
         throw new Error(`Unauthorized: Page does not belong to user ${userId}`);
       }
     }
 
-    if (options?.hardDelete) {
-      // Delete all files first, then the page
-      await FileDAO.deleteByPage(id);
-      await PageDAO.hardDelete(id);
-    } else {
-      // Soft delete - just mark page as deleted (files remain)
-      await PageDAO.softDelete(id);
-    }
-  },
+    // Soft delete the page
+    await this.pageRepository.softDelete(id);
+  }
 
-  deletePageWithFiles: async (
-    pageId: string,
-    userId?: string,
-  ): Promise<void> => {
-    await PageService.deletePage(pageId, userId, { hardDelete: true });
-  },
-
-  movePage: async (
-    id: string,
-    newFolderId: string,
-    userId?: string,
-  ): Promise<void> => {
-    const page = await PageDAO.getById(id);
+  async hardDeletePage(id: string, userId?: string): Promise<void> {
+    const page = await this.pageRepository.getById(id);
     if (!page) {
       throw new Error(`Page with id ${id} not found`);
     }
 
-    const newFolder = await FolderDAO.getById(newFolderId);
-    if (!newFolder) {
-      throw new Error(`Destination folder with id ${newFolderId} not found`);
+    // If userId provided, validate access through folder ownership
+    if (userId) {
+      const folder = await this.folderRepository.getById(page.folderId);
+      if (!folder || folder.userId !== userId) {
+        throw new Error(`Unauthorized: Page does not belong to user ${userId}`);
+      }
+    }
+
+    // Hard delete the page (this will cascade delete files)
+    await this.pageRepository.hardDelete(id);
+  }
+
+  async validatePageAccess(pageId: string, userId: string): Promise<boolean> {
+    const page = await this.pageRepository.getById(pageId);
+    if (!page) return false;
+
+    return this.folderRepository.belongsToUser(page.folderId, userId);
+  }
+
+  async pageExists(id: string): Promise<boolean> {
+    return this.pageRepository.exists(id);
+  }
+
+  async pageBelongsToFolder(id: string, folderId: string): Promise<boolean> {
+    return this.pageRepository.belongsToFolder(id, folderId);
+  }
+
+  async getPagesByType(
+    type: "code" | "web" | "mermaid" | "database" | "editorjs" | "circuit",
+    userId?: string,
+  ): Promise<Page[]> {
+    const pages = await this.pageRepository.getByType(type);
+
+    // If userId provided, filter pages to only those accessible by the user
+    if (userId) {
+      const accessiblePages: Page[] = [];
+
+      for (const page of pages) {
+        try {
+          const folder = await this.folderRepository.getById(page.folderId);
+          if (folder && folder.userId === userId) {
+            accessiblePages.push(page);
+          }
+        } catch (error) {
+          // Skip pages that can't be accessed
+          continue;
+        }
+      }
+
+      return accessiblePages;
+    }
+
+    return pages;
+  }
+
+  async countPagesByFolder(folderId: string): Promise<number> {
+    return this.pageRepository.countByFolder(folderId);
+  }
+
+  async movePageToFolder(
+    id: string,
+    newFolderId: string,
+    userId?: string,
+  ): Promise<void> {
+    const page = await this.pageRepository.getById(id);
+    if (!page) {
+      throw new Error(`Page with id ${id} not found`);
     }
 
     // If userId provided, validate access to both folders
     if (userId) {
-      const currentFolder = await FolderDAO.getById(page.folderId);
+      const currentFolder = await this.folderRepository.getById(page.folderId);
+      const destinationFolder =
+        await this.folderRepository.getById(newFolderId);
+
       if (!currentFolder || currentFolder.userId !== userId) {
         throw new Error(
           `Unauthorized: Current page folder does not belong to user ${userId}`,
         );
       }
-      if (newFolder.userId !== userId) {
+
+      if (!destinationFolder || destinationFolder.userId !== userId) {
         throw new Error(
           `Unauthorized: Destination folder does not belong to user ${userId}`,
         );
       }
     }
 
-    // Check for duplicate names in destination folder
-    const existingPages = await PageDAO.getByFolder(newFolderId);
-    const duplicateName = existingPages.some(
-      (existingPage) =>
-        existingPage.name.toLowerCase() === page.name.toLowerCase(),
-    );
+    await this.pageRepository.moveToFolder(id, newFolderId);
+  }
 
-    if (duplicateName) {
-      throw new Error(
-        `Page with name "${page.name}" already exists in destination folder`,
-      );
-    }
-
-    await PageDAO.update(id, { folderId: newFolderId });
-  },
-
-  validatePageAccess: async (
-    pageId: string,
-    userId: string,
-  ): Promise<boolean> => {
-    const page = await PageDAO.getById(pageId);
-    if (!page) return false;
-
-    return FolderDAO.belongsToUser(page.folderId, userId);
-  },
-
-  getPageStats: async (id: string, userId?: string) => {
-    const page = await PageDAO.getById(id);
+  async duplicatePage(
+    id: string,
+    newName: string,
+    destinationFolderId?: string,
+    userId?: string,
+  ): Promise<Page> {
+    const page = await this.pageRepository.getById(id);
     if (!page) {
       throw new Error(`Page with id ${id} not found`);
     }
 
-    // If userId provided, validate access through folder ownership
+    const targetFolderId = destinationFolderId || page.folderId;
+
+    // If userId provided, validate access
     if (userId) {
-      const folder = await FolderDAO.getById(page.folderId);
-      if (!folder || folder.userId !== userId) {
-        throw new Error(`Unauthorized: Page does not belong to user ${userId}`);
+      const sourceFolder = await this.folderRepository.getById(page.folderId);
+      const targetFolder = await this.folderRepository.getById(targetFolderId);
+
+      if (!sourceFolder || sourceFolder.userId !== userId) {
+        throw new Error(
+          `Unauthorized: Source page folder does not belong to user ${userId}`,
+        );
+      }
+
+      if (!targetFolder || targetFolder.userId !== userId) {
+        throw new Error(
+          `Unauthorized: Target folder does not belong to user ${userId}`,
+        );
       }
     }
 
-    const fileCount = await FileDAO.countByPage(id);
-    const files = await FileDAO.getByPage(id);
-    const totalSize = files.reduce(
-      (size, file) => size + (file.content?.length || 0),
-      0,
-    );
-
-    return {
-      id: page.id,
-      name: page.name,
+    // Create the new page
+    const [newPage] = await this.pageRepository.create({
+      folderId: targetFolderId,
+      name: newName,
       type: page.type,
-      fileCount,
-      totalSize,
-      createdAt: page.createdAt,
-      updatedAt: page.updatedAt,
-    };
-  },
+    });
 
-  getPagesByType: async (
+    // Copy all files from the original page
+    const files = await this.fileRepository.getByPage(id);
+    if (files.length > 0) {
+      const fileData = files.map((file) => ({
+        name: file.name,
+        lang: file.lang,
+        content: file.content,
+      }));
+      await this.fileRepository.createMany(newPage.id, fileData);
+    }
+
+    return newPage;
+  }
+
+  async getAllPages(): Promise<Page[]> {
+    return this.pageRepository.getAll();
+  }
+
+  private getDefaultFilesForType(
     type: "code" | "web" | "mermaid" | "database" | "editorjs" | "circuit",
-    userId?: string,
-  ): Promise<Page[]> => {
-    const pages = await PageDAO.getByType(type);
-
-    if (!userId) {
-      return pages;
+  ): Array<{ name: string; lang?: string; content?: string }> {
+    switch (type) {
+      case "code":
+        return [
+          {
+            name: "main.js",
+            lang: "javascript",
+            content: defaultJsContent,
+          },
+        ];
+      case "web":
+        return [
+          {
+            name: "index.html",
+            lang: "html",
+            content: defaultWebContent.html,
+          },
+          {
+            name: "style.css",
+            lang: "css",
+            content: defaultWebContent.css,
+          },
+          {
+            name: "script.js",
+            lang: "javascript",
+            content: defaultWebContent.js,
+          },
+        ];
+      case "mermaid":
+        return [
+          {
+            name: "diagram.mmd",
+            lang: "mermaid",
+            content: defaultMermaidContent,
+          },
+        ];
+      case "database":
+        return [
+          {
+            name: "schema.sql",
+            lang: "sql",
+            content: defaultDatabaseContent,
+          },
+        ];
+      case "editorjs":
+        return [
+          {
+            name: "content.json",
+            lang: "json",
+            content: defaultEditorJsContent(),
+          },
+        ];
+      case "circuit":
+        return [
+          {
+            name: "circuit.json",
+            lang: "json",
+            content: defaultCircuitContent("Circuit"),
+          },
+        ];
+      default:
+        return [];
     }
-
-    // Filter pages by user ownership through folders
-    const userPages = [];
-    for (const page of pages) {
-      const folder = await FolderDAO.getById(page.folderId);
-      if (folder && folder.userId === userId) {
-        userPages.push(page);
-      }
-    }
-
-    return userPages;
-  },
-};
+  }
+}

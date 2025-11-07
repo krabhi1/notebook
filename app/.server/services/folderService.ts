@@ -1,22 +1,31 @@
-import { FolderDAO } from "../db/queries/folder";
-import { PageDAO } from "../db/queries/page";
-import { FileDAO } from "../db/queries/file";
-import { UserDAO } from "../db/queries/user";
-import { type Folder, type NewFolder, type UpdateFolder } from "../db/schema";
+import { FolderRepository } from "../repos/folderRepository";
+import { PageRepository } from "../repos/pageRepository";
+import { FileRepository } from "../repos/fileRepository";
+import { UserRepository } from "../repos/userRepository";
+import {
+  type Folder,
+  type NewFolder,
+  type UpdateFolder,
+} from "~/.server/db/schema";
+import type { FolderWithPages } from "../repos/folderRepository";
 
-export const FolderService = {
-  createFolder: async (data: {
-    userId: string;
-    name: string;
-  }): Promise<Folder> => {
+export class FolderService {
+  constructor(
+    private folderRepository: FolderRepository,
+    private pageRepository: PageRepository,
+    private fileRepository: FileRepository,
+    private userRepository: UserRepository,
+  ) {}
+
+  async createFolder(data: { userId: string; name: string }): Promise<Folder> {
     // Validate user exists
-    const userExists = await UserDAO.exists(data.userId);
+    const userExists = await this.userRepository.exists(data.userId);
     if (!userExists) {
       throw new Error(`User with id ${data.userId} not found`);
     }
 
     // Check for duplicate folder names for the user
-    const existingFolders = await FolderDAO.getByUser(data.userId);
+    const existingFolders = await this.folderRepository.getByUser(data.userId);
     const duplicateName = existingFolders.some(
       (folder) => folder.name.toLowerCase() === data.name.toLowerCase(),
     );
@@ -25,7 +34,7 @@ export const FolderService = {
       throw new Error(`Folder with name "${data.name}" already exists`);
     }
 
-    const [folder] = await FolderDAO.create({
+    const [folder] = await this.folderRepository.create({
       userId: data.userId,
       name: data.name,
       isDeleted: false,
@@ -34,40 +43,10 @@ export const FolderService = {
     });
 
     return folder;
-  },
+  }
 
-  getFolderById: async (id: string): Promise<Folder> => {
-    const folder = await FolderDAO.getById(id);
-    if (!folder) {
-      throw new Error(`Folder with id ${id} not found`);
-    }
-    return folder;
-  },
-
-  getFoldersByUser: async (userId: string): Promise<Folder[]> => {
-    const userExists = await UserDAO.exists(userId);
-    if (!userExists) {
-      throw new Error(`User with id ${userId} not found`);
-    }
-
-    return FolderDAO.getByUser(userId);
-  },
-
-  getFoldersWithPages: async (userId: string) => {
-    const userExists = await UserDAO.exists(userId);
-    if (!userExists) {
-      throw new Error(`User with id ${userId} not found`);
-    }
-
-    return FolderDAO.getByUserWithPages(userId);
-  },
-
-  updateFolder: async (
-    id: string,
-    data: UpdateFolder,
-    userId?: string,
-  ): Promise<void> => {
-    const folder = await FolderDAO.getById(id);
+  async getFolderById(id: string, userId?: string): Promise<Folder> {
+    const folder = await this.folderRepository.getById(id);
     if (!folder) {
       throw new Error(`Folder with id ${id} not found`);
     }
@@ -77,13 +56,49 @@ export const FolderService = {
       throw new Error(`Unauthorized: Folder does not belong to user ${userId}`);
     }
 
-    // Check for duplicate names if name is being updated
-    if (data.name) {
-      const siblingFolders = await FolderDAO.getByUser(folder.userId);
-      const duplicateName = siblingFolders.some(
-        (sibling) =>
-          sibling.id !== id &&
-          sibling.name.toLowerCase() === data.name!.toLowerCase(),
+    return folder;
+  }
+
+  async getFoldersByUser(userId: string): Promise<Folder[]> {
+    const userExists = await this.userRepository.exists(userId);
+    if (!userExists) {
+      throw new Error(`User with id ${userId} not found`);
+    }
+
+    return this.folderRepository.getByUser(userId);
+  }
+
+  async getFoldersWithPages(userId: string): Promise<FolderWithPages[]> {
+    const userExists = await this.userRepository.exists(userId);
+    if (!userExists) {
+      throw new Error(`User with id ${userId} not found`);
+    }
+
+    return this.folderRepository.getByUserWithPages(userId);
+  }
+
+  async updateFolder(
+    id: string,
+    data: UpdateFolder,
+    userId: string,
+  ): Promise<void> {
+    const folder = await this.folderRepository.getById(id);
+    if (!folder) {
+      throw new Error(`Folder with id ${id} not found`);
+    }
+
+    // Validate ownership
+    if (folder.userId !== userId) {
+      throw new Error(`Unauthorized: Folder does not belong to user ${userId}`);
+    }
+
+    // Check for duplicate names if name is being changed
+    if (data.name && data.name !== folder.name) {
+      const existingFolders = await this.folderRepository.getByUser(userId);
+      const duplicateName = existingFolders.some(
+        (existingFolder) =>
+          existingFolder.id !== id &&
+          existingFolder.name.toLowerCase() === data.name?.toLowerCase(),
       );
 
       if (duplicateName) {
@@ -91,106 +106,130 @@ export const FolderService = {
       }
     }
 
-    await FolderDAO.update(id, data);
-  },
+    await this.folderRepository.update(id, data);
+  }
 
-  deleteFolder: async (
-    id: string,
-    userId?: string,
-    options?: {
-      hardDelete?: boolean;
-    },
-  ): Promise<void> => {
-    const folder = await FolderDAO.getById(id);
+  async deleteFolder(id: string, userId: string): Promise<void> {
+    const folder = await this.folderRepository.getById(id);
     if (!folder) {
       throw new Error(`Folder with id ${id} not found`);
     }
 
-    // If userId provided, validate ownership
-    if (userId && folder.userId !== userId) {
+    // Validate ownership
+    if (folder.userId !== userId) {
       throw new Error(`Unauthorized: Folder does not belong to user ${userId}`);
     }
 
-    if (options?.hardDelete) {
-      // Delete all pages and their files first
-      const pages = await PageDAO.getByFolder(id);
-      for (const page of pages) {
-        await FileDAO.deleteByPage(page.id);
-        await PageDAO.hardDelete(page.id);
-      }
+    // Soft delete the folder
+    await this.folderRepository.softDelete(id);
+  }
 
-      await FolderDAO.hardDelete(id);
-    } else {
-      // Soft delete - mark folder and all its pages as deleted
-      const pages = await PageDAO.getByFolder(id);
-      for (const page of pages) {
-        await PageDAO.softDelete(page.id);
-      }
-
-      await FolderDAO.softDelete(id);
+  async hardDeleteFolder(id: string, userId: string): Promise<void> {
+    const folder = await this.folderRepository.getById(id);
+    if (!folder) {
+      throw new Error(`Folder with id ${id} not found`);
     }
-  },
 
-  validateFolderAccess: async (
+    // Validate ownership
+    if (folder.userId !== userId) {
+      throw new Error(`Unauthorized: Folder does not belong to user ${userId}`);
+    }
+
+    // Hard delete the folder (this will cascade delete pages and files)
+    await this.folderRepository.hardDelete(id);
+  }
+
+  async validateFolderAccess(
     folderId: string,
     userId: string,
-  ): Promise<boolean> => {
-    return FolderDAO.belongsToUser(folderId, userId);
-  },
+  ): Promise<boolean> {
+    return this.folderRepository.belongsToUser(folderId, userId);
+  }
 
-  getFolderWithPagesAndFiles: async (id: string, userId?: string) => {
-    const folder = await FolderDAO.getById(id);
+  async folderExists(id: string): Promise<boolean> {
+    return this.folderRepository.exists(id);
+  }
+
+  async getFolderPageCount(id: string, userId?: string): Promise<number> {
+    // If userId provided, validate ownership first
+    if (userId) {
+      const hasAccess = await this.validateFolderAccess(id, userId);
+      if (!hasAccess) {
+        throw new Error(
+          `Unauthorized: Folder does not belong to user ${userId}`,
+        );
+      }
+    }
+
+    const pages = await this.pageRepository.getByFolder(id);
+    return pages.length;
+  }
+
+  async getAllFolders(): Promise<Folder[]> {
+    return this.folderRepository.getAll();
+  }
+
+  async restoreFolder(id: string, userId: string): Promise<void> {
+    const folder = await this.folderRepository.getById(id);
     if (!folder) {
       throw new Error(`Folder with id ${id} not found`);
     }
 
-    // If userId provided, validate ownership
-    if (userId && folder.userId !== userId) {
+    // Validate ownership
+    if (folder.userId !== userId) {
       throw new Error(`Unauthorized: Folder does not belong to user ${userId}`);
     }
 
-    const pages = await PageDAO.getByFolderWithFiles(id);
+    // For restore functionality, we'd need to implement undelete
+    // This would require updating the soft delete to set isDeleted back to false
+    await this.folderRepository.update(id, { isDeleted: false });
+  }
 
-    return {
-      ...folder,
-      pages,
-    };
-  },
-
-  duplicateFolder: async (
+  async duplicateFolder(
     id: string,
     newName: string,
-    userId?: string,
-  ): Promise<Folder> => {
-    throw new Error("Not implemented");
-  },
-
-  getFolderStats: async (id: string, userId?: string) => {
-    const folder = await FolderDAO.getById(id);
+    userId: string,
+  ): Promise<Folder> {
+    const folder = await this.folderRepository.getById(id);
     if (!folder) {
       throw new Error(`Folder with id ${id} not found`);
     }
 
-    // If userId provided, validate ownership
-    if (userId && folder.userId !== userId) {
+    // Validate ownership
+    if (folder.userId !== userId) {
       throw new Error(`Unauthorized: Folder does not belong to user ${userId}`);
     }
 
-    const pages = await PageDAO.getByFolder(id);
-    let totalFiles = 0;
+    // Create new folder with the new name
+    const [newFolder] = await this.folderRepository.create({
+      userId: folder.userId,
+      name: newName,
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
+    // Copy all pages from the original folder to the new folder
+    const pages = await this.pageRepository.getByFolder(id);
     for (const page of pages) {
-      const fileCount = await FileDAO.countByPage(page.id);
-      totalFiles += fileCount;
+      const [newPage] = await this.pageRepository.create({
+        folderId: newFolder.id,
+        name: page.name,
+        type: page.type,
+      });
+
+      // Copy all files from the original page to the new page
+      const files = await this.fileRepository.getByPage(page.id);
+      if (files.length > 0) {
+        const fileData = files.map((file) => ({
+          name: file.name,
+          lang: file.lang,
+          content: file.content,
+        }));
+        await this.fileRepository.createMany(newPage.id, fileData);
+      }
     }
 
-    return {
-      id: folder.id,
-      name: folder.name,
-      pageCount: pages.length,
-      fileCount: totalFiles,
-      createdAt: folder.createdAt,
-      updatedAt: folder.updatedAt,
-    };
-  },
-};
+    return newFolder;
+  }
+}
