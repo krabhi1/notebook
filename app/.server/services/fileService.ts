@@ -224,12 +224,104 @@ export const FileService = {
         error instanceof Error &&
         error.message === "Version conflict or file not found"
       ) {
+        // Get the current version of the file for detailed conflict info
+        const currentFile = await FileDAO.getById(id);
+        if (currentFile) {
+          const conflictError = new Error(
+            `Conflict detected. Expected version ${expectedVersion}, but current version is ${currentFile.version}. The file has been updated by another source.`,
+          );
+          (conflictError as any).conflictInfo = {
+            expectedVersion,
+            currentVersion: currentFile.version,
+            currentContent: currentFile.content,
+            attemptedContent: content,
+            lastModified: currentFile.updatedAt,
+          };
+          throw conflictError;
+        }
         throw new Error(
           "Conflict detected. The file has been updated by another source.",
         );
       }
       throw error;
     }
+  },
+
+  // Get detailed conflict information for resolution
+  getConflictInfo: async (
+    id: string,
+    expectedVersion: number,
+    userId?: string,
+  ): Promise<{
+    hasConflict: boolean;
+    currentFile?: File;
+    expectedVersion: number;
+    currentVersion?: number;
+  }> => {
+    const file = await FileDAO.getById(id);
+    if (!file) {
+      throw new Error(`File with id ${id} not found`);
+    }
+
+    // If userId provided, validate access
+    if (userId) {
+      const page = await PageDAO.getById(file.pageId);
+      if (!page) {
+        throw new Error(`Associated page not found`);
+      }
+
+      const folder = await FolderDAO.getById(page.folderId);
+      if (!folder || folder.userId !== userId) {
+        throw new Error(`Unauthorized: File does not belong to user ${userId}`);
+      }
+    }
+
+    return {
+      hasConflict: file.version !== expectedVersion,
+      currentFile: file,
+      expectedVersion,
+      currentVersion: file.version,
+    };
+  },
+
+  // Force update with conflict resolution strategy
+  updateFileContentWithConflictResolution: async (
+    id: string,
+    content: string,
+    expectedVersion: number,
+    resolutionStrategy: "force-overwrite" | "merge-attempt" = "force-overwrite",
+    userId?: string,
+  ): Promise<File> => {
+    const file = await FileDAO.getById(id);
+    if (!file) {
+      throw new Error(`File with id ${id} not found`);
+    }
+
+    // If userId provided, validate access
+    if (userId) {
+      const page = await PageDAO.getById(file.pageId);
+      if (!page) {
+        throw new Error(`Associated page not found`);
+      }
+
+      const folder = await FolderDAO.getById(page.folderId);
+      if (!folder || folder.userId !== userId) {
+        throw new Error(`Unauthorized: File does not belong to user ${userId}`);
+      }
+    }
+
+    if (resolutionStrategy === "force-overwrite") {
+      // Force update regardless of version, but increment from current version
+      return await FileDAO.updateContentWithVersion(
+        id,
+        content,
+        file.version, // Use current version instead of expected
+      );
+    }
+
+    // For merge-attempt, we would implement merge logic here
+    // For now, just return the force overwrite behavior
+    return await FileDAO.updateContentWithVersion(id, content, file.version);
   },
 
   deleteFile: async (id: string, userId?: string): Promise<void> => {

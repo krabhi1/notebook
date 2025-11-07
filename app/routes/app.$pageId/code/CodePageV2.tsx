@@ -9,6 +9,10 @@ import { useSonner } from "~/hooks/useSonner";
 import { useNetworkStatus } from "~/hooks/useNetworkStatus";
 import { useDataLossPrevention } from "~/hooks/useBeforeUnload";
 import { useThrottledLocalStorage } from "~/hooks/useThrottle";
+import {
+  ConflictResolutionDialog,
+  type ConflictInfo,
+} from "~/components/ConflictResolutionDialog";
 
 // Types for draft state management
 type DraftAction =
@@ -89,7 +93,14 @@ function draftsReducer(state: DraftState, action: DraftAction): DraftState {
   }
 }
 
-type SyncStatus = "Synced" | "Unsaved" | "Saving..." | "Error";
+type SyncStatus = "Synced" | "Unsaved" | "Saving..." | "Error" | "Conflict";
+
+interface ConflictState {
+  fileId: string;
+  fileName: string;
+  yourContent: string;
+  conflictInfo: ConflictInfo;
+}
 
 interface CodePageV2Props {
   page: PageWithFiles;
@@ -105,6 +116,11 @@ export default function CodePageV2({ page }: CodePageV2Props) {
 
   // Network status monitoring
   const { isOnline, isOffline, wasOffline } = useNetworkStatus();
+
+  // Conflict resolution state
+  const [conflictState, setConflictState] = useState<ConflictState | null>(
+    null,
+  );
 
   // Use useReducer for draft management
   const [drafts, dispatch] = useReducer(draftsReducer, {}, () => {
@@ -196,6 +212,26 @@ export default function CodePageV2({ page }: CodePageV2Props) {
     message: `You have unsaved changes in ${Object.keys(drafts).length} file(s). Are you sure you want to leave?`,
   });
 
+  // Handle conflict resolution
+  const handleConflictResolved = (
+    resolvedContent: string,
+    newVersion: number,
+  ) => {
+    if (!conflictState) return;
+
+    // Update the draft with resolved content
+    dispatch({
+      type: "UPDATE_DRAFT",
+      payload: { id: conflictState.fileId, content: resolvedContent },
+    });
+
+    // Clear conflict state
+    setConflictState(null);
+
+    // Force revalidation to get the latest file data
+    revalidate();
+  };
+
   return (
     <>
       <div className="flex-1 flex flex-col h-full">
@@ -245,6 +281,7 @@ export default function CodePageV2({ page }: CodePageV2Props) {
                     dispatch={dispatch}
                     revalidate={revalidate}
                     toast={toast}
+                    onConflict={setConflictState}
                   />
                 );
               })}
@@ -287,6 +324,19 @@ export default function CodePageV2({ page }: CodePageV2Props) {
           </div>
         </Tabs>
       </div>
+
+      {/* Conflict Resolution Dialog */}
+      {conflictState && (
+        <ConflictResolutionDialog
+          isOpen={!!conflictState}
+          onClose={() => setConflictState(null)}
+          fileName={conflictState.fileName}
+          fileId={conflictState.fileId}
+          yourContent={conflictState.yourContent}
+          conflictInfo={conflictState.conflictInfo}
+          onResolved={handleConflictResolved}
+        />
+      )}
     </>
   );
 }
@@ -299,6 +349,7 @@ interface FileSyncStatusProps {
   dispatch: React.Dispatch<DraftAction>;
   revalidate: () => void;
   toast: ReturnType<typeof useSonner>;
+  onConflict: (conflictState: ConflictState) => void;
 }
 
 // Helper function to get error message from draft state
@@ -315,6 +366,7 @@ function FileSyncStatus({
   dispatch,
   revalidate,
   toast,
+  onConflict,
 }: FileSyncStatusProps) {
   const fileFetcher = useFetcher({ key: file.id });
   const fetcherData = fileFetcher.data as
@@ -322,6 +374,13 @@ function FileSyncStatus({
         ok?: boolean;
         error?: string;
         revalidate?: boolean;
+        conflictInfo?: {
+          expectedVersion: number;
+          currentVersion: number;
+          currentContent: string;
+          hasConflict: boolean;
+          lastModified: string;
+        };
       }
     | undefined;
 
@@ -350,16 +409,29 @@ function FileSyncStatus({
           type: "MARK_ERROR",
           payload: { id: file.id, error: fetcherData.error },
         });
-        if (fetcherData.error.includes("Conflict detected")) {
-          toast.error(`Conflict in ${file.name}`, {
+        if (
+          fetcherData.error.includes("Conflict detected") &&
+          fetcherData.conflictInfo
+        ) {
+          // Show conflict resolution dialog
+          onConflict({
+            fileId: file.id,
+            fileName: file.name,
+            yourContent: draftContent || file.content,
+            conflictInfo: {
+              expectedVersion: fetcherData.conflictInfo.expectedVersion,
+              currentVersion: fetcherData.conflictInfo.currentVersion,
+              currentContent: fetcherData.conflictInfo.currentContent,
+              hasConflict: fetcherData.conflictInfo.hasConflict,
+              lastModified: new Date(fetcherData.conflictInfo.lastModified),
+            },
+          });
+
+          toast.warning(`Conflict in ${file.name}`, {
             id: `save-${file.id}`,
             description:
-              "File was modified by another user. Refreshing content...",
-            duration: 8000,
-            action: {
-              label: "Dismiss",
-              onClick: () => toast.dismiss(`save-${file.id}`),
-            },
+              "File was modified by another user. Please resolve the conflict.",
+            duration: 6000,
           });
         } else {
           toast.error(`Failed to save ${file.name}`, {
@@ -390,15 +462,23 @@ function FileSyncStatus({
 
   let syncStatus: SyncStatus = "Synced";
   if (fetcherData?.error) {
-    // Handle conflict resolution
-    if (fetcherData.revalidate) {
+    if (fetcherData.error.includes("Conflict detected")) {
+      syncStatus = "Conflict";
+    } else {
+      syncStatus = "Error";
+    }
+
+    // Handle automatic revalidation for non-conflict errors
+    if (
+      fetcherData.revalidate &&
+      !fetcherData.error.includes("Conflict detected")
+    ) {
       revalidate();
       toast.info("Content refreshed", {
         description: "Latest changes have been loaded",
         duration: 3000,
       });
     }
-    syncStatus = "Error";
   } else if (fileFetcher.state === "submitting") {
     syncStatus = "Saving...";
   } else if (draftContent !== undefined && draftContent !== file.content) {
@@ -421,6 +501,11 @@ function FileSyncStatus({
       {syncStatus === "Error" && (
         <span className="ml-1" title={errorMessage || "Save failed"}>
           ⚠️
+        </span>
+      )}
+      {syncStatus === "Conflict" && (
+        <span className="ml-1" title="Merge conflict - click to resolve">
+          🔀
         </span>
       )}
       {syncStatus === "Unsaved" && (

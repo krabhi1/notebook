@@ -62,14 +62,79 @@ export async function action({ request }: Route.ActionArgs) {
         error instanceof Error &&
         error.message.includes("Conflict detected")
       ) {
+        // Get detailed conflict information
+        const conflictInfo = await FileService.getConflictInfo(
+          fileId,
+          expectedVersion,
+        );
+
         return {
           ok: false,
           error:
             "Conflict detected. The file has been updated by another source.",
+          conflictInfo: {
+            expectedVersion: conflictInfo.expectedVersion,
+            currentVersion: conflictInfo.currentVersion,
+            currentContent: conflictInfo.currentFile?.content,
+            hasConflict: conflictInfo.hasConflict,
+            lastModified: conflictInfo.currentFile?.updatedAt,
+          },
           revalidate: true,
         };
       }
       throw error;
+    }
+  }
+
+  if (intent === "resolve-conflict") {
+    const fileId = formData.get("fileId") as string;
+    const content = formData.get("content") as string;
+    const version = formData.get("version") as string;
+    const resolution = formData.get("resolution") as string;
+
+    if (typeof fileId !== "string" || fileId.trim() === "") {
+      throw new Error("File ID is required");
+    }
+    if (typeof content !== "string") {
+      throw new Error("Content is required");
+    }
+    if (typeof version !== "string") {
+      throw new Error("Version is required");
+    }
+    if (typeof resolution !== "string") {
+      throw new Error("Resolution strategy is required");
+    }
+
+    const expectedVersion = parseInt(version, 10);
+    if (isNaN(expectedVersion)) {
+      throw new Error("Invalid version number");
+    }
+
+    try {
+      const updatedFile =
+        await FileService.updateFileContentWithConflictResolution(
+          fileId,
+          content,
+          expectedVersion,
+          resolution as "force-overwrite" | "merge-attempt",
+        );
+
+      return {
+        ok: true,
+        resolved: true,
+        savedFile: {
+          id: fileId,
+          content: updatedFile.content,
+          version: updatedFile.version,
+        },
+        resolutionStrategy: resolution,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error:
+          error instanceof Error ? error.message : "Failed to resolve conflict",
+      };
     }
   }
 
