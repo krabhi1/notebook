@@ -4,15 +4,18 @@ import FolderList from "~/routes/app/FolderList";
 import { useFetcher } from "react-router";
 import type { Route } from "../app/+types/route";
 import type { Page } from "~/.server/db/schema";
-const userId = "hQHg8eOjyiRYcEfJhJrLMReJmFQEaWrk";
-export async function loader({ context: { services } }: Route.LoaderArgs) {
+
+export async function loader({
+  context: { services, user },
+}: Route.LoaderArgs) {
   console.log("Loader called for /app route");
-  const folders = await services.folderService.getFoldersWithPages(userId);
+  const folders = await services.folderService.getFoldersWithPages(user.id);
   return { folders };
 }
+
 export async function action({
   request,
-  context: { services },
+  context: { services, user },
 }: Route.ActionArgs) {
   const formData = await request.formData();
   const action = formData.get("action");
@@ -22,7 +25,7 @@ export async function action({
       throw new Error("Folder name is required");
     }
     await services.folderService.createFolder({
-      userId,
+      userId: user.id,
       name: name.trim(),
     });
   }

@@ -326,6 +326,24 @@ export class PageService {
             lang: "javascript",
             content: defaultJsContent,
           },
+          {
+            name: "utils.js",
+            lang: "javascript",
+            content:
+              "// Utility functions\n\nfunction log(message) {\n  console.log(message);\n}\n\nfunction isEmpty(value) {\n  return value == null || value === '';\n}\n\nmodule.exports = {\n  log,\n  isEmpty\n};",
+          },
+          {
+            name: "config.json",
+            lang: "json",
+            content:
+              '{\n  "name": "My Project",\n  "version": "1.0.0",\n  "description": "A JavaScript project",\n  "main": "main.js"\n}',
+          },
+          {
+            name: "README.md",
+            lang: "markdown",
+            content:
+              "# My Project\n\nThis is a JavaScript project created with the code editor.\n\n## Getting Started\n\n1. Edit the files in this project\n2. Run your code\n3. Build something amazing!\n\n## Files\n\n- `main.js` - The main entry point\n- `utils.js` - Utility functions\n- `config.json` - Project configuration\n",
+          },
         ];
       case "web":
         return [

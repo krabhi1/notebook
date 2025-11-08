@@ -36,7 +36,6 @@ export default {
         return redirect("/sign-in", 303);
       }
     }
-    console.log({ appContext });
     return requestHandler(request, appContext);
   },
 } satisfies ExportedHandler<Env>;

@@ -1,48 +1,51 @@
+import { useEffect } from "react";
+import { useFetcher, type FetcherWithComponents } from "react-router";
 import type { File } from "~/.server/db/schema";
-import type { PageWithFiles } from "~/.server/repos/pageRepository";
 import CodeEditor from "~/components/CodeEditor";
 import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { useFile } from "~/lib/hooks";
-export default function CodePage({ page }: { page: PageWithFiles }) {
-  const defaultValue = page.files.length > 0 ? page.files[0].id : "";
+import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { FileFetcher, useFilesSync } from "~/lib/contexts/FileSyncProvider";
+
+export default function CodePage() {
+  const filesSync = useFilesSync();
+  const activeFile = filesSync.activeFile;
 
   return (
     <div className="flex-1 flex flex-col h-full">
-      <Tabs defaultValue={defaultValue} className="flex-1 flex flex-col h-full">
+      <Tabs
+        value={activeFile?.id || ""}
+        className="flex-1 flex flex-col h-full"
+        onValueChange={(val) => filesSync.setActiveTab(val)}
+      >
         <ScrollArea className="w-full">
           <TabsList className="h-10 w-max">
-            {page.files.map((file) => (
+            {filesSync.files.map((file) => (
               <TabsTrigger key={file.id} value={file.id}>
-                {file.name}
+                {file.name}-{file.status}
+                <FileFetcher id={file.id} />
               </TabsTrigger>
             ))}
           </TabsList>
           <ScrollBar orientation="horizontal" />
         </ScrollArea>
         <div className="flex-1 flex flex-col min-h-0">
-          {page.files.map((file) => (
-            <FileTab key={file.id} file={file} />
-          ))}
+          {activeFile && (
+            <CodeEditor
+              language={activeFile.lang}
+              defaultValue={filesSync.activeEditorContent}
+              onChange={(val) => {
+                filesSync.updateValue(activeFile.id, val || "");
+              }}
+              path={activeFile.path}
+            />
+          )}
+          {!activeFile && (
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
+              No file selected
+            </div>
+          )}
         </div>
       </Tabs>
     </div>
-  );
-}
-function FileTab({ file }: { file: File }) {
-  const fileState = useFile(file);
-
-  return (
-    <TabsContent
-      value={file.id}
-      className="flex-1 h-full data-[state=active]:flex data-[state=active]:flex-col"
-    >
-      <CodeEditor
-        language={file.lang}
-        defaultValue={fileState.value}
-        onChange={(val) => fileState.updateValue(val || "")}
-        path={fileState.path}
-      />
-    </TabsContent>
   );
 }

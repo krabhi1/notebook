@@ -1,12 +1,28 @@
 import { useEffect, useState, useCallback } from "react";
 import { debounce } from "./utils";
 import type { File } from "~/.server/db/schema";
-import { useFetcher } from "react-router";
+import { useFetcher, useFetchers } from "react-router";
 import type { PageWithFiles } from "~/.server/repos/pageRepository";
+export function useFilesStatus() {
+  const fetchers = useFetchers();
+  const check = useCallback(
+    (fileId: string) => {
+      const fetcher = fetchers.find((f) => f.key === fileId);
+      if (!fetcher) return { isSaving: false };
+      return {
+        isSaving: fetcher.state === "submitting",
+      };
+    },
+    [fetchers],
+  );
+  return {
+    check,
+  };
+}
 export function useFile(file: File) {
   const [value, setValue] = useState(file.content);
   const [updatedAt, setUpdatedAt] = useState<Date>(file.updatedAt);
-  const fetcher = useFetcher();
+  const fetcher = useFetcher({ key: file.id });
   const path = `${file.pageId}/${file.id}`;
 
   // Debounced cloud save
@@ -23,7 +39,7 @@ export function useFile(file: File) {
         //TODO: show toast
         console.error("Failed to save to cloud:", error);
       }
-    }, 1000),
+    }, 2000),
     [file.id, fetcher],
   );
 
