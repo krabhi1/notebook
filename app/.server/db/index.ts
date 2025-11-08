@@ -2,7 +2,7 @@ import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
 
 export type GetDbParams = {
-  filePath?: string;
+  databaseURL?: string;
   turso?: {
     url: string;
     authToken: string;
@@ -11,7 +11,7 @@ export type GetDbParams = {
 
 export type DrizzleClient = ReturnType<typeof drizzle<typeof schema>>;
 
-export const getDb = ({ filePath, turso }: GetDbParams) => {
+export const getDb = ({ databaseURL: filePath, turso }: GetDbParams) => {
   if (turso) {
     return drizzle({
       connection: {
@@ -22,7 +22,7 @@ export const getDb = ({ filePath, turso }: GetDbParams) => {
     });
   }
   if (filePath) {
-    return drizzle(`file:${filePath}`, { schema });
+    return drizzle(`${filePath}`, { schema });
   }
   throw new Error(
     `No database binding provided ${JSON.stringify({ filePath, turso })}`,
