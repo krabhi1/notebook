@@ -4,7 +4,7 @@ import type { File } from "~/.server/db/schema";
 import CodeEditor from "~/components/CodeEditor";
 import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { FileFetcher, useFilesSync } from "~/lib/contexts/FileSyncProvider";
+import { useFilesSync } from "~/contexts/FileSyncProvider";
 
 export default function CodePage() {
   const filesSync = useFilesSync();
@@ -22,7 +22,6 @@ export default function CodePage() {
             {filesSync.files.map((file) => (
               <TabsTrigger key={file.id} value={file.id}>
                 {file.name}-{file.status}
-                <FileFetcher id={file.id} />
               </TabsTrigger>
             ))}
           </TabsList>

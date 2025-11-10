@@ -15,7 +15,7 @@ import {
   type FetcherWithComponents,
 } from "react-router";
 import type { File } from "~/.server/db/schema";
-import { debounce } from "../utils";
+import { debounce } from "~/lib/utils";
 import type { PageWithFiles } from "~/.server/repos/pageRepository";
 export type ExtendedFile = File & {
   status?: "saved" | "saving" | "error" | "unsaved";
@@ -182,6 +182,10 @@ export function FileSyncProvider({
   return (
     <FileSyncContext.Provider value={value}>
       {children}
+      {/*Setup file fetcher for all files*/}
+      {extendedFiles.map((file) => (
+        <FileFetcher key={file.id} id={file.id} />
+      ))}
     </FileSyncContext.Provider>
   );
 }
@@ -196,7 +200,7 @@ export const useFilesSync = (): FileSyncContextType => {
   return ctx;
 };
 
-export function FileFetcher({ id }: { id: string }) {
+function FileFetcher({ id }: { id: string }) {
   const fetcher = useFetcher({ key: id });
   const fileSync = useFilesSync();
   useEffect(() => {
