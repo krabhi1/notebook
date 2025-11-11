@@ -5,7 +5,7 @@ import CodePageV2 from "./code/CodePageV2";
 import type { ShouldRevalidateFunction } from "react-router";
 import type { PageWithFiles } from "~/.server/repos/pageRepository";
 import CodePage from "./code/CodePage";
-import { FileSyncProvider } from "~/lib/contexts/FileSyncProvider";
+import { FileSyncProvider } from "~/contexts/FileSyncProvider";
 import { sleep } from "~/lib/utils";
 export async function loader({
   params: { pageId },
