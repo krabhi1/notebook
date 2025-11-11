@@ -7,6 +7,14 @@ import type { PageWithFiles } from "~/.server/repos/pageRepository";
 import CodePage from "./code/CodePage";
 import { FileSyncProvider } from "~/contexts/FileSyncProvider";
 import { sleep } from "~/lib/utils";
+import { z } from "zod";
+
+const saveFileSchema = z.object({
+  action: z.literal("saveFile"),
+  fileId: z.string().min(1, "File ID is required"),
+  content: z.string(),
+});
+
 export async function loader({
   params: { pageId },
   context: { services },
@@ -24,17 +32,47 @@ export async function action({
 }: Route.ActionArgs) {
   const formData = await request.formData();
   const action = formData.get("action");
-  const fileService = services.fileService;
+  // save File
   if (action === "saveFile") {
-    const fileId = formData.get("fileId") as string;
-    const content = formData.get("content") as string;
-    if (typeof fileId !== "string" || fileId.trim() === "") {
-      throw new Error("File ID is required");
+    const formDataObj = {
+      action: formData.get("action"),
+      fileId: formData.get("fileId"),
+      content: formData.get("content"),
+    };
+
+    const validationResult = saveFileSchema.safeParse(formDataObj);
+
+    if (!validationResult.success) {
+      const errors = z.prettifyError(validationResult.error);
+      return {
+        ok: false,
+        error: errors,
+        content: formDataObj.content || "",
+        version: 0,
+      };
     }
-    if (typeof content !== "string") {
-      throw new Error("Content is required");
+
+    const { fileId, content } = validationResult.data;
+
+    try {
+      const updatedFile = await services.fileService.updateFileContent(
+        fileId,
+        content,
+      );
+      return {
+        ok: true,
+        content: updatedFile.content,
+        version: updatedFile.version,
+      };
+    } catch (error) {
+      console.error("Failed to save file:", error);
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : "Failed to save file",
+        content,
+        version: 0,
+      };
     }
-    await fileService.updateFileContent(fileId, content);
   }
 
   return null;
@@ -53,7 +91,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     console.log("Loaded page:", page);
   }, [page]);
   return (
-    <FileSyncProvider page={page}>
+    <FileSyncProvider key={page.id} page={page}>
       <div className="flex-1 flex">
         <PageView page={page} />
       </div>

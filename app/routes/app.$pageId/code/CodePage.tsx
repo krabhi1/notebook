@@ -31,7 +31,7 @@ export default function CodePage() {
           {activeFile && (
             <CodeEditor
               language={activeFile.lang}
-              defaultValue={filesSync.activeEditorContent}
+              defaultValue={activeFile.content}
               onChange={(val) => {
                 filesSync.updateValue(activeFile.id, val || "");
               }}

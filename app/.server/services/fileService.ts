@@ -172,11 +172,7 @@ export class FileService {
     await this.fileRepository.update(id, data);
   }
 
-  async updateFileContent(
-    id: string,
-    content: string,
-    userId?: string,
-  ): Promise<void> {
+  async updateFileContent(id: string, content: string, userId?: string) {
     const file = await this.fileRepository.getById(id);
     if (!file) {
       throw new Error(`File with id ${id} not found`);
@@ -195,7 +191,7 @@ export class FileService {
       }
     }
 
-    await this.fileRepository.updateContent(id, content);
+    return await this.fileRepository.updateContent(id, content);
   }
 
   async updateFileContentWithVersion(

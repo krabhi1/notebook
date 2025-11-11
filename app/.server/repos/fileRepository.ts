@@ -74,14 +74,16 @@ export class FileRepository {
       .where(eq(files.id, id));
   }
 
-  async updateContent(id: string, content: string): Promise<void> {
-    await this.db
+  async updateContent(id: string, content: string): Promise<File> {
+    const result = await this.db
       .update(files)
       .set({
         content,
         updatedAt: new Date(),
       })
-      .where(eq(files.id, id));
+      .where(eq(files.id, id))
+      .returning();
+    return result[0];
   }
 
   async updateContentWithVersion(

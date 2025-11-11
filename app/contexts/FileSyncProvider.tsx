@@ -1,210 +1,182 @@
-import React, {
+import {
   createContext,
-  use,
   useCallback,
   useContext,
   useEffect,
   useMemo,
-  useReducer,
+  useRef,
   useState,
-  type ReactNode,
+  type PropsWithChildren,
 } from "react";
-import {
-  useFetcher,
-  useFetchers,
-  type FetcherWithComponents,
-} from "react-router";
+import { useFetcher } from "react-router";
 import type { File } from "~/.server/db/schema";
-import { debounce } from "~/lib/utils";
 import type { PageWithFiles } from "~/.server/repos/pageRepository";
+
 export type ExtendedFile = File & {
-  status?: "saved" | "saving" | "error" | "unsaved";
+  status: "saved" | "dirty" | "saving" | "conflict";
   path: string;
 };
+
+type SaveResponse = {
+  content: string;
+  version: number;
+  ok: boolean;
+  error?: string;
+};
+
 type FileSyncContextType = {
   files: ExtendedFile[];
   activeFile: ExtendedFile | undefined;
-  activeEditorContent: string;
-  setActiveTab: (tabId: string) => void;
-  updateValue: (fileId: string, newContent: string) => void;
-  setFetcher: (fileId: string, fetcher: FetcherWithComponents<any>) => void;
+  setActiveTab: (id: string) => void;
+  updateValue: (id: string, content: string) => void;
+};
+
+type FileSaverProps = {
+  file: ExtendedFile;
+  markSaving: (id: string) => void;
+  applySave: (id: string, data: SaveResponse) => void;
 };
 
 const FileSyncContext = createContext<FileSyncContextType | undefined>(
   undefined,
 );
 
-interface FileSyncProviderProps {
-  page: PageWithFiles;
-}
-
 export function FileSyncProvider({
-  page: { files, id, name },
+  page,
   children,
-}: React.PropsWithChildren<FileSyncProviderProps>) {
-  const [drafts, setDrafts] = useState<
-    Record<
-      string,
-      {
-        content: string;
-        fetcher?: FetcherWithComponents<any>;
-      }
-    >
-  >({});
-  const [activeTabId, setActiveTabId] = useState(files[0]?.id);
-  useEffect(() => {
-    const activeExists = files.some((f) => f.id === activeTabId);
-    if (!activeExists) {
-      const newActiveId = files[0]?.id;
-      setActiveTabId(newActiveId);
-    }
-  }, [files, activeTabId, setActiveTabId]);
+}: PropsWithChildren<{ page: PageWithFiles }>) {
+  const [files, setFiles] = useState<ExtendedFile[]>(() =>
+    page.files.map((f) => ({
+      ...f,
+      status: "saved" as const,
+      path: `${f.pageId}/${f.id}`,
+    })),
+  );
 
-  const activePage = files.find((f) => f.id === activeTabId);
-  const activeEditorContent =
-    drafts[activeTabId]?.content ?? activePage?.content ?? "";
+  const [activeId, setActiveId] = useState<string | undefined>(files[0]?.id);
 
-  useEffect(() => {
-    console.log("FileSyncProvider mounted", name);
-    return () => {
-      console.log("FileSyncProvider unmounted", name);
-    };
-  }, [name]);
-
-  // 1. Memoized Debounce Function
-  const debouncedSave = useMemo(() => {
-    return debounce(
-      async (
-        fileId: string,
-        content: string,
-        fetcher: FetcherWithComponents<any>,
-      ) => {
-        try {
-          const formData = new FormData();
-          formData.append("action", "saveFile");
-          formData.append("content", content);
-          formData.append("fileId", fileId);
-          // Submit the form data
-          await fetcher.submit(formData, { method: "post" });
-          // Note: State update for 'saved' status happens automatically via fetchers update
-          console.log("Saved to cloud successfully.");
-        } catch (error) {
-          console.error("Failed to save to cloud:", error);
-          // TODO: Implement error status update here
-        }
-      },
-      2000,
+  const updateValue = useCallback((id: string, content: string) => {
+    setFiles((s) =>
+      s.map((f) =>
+        f.id === id ? { ...f, content, status: "dirty" as const } : f,
+      ),
     );
   }, []);
 
-  const updateValue = useCallback(
-    (fileId: string, newContent: string) => {
-      setDrafts((prev) => {
-        const old = prev[fileId];
-        const fetcher = old?.fetcher;
-        if (fetcher) {
-          debouncedSave(fileId, newContent, fetcher);
-        } else {
-          console.warn(
-            `No fetcher found for fileId ${fileId}. Cannot auto-save.`,
-          );
-        }
-        return {
-          ...prev,
-          [fileId]: { ...old, content: newContent },
-        };
-      });
-    },
-    [debouncedSave, setDrafts],
-  );
+  // internal
+  const markSaving = useCallback((id: string) => {
+    setFiles((s) =>
+      s.map((f) => (f.id === id ? { ...f, status: "saving" as const } : f)),
+    );
+  }, []);
 
-  const setFetcher = useCallback(
-    (fileId: string, fetcher: FetcherWithComponents<any>) => {
-      setDrafts((prev) => {
-        const old = prev[fileId];
-        // Avoid state update if fetcher is already set
-        if (old?.fetcher === fetcher) {
-          return prev;
-        }
-        return {
-          ...prev,
-          [fileId]: { ...old, fetcher },
-        };
-      });
-    },
-    [setDrafts],
-  );
+  const applySave = useCallback((id: string, data: SaveResponse) => {
+    setFiles((s) =>
+      s.map((f) =>
+        f.id === id
+          ? {
+              ...f,
+              content: data.content,
+              version: data.version,
+              status: data.ok ? ("saved" as const) : ("conflict" as const),
+            }
+          : f,
+      ),
+    );
+  }, []);
 
-  const extendedFiles: ExtendedFile[] = useMemo(() => {
-    return files.map((file) => {
-      const draftContent = drafts[file.id]?.content;
-      // Assumes the consuming component uses useFetcher({ key: file.id })
-      const fetcher = drafts[file.id]?.fetcher;
-      const isSaving = fetcher?.state === "submitting";
-      const path = `${file.pageId}/${file.id}`;
-      let status: ExtendedFile["status"] = undefined;
-      if (isSaving) {
-        status = "saving";
-      } else if (draftContent !== undefined && draftContent !== file.content) {
-        status = "unsaved";
-      } else {
-        status = "saved";
-      }
-
-      return { ...file, status, path };
-    });
-  }, [files, drafts]);
-
-  const activeFile = useMemo(() => {
-    return extendedFiles.find((f) => f.id === activeTabId);
-  }, [extendedFiles, activeTabId]);
+  const activeFile = files.find((f) => f.id === activeId);
 
   const value = useMemo(
     () => ({
-      updateValue,
-      files: extendedFiles,
-      activeEditorContent,
-      setActiveTab: setActiveTabId,
+      files,
       activeFile,
-      setFetcher,
+      setActiveTab: setActiveId,
+      updateValue,
     }),
-    [
-      updateValue,
-      extendedFiles,
-      activeTabId,
-      activeEditorContent,
-      setActiveTabId,
-      activeFile,
-      setFetcher,
-    ],
+    [files, activeFile, updateValue],
   );
+  console.log("Active file", activeFile?.id);
 
   return (
     <FileSyncContext.Provider value={value}>
       {children}
-      {/*Setup file fetcher for all files*/}
-      {extendedFiles.map((file) => (
-        <FileFetcher key={file.id} id={file.id} />
+      {files.map((f) => (
+        <FileSaver
+          key={f.id}
+          file={f}
+          markSaving={markSaving}
+          applySave={applySave}
+        />
       ))}
     </FileSyncContext.Provider>
   );
 }
 
-export const useFilesSync = (): FileSyncContextType => {
+export function useFilesSync(): FileSyncContextType {
   const ctx = useContext(FileSyncContext);
-  if (!ctx) {
-    throw new Error(
-      "useFileSyncContext must be used within a FileSyncProvider",
-    );
-  }
+  if (!ctx) throw new Error("useFilesSync must be inside provider");
   return ctx;
-};
+}
 
-function FileFetcher({ id }: { id: string }) {
-  const fetcher = useFetcher({ key: id });
-  const fileSync = useFilesSync();
+function FileSaver({ file, markSaving, applySave }: FileSaverProps) {
+  const fetcher = useFetcher({ key: file.id });
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // Use refs to store latest values without causing re-renders
+  const fileRef = useRef(file);
+  const markSavingRef = useRef(markSaving);
+
+  // Update refs on every render
+  fileRef.current = file;
+  markSavingRef.current = markSaving;
+
+  // Stable save function that doesn't recreate
+  const saveNow = useCallback(() => {
+    const currentFile = fileRef.current;
+    if (currentFile.status !== "dirty") return;
+
+    clearTimeout(timerRef.current);
+    markSavingRef.current(currentFile.id);
+    const formData = new FormData();
+    formData.append("action", "saveFile");
+    formData.append("content", currentFile.content);
+    formData.append("fileId", currentFile.id);
+    fetcher.submit(formData, { method: "post" });
+  }, [fetcher]); // Only depends on fetcher
+
+  // autosave with timer
   useEffect(() => {
-    fileSync.setFetcher(id, fetcher);
-  }, [id, fetcher, fileSync]);
+    if (file.status !== "dirty") return;
+
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      saveNow();
+    }, 1500);
+
+    return () => clearTimeout(timerRef.current);
+  }, [file.content, file.status, saveNow]); // saveNow is now stable
+
+  // Save immediately on ACTUAL unmount
+  useEffect(() => {
+    return () => {
+      console.log(`Actually unmounting FileSaver for file ${file.id}`);
+      const currentFile = fileRef.current;
+      if (currentFile.status === "dirty") {
+        saveNow();
+      }
+    };
+  }, [saveNow]); // saveNow is now stable, so this rarely re-runs
+
+  // Handle save response
+  useEffect(() => {
+    if (!fetcher.data) return;
+    const response = fetcher.data as SaveResponse;
+    if (!response.ok && response.error) {
+      console.error(`Failed to save file ${file.id}:`, response.error);
+    }
+    applySave(file.id, response);
+  }, [fetcher.data, applySave, file.id]);
+
   return null;
 }
