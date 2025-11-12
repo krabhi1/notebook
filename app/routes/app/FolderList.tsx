@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import PageList from "./PageList";
-import { useFetcher } from "react-router";
+import { useFetcher, useParams } from "react-router";
 import type { FolderWithPages } from "~/.server/repos/folderRepository";
 
 interface FolderListProps {
@@ -35,7 +35,9 @@ type FolderItemProps = {
   folder: FolderWithPages;
 };
 function FolderItem({ folder }: FolderItemProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const { pageId } = useParams();
+  const isActive = folder.pages.some((p) => p.id === pageId);
+  const [isExpanded, setIsExpanded] = useState(isActive);
 
   const toggleFolder = (id: string) => {
     setIsExpanded((prev) => !prev);
@@ -65,11 +67,15 @@ function FolderItem({ folder }: FolderItemProps) {
             }`}
           />
           {isExpanded ? (
-            <FolderOpen className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            <FolderOpen
+              className={`w-4 h-4 ${isActive && "text-blue-500"} flex-shrink-0`}
+            />
           ) : (
             <Folder className="w-4 h-4 text-gray-400 flex-shrink-0" />
           )}
-          <span className="truncate text-sm">{folder.name}</span>
+          <span className={`truncate text-sm ${isActive && "text-blue-500"}`}>
+            {folder.name}
+          </span>
         </div>
         <div className="flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <DropdownMenu>
@@ -87,19 +93,19 @@ function FolderItem({ folder }: FolderItemProps) {
                 e.stopPropagation();
               }}
             >
-              <DropdownMenuItem onClick={() => createPage(folder.id, "web")}>
+              <DropdownMenuItem onSelect={() => createPage(folder.id, "web")}>
                 Web
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => createPage(folder.id, "code")}>
+              <DropdownMenuItem onSelect={() => createPage(folder.id, "code")}>
                 Code
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => createPage(folder.id, "mermaid")}
+                onSelect={() => createPage(folder.id, "mermaid")}
               >
                 Mermaid
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => createPage(folder.id, "database")}
+                onSelect={() => createPage(folder.id, "database")}
               >
                 Database
               </DropdownMenuItem>

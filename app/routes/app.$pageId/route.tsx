@@ -1,7 +1,6 @@
 import type { Route } from "../app.$pageId/+types/route";
 import WebPage from "./web/WebPage";
 import { useEffect } from "react";
-import CodePageV2 from "./code/CodePageV2";
 import type { ShouldRevalidateFunction } from "react-router";
 import type { PageWithFiles } from "~/.server/repos/pageRepository";
 import CodePage from "./code/CodePage";

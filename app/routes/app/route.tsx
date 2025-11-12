@@ -4,6 +4,7 @@ import FolderList from "~/routes/app/FolderList";
 import { useFetcher } from "react-router";
 import type { Route } from "../app/+types/route";
 import type { Page } from "~/.server/db/schema";
+import { redirect } from "react-router";
 
 export async function loader({
   context: { services, user },
@@ -42,11 +43,12 @@ export async function action({
     if (typeof type !== "string" || type.trim() === "") {
       throw new Error("Page type is required");
     }
-    await services.pageService.createPageWithDefaultFiles(
+    const page = await services.pageService.createPageWithDefaultFiles(
       folderId,
       name,
       type as Page["type"],
     );
+    return redirect("/app/" + page.id);
   }
   // save File
   if (action === "saveFile") {
