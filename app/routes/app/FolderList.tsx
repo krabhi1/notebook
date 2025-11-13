@@ -105,6 +105,11 @@ function FolderItem({ folder }: FolderItemProps) {
                 Mermaid
               </DropdownMenuItem>
               <DropdownMenuItem
+                onSelect={() => createPage(folder.id, "excalidraw")}
+              >
+                Excalidraw
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 onSelect={() => createPage(folder.id, "database")}
               >
                 Database

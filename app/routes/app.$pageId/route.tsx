@@ -1,11 +1,8 @@
 import type { Route } from "../app.$pageId/+types/route";
 import WebPage from "./web/WebPage";
-import { useEffect } from "react";
-import type { ShouldRevalidateFunction } from "react-router";
 import type { PageWithFiles } from "~/.server/repos/pageRepository";
 import CodePage from "./code/CodePage";
 import { FileSyncProvider } from "~/contexts/FileSyncProvider";
-import { sleep } from "~/lib/utils";
 import { z } from "zod";
 
 const saveFileSchema = z.object({
@@ -76,19 +73,9 @@ export async function action({
 
   return null;
 }
-export const shouldRevalidate: ShouldRevalidateFunction = ({ formData }) => {
-  // if (formData?.get("action") === "saveFile") {
-  //   return false;
-  // }
-
-  return true;
-};
 
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { page } = loaderData;
-  useEffect(() => {
-    console.log("Loaded page:", page);
-  }, [page]);
   return (
     <FileSyncProvider key={page.id} page={page}>
       <div className="flex-1 flex">

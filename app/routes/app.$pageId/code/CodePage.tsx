@@ -1,6 +1,3 @@
-import { useEffect } from "react";
-import { useFetcher, type FetcherWithComponents } from "react-router";
-import type { File } from "~/.server/db/schema";
 import CodeEditor from "~/components/CodeEditor";
 import { ScrollArea, ScrollBar } from "~/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
@@ -21,7 +18,12 @@ export default function CodePage() {
           <TabsList className="h-10 w-max">
             {filesSync.files.map((file) => (
               <TabsTrigger key={file.id} value={file.id}>
-                {file.name}-{file.status}
+                <div className="flex items-center gap-2">
+                  {file.status === "dirty" && (
+                    <div className={`w-2 h-2 rounded-full bg-yellow-500`} />
+                  )}
+                  {file.name}
+                </div>
               </TabsTrigger>
             ))}
           </TabsList>
