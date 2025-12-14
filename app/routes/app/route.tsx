@@ -13,6 +13,18 @@ export async function loader({
   const folders = await services.folderService.getFoldersWithPages(user.id);
   return { folders };
 }
+// let cache: any = null;
+// export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
+//   if (cache) {
+//     console.log("Returning cached data for /app route");
+//     return cache;
+//   }
+//   const data = await serverLoader();
+//   cache = data;
+//   return data;
+// }
+
+// clientLoader.hydrate = true;
 
 export async function action({
   request,

@@ -73,6 +73,18 @@ export async function action({
 
   return null;
 }
+// let cache = new Map<any,any>();
+// export async function clientLoader({ serverLoader, params: { pageId }, }: Route.ClientLoaderArgs) {
+//   if (cache.has(pageId)) {
+//     console.log("Returning cached data for /app/:pageId route, pageId:", pageId);
+//     return cache.get(pageId);
+//   }
+//   const data = await serverLoader();
+//   cache.set(pageId, data);
+//   return data;
+// }
+
+// clientLoader.hydrate = true;
 
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { page } = loaderData;

@@ -9,7 +9,7 @@
     "dev": "react-router dev",
     "postinstall": "npm run cf-typegen",
     "prebuild": "drizzle-kit migrate",
-    "preview": "npm run build && vite preview",
+    "preview": "npm run build && vite preview --port 5173",
     "typecheck": "npm run cf-typegen && react-router typegen && tsc -b",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

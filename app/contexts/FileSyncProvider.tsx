@@ -96,7 +96,6 @@ export function FileSyncProvider({
     }),
     [files, activeFile, updateValue],
   );
-  console.log("Active file", activeFile?.id);
 
   return (
     <FileSyncContext.Provider value={value}>
@@ -160,7 +159,6 @@ function FileSaver({ file, markSaving, applySave }: FileSaverProps) {
   // Save immediately on ACTUAL unmount
   useEffect(() => {
     return () => {
-      console.log(`Actually unmounting FileSaver for file ${file.id}`);
       const currentFile = fileRef.current;
       if (currentFile.status === "dirty") {
         saveNow();
