@@ -23,7 +23,7 @@ mermaid.initialize({
 export function MermaidViewer({ code }: MermaidViewerProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [error, setError] = useState<string | null>(null);
-	const uniqueId = useId().replace(/:/g, ""); // Ensure ID is CSS-selector safe
+	const uniqueId = Math.random().toString(36).substr(2, 9) + useId();
 
 	// Persist the D3 transform across renders
 	const transformRef = useRef<d3.ZoomTransform | null>(null);

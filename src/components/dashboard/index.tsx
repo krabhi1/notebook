@@ -1,4 +1,3 @@
-import { ClientOnly } from "@tanstack/react-router";
 import { useState } from "react";
 import CodeEditor from "@/components/CodeEditor";
 import {
@@ -6,6 +5,7 @@ import {
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { useDebounce } from "@/lib/utils";
 import { MermaidViewer } from "./MermaidViewer";
 
 const DEFAULT_CODE = `graph TD
@@ -20,6 +20,7 @@ const DEFAULT_CODE = `graph TD
 
 export default function Dashboard() {
 	const [code, setCode] = useState(DEFAULT_CODE);
+	const debouncedCode = useDebounce(code, 300);
 
 	return (
 		<div className="h-full w-full p-2 flex flex-col min-h-0">
@@ -36,8 +37,10 @@ export default function Dashboard() {
 							</div>
 							<div className="flex-1 min-h-0 w-full overflow-hidden">
 								<CodeEditor
-									value={code}
-									onChange={(val) => setCode(val || "")}
+									defaultValue={code}
+									onChange={(val) => {
+										setCode(val || "");
+									}}
 									language="markdown"
 								/>
 							</div>
@@ -56,9 +59,7 @@ export default function Dashboard() {
 								Preview
 							</div>
 							<div className="flex-1 min-h-0 overflow-hidden relative">
-								<ClientOnly>
-									<MermaidViewer code={code} />
-								</ClientOnly>
+								<MermaidViewer code={debouncedCode} />
 							</div>
 						</div>
 					</ResizablePanel>
