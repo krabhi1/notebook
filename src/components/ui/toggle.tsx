@@ -5,7 +5,7 @@ import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 const toggleVariants = cva(
-	"inline-flex items-center justify-center gap-2 text-sm font-medium border border-border bg-surface hover:bg-panel hover:text-text disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-white data-[state=on]:border-accent [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-focus focus-visible:ring-focus/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-focus/20 aria-invalid:border-focus whitespace-nowrap",
+	"inline-flex items-center justify-center gap-2 text-sm font-medium border border-border bg-surface hover:bg-panel hover:text-text disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-white data-[state=on]:border-accent [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 focus-visible:border-focus outline-none transition-[color,box-shadow] aria-invalid:border-focus whitespace-nowrap",
 	{
 		variants: {
 			variant: {
@@ -16,7 +16,7 @@ const toggleVariants = cva(
 			size: {
 				default: "h-9 px-2 min-w-9",
 				sm: "h-8 px-1.5 min-w-8",
-				lg: "h-10 px-2.5 min-w-10",
+				lg: "h-10 px-3 min-w-10",
 			},
 		},
 		defaultVariants: {

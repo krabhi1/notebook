@@ -36,7 +36,7 @@ function AppLayout({
 		<div
 			className={cn(
 				className,
-				"h-dvh overflow-hidden min-h-0 flex flex-col bg-surface",
+				"h-screen w-screen overflow-hidden flex flex-col bg-surface",
 			)}
 			{...props}
 		>
@@ -145,9 +145,7 @@ function AppLayout({
 				</div>
 			</header>
 
-			<main className="flex-1 overflow-y-auto min-h-0 relative">
-				{children}
-			</main>
+			<main className="flex-1 overflow-y-auto min-h-0">{children}</main>
 		</div>
 	);
 }
