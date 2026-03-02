@@ -1,33 +1,25 @@
-import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
-import { z } from "zod";
+import fs from 'node:fs';
+import path from 'node:path';
 
-const envSchema = z.discriminatedUnion("NODE_ENV", [
-  z.object({
-    NODE_ENV: z.literal("production"),
-    TURSO_CONNECTION_URL: z.string().min(1),
-    TURSO_AUTH_TOKEN: z.string().min(1),
-  }),
-  z.object({
-    NODE_ENV: z.enum(["development", "test"]).optional(),
-    DATABASE_URL: z.string().min(1),
-  }),
-]);
-
-const env = envSchema.parse(process.env);
-const isProduction = env.NODE_ENV === "production";
-console.log(`Running in ${env.NODE_ENV} environment`);
-
+// Helper to find the local D1 SQLite file
+function getLocalD1() {
+  const basePath = path.resolve('.wrangler/state/v3/d1/miniflare-D1DatabaseObject');
+  if (fs.existsSync(basePath)) {
+    const files = fs.readdirSync(basePath);
+    const sqliteFile = files.find((f) => f.endsWith('.sqlite'));
+    if (sqliteFile) return path.join(basePath, sqliteFile);
+  }
+  return null;
+}
+const localD1Path = getLocalD1();
 export default defineConfig({
-  schema: "./app/.server/db/schema.ts",
   out: "./migrations",
-  dialect: isProduction ? "turso" : "sqlite",
-  dbCredentials: isProduction
-    ? {
-        url: env.TURSO_CONNECTION_URL,
-        authToken: env.TURSO_AUTH_TOKEN,
-      }
-    : {
-        url: `${env.DATABASE_URL}`,
-      },
+  schema: "./src/server/db/schema/index.ts",
+  dialect: "sqlite",
+  // For Cloudflare D1, we don't need to provide dbCredentials here
+  // as migrations are generated based on the schema and applied
+  // via the wrangler CLI.
+  // However, we can specify the local SQLite file for development purposes.
+  ...(localD1Path ? { dbCredentials: { url: `file:${localD1Path}` } } : {})
 });

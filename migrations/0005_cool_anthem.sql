@@ -1,1 +1,0 @@
-ALTER TABLE `file` ADD `version` integer DEFAULT 1 NOT NULL;

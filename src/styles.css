@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@import "@radix-ui/colors/teal.css";
+@import "@radix-ui/colors/teal-dark.css";
+@import "@radix-ui/colors/sage.css";
+@import "@radix-ui/colors/sage-dark.css";
+
+@import "@radix-ui/colors/red.css";
+@import "@radix-ui/colors/red-dark.css";
+@import "@radix-ui/colors/green.css";
+@import "@radix-ui/colors/green-dark.css";
+
+:root {
+	color-scheme: light;
+
+	--radius: 6px;
+
+	/* Brand + Neutral (Teal + Sage) */
+	--accent-9: var(--teal-9);
+	--accent-10: var(--teal-10);
+	--accent-11: var(--teal-11);
+
+	--neutral-1: var(--sage-1);
+	--neutral-2: var(--sage-2);
+	--neutral-3: var(--sage-3);
+	--neutral-4: var(--sage-4);
+	--neutral-6: var(--sage-6);
+	--neutral-7: var(--sage-7);
+	--neutral-11: var(--sage-11);
+	--neutral-12: var(--sage-12);
+
+	/* Minimal roles */
+	--surface: var(--neutral-1);
+	--panel: var(--neutral-2);
+	--panel2: var(--neutral-3);
+	--panel3: var(--neutral-4);
+	--text: var(--neutral-12);
+	--text-muted: var(--neutral-11);
+	--border: var(--neutral-6);
+	--accent: var(--accent-9);
+	--accent-hover: var(--accent-10);
+	--focus: var(--accent-11);
+	--error: var(--red-9);
+	--success: var(--green-9);
+	--surface-raised: var(--neutral-3);
+}
+
+.dark {
+	color-scheme: dark;
+
+	/* Use Dark Radix UI Tokens */
+	--accent-9: var(--teal-9);
+	--accent-10: var(--teal-10);
+	--accent-11: var(--teal-11);
+
+	--neutral-1: var(--sage-1);
+	--neutral-2: var(--sage-2);
+	--neutral-3: var(--sage-3);
+	--neutral-4: var(--sage-4);
+	--neutral-6: var(--sage-6);
+	--neutral-7: var(--sage-7);
+	--neutral-11: var(--sage-11);
+	--neutral-12: var(--sage-12);
+
+	/* Minimal roles for Dark Mode */
+	--surface: var(--neutral-1);
+	--panel: var(--neutral-2);
+	--panel2: var(--neutral-3);
+	--panel3: var(--neutral-4);
+	--text: var(--neutral-12);
+	--text-muted: var(--neutral-11);
+	--border: var(--neutral-7); /* Slightly stronger border in dark mode */
+	--accent: var(--accent-9);
+	--accent-hover: var(--accent-10);
+	--focus: var(--accent-11);
+	--error: var(--red-9);
+	--success: var(--green-9);
+	--surface-raised: var(--neutral-3);
+}
+
+@theme {
+	--color-surface: var(--surface);
+	--color-panel: var(--panel);
+	--color-panel2: var(--panel2);
+	--color-panel3: var(--panel3);
+	--color-text: var(--text);
+	--color-text-muted: var(--text-muted);
+	--color-border: var(--border);
+	--color-accent: var(--accent);
+	--color-accent-hover: var(--accent-hover);
+	--color-focus: var(--focus);
+	--color-error: var(--error);
+	--color-success: var(--success);
+	--color-surface-raised: var(--surface-raised);
+
+	--radius-lg: var(--radius);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-sm: calc(var(--radius) - 4px);
+}
+
+/* Global resets to ensure colors apply correctly */
+body {
+	background-color: var(--surface);
+	color: var(--text);
+}

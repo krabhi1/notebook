@@ -1,1 +1,0 @@
-ALTER TABLE `page` RENAME COLUMN "meta" TO "options";

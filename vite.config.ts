@@ -1,16 +1,34 @@
-import { reactRouter } from "@react-router/dev/vite";
+import { fileURLToPath, URL } from "node:url";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
+import { devtools } from "@tanstack/devtools-vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
-import devtoolsJson from "vite-plugin-devtools-json";
+import viteTsConfigPaths from "vite-tsconfig-paths";
 
-export default defineConfig({
-  plugins: [
-    devtoolsJson(),
-    cloudflare({ viteEnvironment: { name: "ssr" } }),
-    tailwindcss(),
-    reactRouter(),
-    tsconfigPaths(),
-  ],
+const config = defineConfig({
+	resolve: {
+		alias: {
+			"@": fileURLToPath(new URL("./src", import.meta.url)),
+		},
+	},
+	plugins: [
+		devtools(),
+		cloudflare({ viteEnvironment: { name: "ssr" } }),
+		// this is the plugin that enables path aliases
+		viteTsConfigPaths({
+			projects: ["./tsconfig.json"],
+		}),
+		tailwindcss(),
+		tanstackStart({
+			// prerender: {
+			// 	enabled: true,
+			// 	autoStaticPathsDiscovery: true,
+			// },
+		}),
+		viteReact(),
+	],
 });
+
+export default config;
