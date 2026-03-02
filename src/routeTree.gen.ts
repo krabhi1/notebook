@@ -10,7 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as authIndexRouteImport } from './routes/(auth)/index'
 import { Route as publicSignupRouteImport } from './routes/(public)/signup'
 import { Route as publicLoginRouteImport } from './routes/(public)/login'
 import { Route as publicForgotPasswordRouteImport } from './routes/(public)/forgot-password'
@@ -21,10 +21,10 @@ const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const authIndexRoute = authIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => authRouteRoute,
 } as any)
 const publicSignupRoute = publicSignupRouteImport.update({
   id: '/(public)/signup',
@@ -53,61 +53,60 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '/history': typeof authHistoryRoute
   '/forgot-password': typeof publicForgotPasswordRoute
   '/login': typeof publicLoginRoute
   '/signup': typeof publicSignupRoute
+  '/': typeof authIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/history': typeof authHistoryRoute
   '/forgot-password': typeof publicForgotPasswordRoute
   '/login': typeof publicLoginRoute
   '/signup': typeof publicSignupRoute
+  '/': typeof authIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
   '/(auth)/history': typeof authHistoryRoute
   '/(public)/forgot-password': typeof publicForgotPasswordRoute
   '/(public)/login': typeof publicLoginRoute
   '/(public)/signup': typeof publicSignupRoute
+  '/(auth)/': typeof authIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/history'
     | '/forgot-password'
     | '/login'
     | '/signup'
+    | '/'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/history'
     | '/forgot-password'
     | '/login'
     | '/signup'
+    | '/'
     | '/api/auth/$'
   id:
     | '__root__'
-    | '/'
     | '/(auth)'
     | '/(auth)/history'
     | '/(public)/forgot-password'
     | '/(public)/login'
     | '/(public)/signup'
+    | '/(auth)/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
   publicForgotPasswordRoute: typeof publicForgotPasswordRoute
   publicLoginRoute: typeof publicLoginRoute
@@ -124,12 +123,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/(auth)/': {
+      id: '/(auth)/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof authIndexRouteImport
+      parentRoute: typeof authRouteRoute
     }
     '/(public)/signup': {
       id: '/(public)/signup'
@@ -171,10 +170,12 @@ declare module '@tanstack/react-router' {
 
 interface authRouteRouteChildren {
   authHistoryRoute: typeof authHistoryRoute
+  authIndexRoute: typeof authIndexRoute
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
   authHistoryRoute: authHistoryRoute,
+  authIndexRoute: authIndexRoute,
 }
 
 const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
@@ -182,7 +183,6 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
   publicForgotPasswordRoute: publicForgotPasswordRoute,
   publicLoginRoute: publicLoginRoute,

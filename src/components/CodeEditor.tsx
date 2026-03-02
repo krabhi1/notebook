@@ -1,5 +1,6 @@
 import type { EditorProps, Monaco, OnMount } from "@monaco-editor/react";
 import { ClientOnly } from "@tanstack/react-router";
+import initEditor from "monaco-mermaid";
 import { lazy, Suspense, useEffect } from "react";
 
 // Lazy load the Monaco Editor to prevent SSR issues
@@ -52,6 +53,10 @@ const CodeEditor = ({
 							{loadingText}
 						</div>
 					}
+					beforeMount={(m) => {
+						// initEditor will register the mermaid language and theme with monaco, and also add the necessary typings for autocompletion
+						initEditor(m);
+					}}
 					options={{
 						minimap: { enabled: false },
 						fontSize: 14,

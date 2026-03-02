@@ -13,14 +13,14 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { useOptionalAppContext } from "@/providers/app-provider";
+import { useAuthContext } from "@/providers/auth-provider";
 
 function AppLayout({
 	children,
 	className,
 	...props
 }: React.ComponentProps<"div">) {
-	const context = useOptionalAppContext();
+	const context = useAuthContext();
 	const [isDark, setIsDark] = useState(false);
 
 	const toggleTheme = () => {

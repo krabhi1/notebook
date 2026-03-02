@@ -1,12 +1,12 @@
 import { useState } from "react";
 import CodeEditor from "@/components/CodeEditor";
+import { MermaidViewer } from "@/components/MermaidViewer";
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { useDebounce } from "@/lib/utils";
-import { MermaidViewer } from "./MermaidViewer";
 
 const DEFAULT_CODE = `graph TD
     A[Start Typing Mermaid Code] --> B{Interactive?}
@@ -41,7 +41,7 @@ export default function Dashboard() {
 									onChange={(val) => {
 										setCode(val || "");
 									}}
-									language="markdown"
+									language="mermaid"
 								/>
 							</div>
 						</div>

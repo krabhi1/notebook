@@ -1,24 +1,22 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { AppProvider } from "@/providers/app-provider";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import Landing from "@/components/landing";
+import AppLayout from "@/components/layout/app-layout";
+import { AuthProvider } from "@/providers/auth-provider";
 
 export const Route = createFileRoute("/(auth)")({
-	beforeLoad: ({ context, location }) => {
-		if (!context.session) {
-			throw redirect({
-				to: "/login",
-				search: {
-					redirect: location.href,
-				},
-			});
-		}
+	component: () => {
+		const { session } = Route.useRouteContext();
+		if (!session) return <Landing />;
+		return <RouteComponent />;
 	},
-	component: RouteComponent,
 });
 
 function RouteComponent() {
 	return (
-		<AppProvider>
-			<Outlet />
-		</AppProvider>
+		<AuthProvider>
+			<AppLayout>
+				<Outlet />
+			</AppLayout>
+		</AuthProvider>
 	);
 }
