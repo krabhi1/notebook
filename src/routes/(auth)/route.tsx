@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import AppHeader from "@/components/dashboard/app-header";
 import Landing from "@/components/landing";
-import AppLayout from "@/components/layout/app-layout";
 import { AuthProvider } from "@/providers/auth-provider";
 
 export const Route = createFileRoute("/(auth)")({
@@ -14,9 +14,10 @@ export const Route = createFileRoute("/(auth)")({
 function RouteComponent() {
 	return (
 		<AuthProvider>
-			<AppLayout>
+			<div className="h-screen w-screen overflow-hidden flex flex-col bg-surface">
+				<AppHeader />
 				<Outlet />
-			</AppLayout>
+			</div>
 		</AuthProvider>
 	);
 }

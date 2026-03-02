@@ -1,26 +1,53 @@
-import { useState } from "react";
-import CodeEditor from "@/components/CodeEditor";
-import { MermaidViewer } from "@/components/MermaidViewer";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import CodeEditor from "@/components/code-editor";
+import { MermaidViewer } from "@/components/mermaid-viewer";
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { useDocument } from "@/hooks/use-document";
 import { useDebounce } from "@/lib/utils";
+export const Route = createFileRoute("/(auth)/$docId")({
+	component: RouteComponent,
+});
 
-const DEFAULT_CODE = `graph TD
-    A[Start Typing Mermaid Code] --> B{Interactive?}
-    B -- Yes --> C[Pan with Mouse]
-    B -- Yes --> D[Zoom with Scroll]
-    C --> E[Double Click to Reset]
-    D --> E
+function RouteComponent() {
+	const { docId } = Route.useParams();
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style E fill:#00ff00,stroke:#333,stroke-width:4px`;
+	// Everything comes from one place
+	const { document, isLoading, updateDocument } = useDocument(docId);
 
-export default function Dashboard() {
-	const [code, setCode] = useState(DEFAULT_CODE);
-	const debouncedCode = useDebounce(code, 300);
+	const [code, setCode] = useState("");
+	const debouncedCode = useDebounce(code, 1000);
+
+	// Sync initial load
+	useEffect(() => {
+		if (document?.content && !code) setCode(document.content);
+	}, [document?.content, code]);
+
+	// Simple auto-save logic
+	useEffect(() => {
+		if (code && code !== document?.content) {
+			updateDocument({ data: { id: docId, content: code } });
+		}
+	}, [code, docId, document?.content, updateDocument]);
+	if (isLoading) {
+		return (
+			<div className="h-full w-full flex items-center justify-center">
+				<p className="text-muted-foreground">Loading...</p>
+			</div>
+		);
+	}
+	if (!document) {
+		return (
+			<div className="h-full w-full flex items-center justify-center">
+				<p className="text-muted-foreground">Document not found</p>
+			</div>
+		);
+	}
+	const text = document.content;
 
 	return (
 		<div className="h-full w-full p-2 flex flex-col min-h-0">
@@ -37,7 +64,7 @@ export default function Dashboard() {
 							</div>
 							<div className="flex-1 min-h-0 w-full overflow-hidden">
 								<CodeEditor
-									defaultValue={code}
+									defaultValue={text}
 									onChange={(val) => {
 										setCode(val || "");
 									}}

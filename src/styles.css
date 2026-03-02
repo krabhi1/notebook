@@ -102,6 +102,10 @@
 body {
 	background-color: var(--surface);
 	color: var(--text);
+
+}
+*{
+    @apply border-border;
 }
 
 .mermaid-preview svg {

@@ -8,7 +8,6 @@ export default {
 	// Standard TanStack Start fetch handler
 	async fetch(request: Request, _env: Env, _ctx: ExecutionContext) {
 		try {
-			console.log(`Received request: ${request.method} ${request.url}`);
 			return await handler.fetch(request);
 		} catch (err) {
 			console.error("Worker Fetch Error:", err);

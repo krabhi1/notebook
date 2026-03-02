@@ -15,6 +15,7 @@ import { Route as publicSignupRouteImport } from './routes/(public)/signup'
 import { Route as publicLoginRouteImport } from './routes/(public)/login'
 import { Route as publicForgotPasswordRouteImport } from './routes/(public)/forgot-password'
 import { Route as authHistoryRouteImport } from './routes/(auth)/history'
+import { Route as authDocIdRouteImport } from './routes/(auth)/$docId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const authRouteRoute = authRouteRouteImport.update({
@@ -46,6 +47,11 @@ const authHistoryRoute = authHistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => authRouteRoute,
 } as any)
+const authDocIdRoute = authDocIdRouteImport.update({
+  id: '/$docId',
+  path: '/$docId',
+  getParentRoute: () => authRouteRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -53,6 +59,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/$docId': typeof authDocIdRoute
   '/history': typeof authHistoryRoute
   '/forgot-password': typeof publicForgotPasswordRoute
   '/login': typeof publicLoginRoute
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
+  '/$docId': typeof authDocIdRoute
   '/history': typeof authHistoryRoute
   '/forgot-password': typeof publicForgotPasswordRoute
   '/login': typeof publicLoginRoute
@@ -71,6 +79,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(auth)': typeof authRouteRouteWithChildren
+  '/(auth)/$docId': typeof authDocIdRoute
   '/(auth)/history': typeof authHistoryRoute
   '/(public)/forgot-password': typeof publicForgotPasswordRoute
   '/(public)/login': typeof publicLoginRoute
@@ -81,6 +90,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/$docId'
     | '/history'
     | '/forgot-password'
     | '/login'
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/$docId'
     | '/history'
     | '/forgot-password'
     | '/login'
@@ -98,6 +109,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/(auth)'
+    | '/(auth)/$docId'
     | '/(auth)/history'
     | '/(public)/forgot-password'
     | '/(public)/login'
@@ -158,6 +170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authHistoryRouteImport
       parentRoute: typeof authRouteRoute
     }
+    '/(auth)/$docId': {
+      id: '/(auth)/$docId'
+      path: '/$docId'
+      fullPath: '/$docId'
+      preLoaderRoute: typeof authDocIdRouteImport
+      parentRoute: typeof authRouteRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -169,11 +188,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface authRouteRouteChildren {
+  authDocIdRoute: typeof authDocIdRoute
   authHistoryRoute: typeof authHistoryRoute
   authIndexRoute: typeof authIndexRoute
 }
 
 const authRouteRouteChildren: authRouteRouteChildren = {
+  authDocIdRoute: authDocIdRoute,
   authHistoryRoute: authHistoryRoute,
   authIndexRoute: authIndexRoute,
 }
