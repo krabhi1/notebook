@@ -106,8 +106,8 @@ export function MermaidViewer({ code }: MermaidViewerProps) {
 					}
 				}
 				setError(null);
-			} catch (err) {
-				console.error("Mermaid rendering error:", err);
+			} catch (_) {
+				// console.error("Mermaid rendering error:", err);
 				setError("Invalid Mermaid syntax");
 			}
 		};

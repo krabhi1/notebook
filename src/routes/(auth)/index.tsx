@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Loader2Icon } from "lucide-react";
 import { useState } from "react";
 import { DocumentCard } from "@/components/dashboard/document-card";
 import { DocumentDeleteDialog } from "@/components/dashboard/document-delete-dialog";
@@ -38,8 +39,9 @@ function RouteComponent() {
 					createDocument({ data: {} });
 				}}
 				disabled={isCreating}
+				className="w-fit"
 			>
-				{isCreating ? "Creating..." : "Create Document"}
+				{isCreating && <Loader2Icon className="animate-spin" />} Create Document
 			</Button>
 			{isLoading ? (
 				<p>Loading documents...</p>

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CodeEditor from "@/components/code-editor";
 import { MermaidViewer } from "@/components/mermaid-viewer";
 import {
@@ -8,7 +8,6 @@ import {
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { useDocument } from "@/hooks/use-document";
-import { useDebounce } from "@/lib/utils";
 export const Route = createFileRoute("/(auth)/$docId")({
 	component: RouteComponent,
 });
@@ -18,21 +17,13 @@ function RouteComponent() {
 
 	// Everything comes from one place
 	const { document, isLoading, updateDocument } = useDocument(docId);
+	const debounceRef = useRef<number | undefined>(undefined);
 
 	const [code, setCode] = useState("");
-	const debouncedCode = useDebounce(code, 1000);
-
-	// Sync initial load
+	//Inital load of the document content into the editor
 	useEffect(() => {
-		if (document?.content && !code) setCode(document.content);
-	}, [document?.content, code]);
-
-	// Simple auto-save logic
-	useEffect(() => {
-		if (code && code !== document?.content) {
-			updateDocument({ data: { id: docId, content: code } });
-		}
-	}, [code, docId, document?.content, updateDocument]);
+		if (document?.content) setCode(document.content);
+	}, [document?.content]);
 	if (isLoading) {
 		return (
 			<div className="h-full w-full flex items-center justify-center">
@@ -47,7 +38,6 @@ function RouteComponent() {
 			</div>
 		);
 	}
-	const text = document.content;
 
 	return (
 		<div className="h-full w-full p-2 flex flex-col min-h-0">
@@ -64,9 +54,15 @@ function RouteComponent() {
 							</div>
 							<div className="flex-1 min-h-0 w-full overflow-hidden">
 								<CodeEditor
-									defaultValue={text}
+									defaultValue={code}
 									onChange={(val) => {
-										setCode(val || "");
+										if (debounceRef.current) {
+											clearTimeout(debounceRef.current);
+										}
+										debounceRef.current = window.setTimeout(() => {
+											setCode(val || "");
+											updateDocument({ data: { id: docId, content: val } });
+										}, 600);
 									}}
 									language="mermaid"
 								/>
@@ -81,12 +77,12 @@ function RouteComponent() {
 						minSize={30}
 						className="flex flex-col min-h-0"
 					>
-						<div className="h-full flex flex-col min-h-0 p-2">
-							<div className="px-3 py-1 text-xs font-medium text-muted-foreground mb-2 shrink-0">
+						<div className="h-full flex flex-col min-h-0">
+							<div className="px-3 py-1.5 text-xs font-medium text-muted-foreground border-b bg-muted/30 shrink-0">
 								Preview
 							</div>
 							<div className="flex-1 min-h-0 overflow-hidden relative">
-								<MermaidViewer code={debouncedCode} />
+								<MermaidViewer code={code} />
 							</div>
 						</div>
 					</ResizablePanel>
