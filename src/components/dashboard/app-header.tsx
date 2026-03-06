@@ -41,12 +41,14 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 			)}
 			{...props}
 		>
-			<Link
-				to="/"
-				className="text-text text-2xl font-bold hover:opacity-80 transition-opacity"
-			>
-				Notebook
-			</Link>
+			<div className="flex items-center gap-3 " id="header-actions">
+				<Link
+					to="/"
+					className="text-text text-2xl font-bold hover:opacity-80 transition-opacity"
+				>
+					Notebook
+				</Link>
+			</div>
 
 			<div className="flex items-center gap-3">
 				<div>

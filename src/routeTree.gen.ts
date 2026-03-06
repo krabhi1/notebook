@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DevRouteImport } from './routes/dev'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as authIndexRouteImport } from './routes/(auth)/index'
 import { Route as publicSignupRouteImport } from './routes/(public)/signup'
@@ -17,6 +18,11 @@ import { Route as publicForgotPasswordRouteImport } from './routes/(public)/forg
 import { Route as authDocIdRouteImport } from './routes/(auth)/$docId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
+const DevRoute = DevRouteImport.update({
+  id: '/dev',
+  path: '/dev',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
   getParentRoute: () => rootRouteImport,
@@ -53,6 +59,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/dev': typeof DevRoute
   '/$docId': typeof authDocIdRoute
   '/forgot-password': typeof publicForgotPasswordRoute
   '/login': typeof publicLoginRoute
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
+  '/dev': typeof DevRoute
   '/$docId': typeof authDocIdRoute
   '/forgot-password': typeof publicForgotPasswordRoute
   '/login': typeof publicLoginRoute
@@ -71,6 +79,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(auth)': typeof authRouteRouteWithChildren
+  '/dev': typeof DevRoute
   '/(auth)/$docId': typeof authDocIdRoute
   '/(public)/forgot-password': typeof publicForgotPasswordRoute
   '/(public)/login': typeof publicLoginRoute
@@ -81,6 +90,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/dev'
     | '/$docId'
     | '/forgot-password'
     | '/login'
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/dev'
     | '/$docId'
     | '/forgot-password'
     | '/login'
@@ -98,6 +109,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/(auth)'
+    | '/dev'
     | '/(auth)/$docId'
     | '/(public)/forgot-password'
     | '/(public)/login'
@@ -108,6 +120,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
+  DevRoute: typeof DevRoute
   publicForgotPasswordRoute: typeof publicForgotPasswordRoute
   publicLoginRoute: typeof publicLoginRoute
   publicSignupRoute: typeof publicSignupRoute
@@ -116,6 +129,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dev': {
+      id: '/dev'
+      path: '/dev'
+      fullPath: '/dev'
+      preLoaderRoute: typeof DevRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)': {
       id: '/(auth)'
       path: ''
@@ -184,6 +204,7 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
+  DevRoute: DevRoute,
   publicForgotPasswordRoute: publicForgotPasswordRoute,
   publicLoginRoute: publicLoginRoute,
   publicSignupRoute: publicSignupRoute,
