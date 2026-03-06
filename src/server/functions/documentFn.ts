@@ -9,6 +9,7 @@ import {
 import { db } from "@/server/db";
 import { documents } from "@/server/db/schema";
 import { authMiddleware } from "@/server/middleware";
+import { DEFAULT_DOCUMENT_CONTENT } from "@/server/utils/constant";
 
 export const getDocumentsFn = createServerFn({ method: "GET" })
 	.middleware([authMiddleware])
@@ -49,7 +50,7 @@ export const createDocumentFn = createServerFn({ method: "POST" })
 				userId: user.id,
 				title: data.title,
 				type: data.type,
-				content: data.content,
+				content: data.content || DEFAULT_DOCUMENT_CONTENT.mermaid,
 				createdAt: new Date(),
 			})
 			.returning();
