@@ -78,10 +78,10 @@ function RouteComponent() {
 					defaultValue={layout}
 				>
 					<ToggleGroupItem value="horizontal">
-						<SplitSquareHorizontal className="size-5" />
+						<SplitSquareHorizontal />
 					</ToggleGroupItem>
 					<ToggleGroupItem value="vertical">
-						<SplitSquareVertical className="size-5" />
+						<SplitSquareVertical />
 					</ToggleGroupItem>
 				</ToggleGroup>,
 
