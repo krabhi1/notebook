@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SplitSquareHorizontal, SplitSquareVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-
 import CodeEditor from "@/components/code-editor";
 import { MermaidViewer } from "@/components/mermaid-viewer";
 import { EditableText } from "@/components/ui/editable-text";
@@ -10,6 +10,7 @@ import {
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDocument } from "@/hooks/use-document";
 export const Route = createFileRoute("/(auth)/$docId")({
 	component: RouteComponent,
@@ -21,6 +22,14 @@ function RouteComponent() {
 	// Everything comes from one place
 	const { document: doc, isLoading, updateDocument } = useDocument(docId);
 	const debounceRef = useRef<number | undefined>(undefined);
+	const [layout, setLayout] = useState<"horizontal" | "vertical">("horizontal");
+	useEffect(() => {
+		//load the layout preference from local storage
+		const savedLayout = localStorage.getItem("mermaid-editor-layout");
+		if (savedLayout === "horizontal" || savedLayout === "vertical") {
+			setLayout(savedLayout);
+		}
+	}, []);
 
 	const [code, setCode] = useState("");
 	//Inital load of the document content into the editor
@@ -56,9 +65,31 @@ function RouteComponent() {
 				</div>,
 				document.getElementById("header-actions") as HTMLElement,
 			)}
+			{createPortal(
+				<ToggleGroup
+					type="single"
+					size="sm"
+					onValueChange={(v) => {
+						if (v === "horizontal" || v === "vertical") {
+							setLayout(v);
+							localStorage.setItem("mermaid-editor-layout", v);
+						}
+					}}
+					defaultValue={layout}
+				>
+					<ToggleGroupItem value="horizontal">
+						<SplitSquareHorizontal className="size-5" />
+					</ToggleGroupItem>
+					<ToggleGroupItem value="vertical">
+						<SplitSquareVertical className="size-5" />
+					</ToggleGroupItem>
+				</ToggleGroup>,
+
+				document.getElementById("header-right-actions") as HTMLElement,
+			)}
 			<div className="h-full w-full p-2 flex flex-col min-h-0">
 				<div className="border h-full w-full rounded-lg bg-background shadow-sm overflow-hidden flex flex-col min-h-0">
-					<ResizablePanelGroup className="flex-1 min-h-0">
+					<ResizablePanelGroup className="flex-1 min-h-0" orientation={layout}>
 						<ResizablePanel
 							defaultSize={40}
 							minSize={20}

@@ -120,7 +120,7 @@ export function MermaidViewer({ code }: MermaidViewerProps) {
 	}, [code, uniqueId, setupZoom]);
 
 	return (
-		<div className="relative w-full h-full min-h-[300px] overflow-hidden bg-slate-50 dark:bg-slate-900 rounded-md border group">
+		<div className="relative w-full h-full min-h-75 overflow-hidden   group">
 			{/* Controls Information */}
 			<div className="absolute bottom-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-slate-400 pointer-events-none select-none bg-white/80 dark:bg-slate-800/80 px-2 py-1 rounded shadow-sm border border-slate-200 dark:border-slate-700">
 				Scroll to zoom • Drag to pan

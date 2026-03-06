@@ -41,13 +41,15 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 			)}
 			{...props}
 		>
-			<div className="flex flex-1 items-center gap-3 " id="header-actions">
+			<div className="flex items-center gap-3 ">
 				<Link
 					to="/"
-					className="text-text text-2xl font-bold hover:opacity-80 transition-opacity"
+					className="text-text text-lg font-bold hover:opacity-80 transition-opacity"
 				>
-					Notebook
+					<span className="hidden sm:inline">Notebook</span>
+					<span className="inline sm:hidden">N</span>
 				</Link>
+				<div id="header-actions" />
 			</div>
 
 			<div className="flex items-center gap-2 shrink-0">
@@ -56,6 +58,7 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 						<Loader2Icon className="animate-spin size-4" />
 					)}
 				</div>
+				<div id="header-right-actions" />
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Avatar className="cursor-pointer border border-border rounded-lg h-9 w-9 shrink-0">
