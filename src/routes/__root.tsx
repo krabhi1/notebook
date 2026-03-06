@@ -4,6 +4,7 @@ import {
 	HeadContent,
 	Scripts,
 } from "@tanstack/react-router";
+import { Toaster } from "@/components/ui/sonner";
 import type { Session } from "@/lib/auth-client";
 import { getSession } from "@/server/utils";
 import appCss from "../styles.css?url";
@@ -69,6 +70,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body className="overflow-hidden">
 				{children}
+				<Toaster />
 				{/*<TanStackDevtools
 					config={{
 						position: "bottom-right",

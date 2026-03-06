@@ -58,7 +58,7 @@ function RouteComponent() {
 					<EditableText
 						initialValue={doc.title}
 						onSave={(v) => {
-							updateDocument({ data: { id: docId, title: v } });
+							return updateDocument({ data: { id: docId, title: v } });
 						}}
 						className="text-sm"
 					/>
