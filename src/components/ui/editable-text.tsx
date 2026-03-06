@@ -50,7 +50,7 @@ export function EditableText({
 				onBlur={finishEditing}
 				onKeyDown={handleKeyDown}
 				className={cn(
-					"border border-border rounded  px-2 py-1 focus:outline-none",
+					"border border-border rounded  px-1.5 py-1 focus:outline-none w-40 md:w-auto",
 					className,
 				)}
 			/>
@@ -63,7 +63,7 @@ export function EditableText({
 		<span
 			onClick={() => setIsEditing(true)}
 			className={cn(
-				"px-2 py-1 border border-transparent! focus:outline-none",
+				"px-1.5 py-1 border border-transparent! focus:outline-none w-40 md:w-auto overflow-clip md:overflow-auto  text-ellipsis whitespace-nowrap cursor-pointer",
 				className,
 			)}
 		>

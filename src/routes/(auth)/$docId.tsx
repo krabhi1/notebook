@@ -49,9 +49,9 @@ function RouteComponent() {
 					<EditableText
 						initialValue={doc.title}
 						onSave={(v) => {
-							//todo save
 							updateDocument({ data: { id: docId, title: v } });
 						}}
+						className="text-sm"
 					/>
 				</div>,
 				document.getElementById("header-actions") as HTMLElement,

@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2Icon } from "lucide-react";
 import { useState } from "react";
 import { DocumentCard } from "@/components/dashboard/document-card";
 import { DocumentDeleteDialog } from "@/components/dashboard/document-delete-dialog";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useDocuments } from "@/hooks/use-document";
 
 export const Route = createFileRoute("/(auth)/")({
@@ -33,20 +33,32 @@ function RouteComponent() {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
 	return (
-		<div className="p-6 flex flex-col gap-6">
+		<div className=" flex flex-col gap-4 h-full overflow-y-scroll px-6 py-6">
 			<Button
 				onClick={() => {
 					createDocument({ data: {} });
 				}}
-				disabled={isCreating}
+				loading={isCreating}
 				className="w-fit"
 			>
-				{isCreating && <Loader2Icon className="animate-spin" />} Create Document
+				Create Document
 			</Button>
 			{isLoading ? (
-				<p>Loading documents...</p>
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ">
+					{Array.from({ length: 6 }).map((_, i) => (
+						<div
+							// biome-ignore lint/suspicious/noArrayIndexKey:  static array
+							key={i}
+							className="p-4 border rounded-lg h-60 flex flex-col justify-between"
+						>
+							<Skeleton className="h-4 w-3/4 mb-2" />
+							<Skeleton className="flex-1 w-full mb-2" />
+							<Skeleton className="h-6 w-1/2 ml-auto" />
+						</div>
+					))}
+				</div>
 			) : (
-				<div className="grid grid-cols-3 gap-4">
+				<div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-4 gap-4 ">
 					{documents.map((doc) => (
 						<DocumentCard
 							key={doc.id}

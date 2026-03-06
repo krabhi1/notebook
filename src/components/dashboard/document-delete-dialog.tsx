@@ -35,9 +35,9 @@ export function DocumentDeleteDialog({
 						onClick={() => {
 							onDelete(id);
 						}}
-						disabled={isDeleting}
+						loading={isDeleting}
 					>
-						{isDeleting ? "Deleting..." : "Delete"}
+						Delete
 					</Button>
 				</div>
 			</DialogContent>

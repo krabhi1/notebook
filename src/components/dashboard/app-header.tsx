@@ -41,7 +41,7 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 			)}
 			{...props}
 		>
-			<div className="flex items-center gap-3 " id="header-actions">
+			<div className="flex flex-1 items-center gap-3 " id="header-actions">
 				<Link
 					to="/"
 					className="text-text text-2xl font-bold hover:opacity-80 transition-opacity"
@@ -50,7 +50,7 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 				</Link>
 			</div>
 
-			<div className="flex items-center gap-3">
+			<div className="flex items-center gap-2 shrink-0">
 				<div>
 					{docId && isSaving > 0 && (
 						<Loader2Icon className="animate-spin size-4" />
@@ -58,7 +58,7 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 				</div>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Avatar className="cursor-pointer border border-border rounded-lg h-9 w-9">
+						<Avatar className="cursor-pointer border border-border rounded-lg h-9 w-9 shrink-0">
 							<AvatarImage
 								className="rounded-lg"
 								src={user.image || undefined}

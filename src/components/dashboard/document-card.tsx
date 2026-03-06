@@ -14,7 +14,7 @@ export function DocumentCard({
 	onDelete?: (id: string) => void;
 }) {
 	return (
-		<div className="border p-3 max-h-60 gap-2 flex flex-col justify-between">
+		<div className="border rounded-md p-3 max-h-60 h-60 gap-2 flex flex-col justify-between">
 			<h3 className="font-bold">{title}</h3>
 			<pre className="block text-xs overflow-hidden">{content}</pre>
 			<footer className="flex justify-end gap-2">
