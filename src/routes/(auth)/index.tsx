@@ -29,6 +29,7 @@ function RouteComponent() {
 		isDeleting,
 		isLoading,
 		isCreating,
+		updateDocument,
 	} = useDocuments();
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
@@ -68,6 +69,9 @@ function RouteComponent() {
 							onDelete={() => {
 								setSelectedDocId(doc.id);
 								setDeleteDialogOpen(true);
+							}}
+							onUpdate={(id, title) => {
+								return updateDocument({ data: { id, title } });
 							}}
 						/>
 					))}

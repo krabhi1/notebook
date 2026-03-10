@@ -4,7 +4,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from "@tanstack/react-query";
-
+import { toast } from "sonner";
 import {
 	createDocumentFn,
 	deleteDocumentFn,
@@ -12,7 +12,6 @@ import {
 	getDocumentsFn,
 	updateDocumentFn,
 } from "@/server/functions/documentFn";
-
 export const documentsQueryKey = ["documents"];
 export const documentsQueryOptions = () =>
 	queryOptions({
@@ -28,17 +27,35 @@ export function useDocuments() {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: documentsQueryKey });
 		},
+		onError: (error) => {
+			toast.error("Failed to create document. Please try again.", {
+				description: error.message,
+			});
+			console.error("Error creating document:", error);
+		},
 	});
 	const updateMutation = useMutation({
 		mutationFn: updateDocumentFn,
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: documentsQueryKey });
 		},
+		onError: (error) => {
+			toast.error("Failed to update document. Please try again.", {
+				description: error.message,
+			});
+			console.error("Error updating document:", error, error);
+		},
 	});
 	const deleteMutation = useMutation({
 		mutationFn: deleteDocumentFn,
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: documentsQueryKey });
+		},
+		onError: (error) => {
+			toast.error("Failed to delete document. Please try again.", {
+				description: error.message,
+			});
+			console.error("Error deleting document:", error);
 		},
 	});
 
@@ -70,12 +87,24 @@ export function useDocument(id: string) {
 		onSuccess: (updatedDoc) => {
 			queryClient.setQueryData(documentQueryOptions(id).queryKey, updatedDoc);
 		},
+		onError: (error) => {
+			toast.error("Failed to update document. Please try again.", {
+				description: error.message,
+			});
+			console.error("Error updating document:", error);
+		},
 	});
 	const deleteMutation = useMutation({
 		mutationFn: deleteDocumentFn,
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: documentQueryKey(id) });
 			queryClient.invalidateQueries({ queryKey: documentsQueryKey });
+		},
+		onError: (error) => {
+			toast.error("Failed to delete document. Please try again.", {
+				description: error.message,
+			});
+			console.error("Error deleting document:", error);
 		},
 	});
 

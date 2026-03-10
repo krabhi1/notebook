@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 type EditableTextProps = {
 	initialValue: string;
-	onSave: (value: string) => void;
+	onSave?: (value: string) => Promise<unknown>;
 	className?: string;
 };
 
@@ -26,10 +26,15 @@ export function EditableText({
 		input?.focus();
 	}, [isEditing]);
 
-	const finishEditing = () => {
+	const finishEditing = async () => {
 		setIsEditing(false);
 		if (value.trim() === "" || value === initialValue) return;
-		onSave(value);
+		try {
+			await onSave?.(value);
+		} catch (_) {
+			// Revert to initial value on error
+			setValue(initialValue);
+		}
 	};
 
 	const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {

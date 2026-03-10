@@ -58,7 +58,7 @@ function RouteComponent() {
 					<EditableText
 						initialValue={doc.title}
 						onSave={(v) => {
-							updateDocument({ data: { id: docId, title: v } });
+							return updateDocument({ data: { id: docId, title: v } });
 						}}
 						className="text-sm"
 					/>
@@ -78,10 +78,10 @@ function RouteComponent() {
 					defaultValue={layout}
 				>
 					<ToggleGroupItem value="horizontal">
-						<SplitSquareHorizontal className="size-5" />
+						<SplitSquareHorizontal />
 					</ToggleGroupItem>
 					<ToggleGroupItem value="vertical">
-						<SplitSquareVertical className="size-5" />
+						<SplitSquareVertical />
 					</ToggleGroupItem>
 				</ToggleGroup>,
 

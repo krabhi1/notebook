@@ -9,6 +9,7 @@ import {
 import { db } from "@/server/db";
 import { documents } from "@/server/db/schema";
 import { authMiddleware } from "@/server/middleware";
+import { validateZodInput } from "@/server/utils";
 import { DEFAULT_DOCUMENT_CONTENT } from "@/server/utils/constant";
 
 export const getDocumentsFn = createServerFn({ method: "GET" })
@@ -59,7 +60,7 @@ export const createDocumentFn = createServerFn({ method: "POST" })
 
 export const updateDocumentFn = createServerFn({ method: "POST" })
 	.middleware([authMiddleware])
-	.inputValidator(updateDocumentSchema)
+	.inputValidator(validateZodInput(updateDocumentSchema))
 	.handler(async ({ data: { id, ...updates }, context: { user } }) => {
 		const updated = await db
 			.update(documents)
