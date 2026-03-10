@@ -1,9 +1,8 @@
 import { SplitSquareHorizontal, SplitSquareVertical } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import CodeEditor from "@/components/code-editor";
 import { MermaidViewer } from "@/components/mermaid-viewer";
-import { EditableText } from "@/components/ui/editable-text";
 import {
 	ResizableHandle,
 	ResizablePanel,
@@ -11,11 +10,13 @@ import {
 } from "@/components/ui/resizable";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDocument } from "@/hooks/use-document";
+import { useDebounceCallback } from "@/lib/utils";
+import type { Document } from "@/server/db/schema";
 
-export default function MermaidEditor({ docId }: { docId: string }) {
+export default function MermaidEditor({ doc }: { doc: Document }) {
 	// Everything comes from one place
-	const { doc, isLoading, updateDocument } = useDocument(docId);
-	const debounceRef = useRef<number | undefined>(undefined);
+	const { updateDocument } = useDocument(doc.id);
+	const debounceSave = useDebounceCallback(1000);
 	const [layout, setLayout] = useState<"horizontal" | "vertical">("horizontal");
 	useEffect(() => {
 		//load the layout preference from local storage
@@ -26,39 +27,14 @@ export default function MermaidEditor({ docId }: { docId: string }) {
 	}, []);
 
 	const [code, setCode] = useState("");
+
 	//Inital load of the document content into the editor
 	useEffect(() => {
 		if (doc?.content) setCode(doc.content);
 	}, [doc?.content]);
-	if (isLoading) {
-		return (
-			<div className="h-full w-full flex items-center justify-center">
-				<p className="text-muted-foreground">Loading...</p>
-			</div>
-		);
-	}
-	if (!doc) {
-		return (
-			<div className="h-full w-full flex items-center justify-center">
-				<p className="text-muted-foreground">Document not found</p>
-			</div>
-		);
-	}
 
 	return (
 		<>
-			{createPortal(
-				<div className="flex" id="header-title">
-					<EditableText
-						initialValue={doc.title}
-						onSave={(v) => {
-							return updateDocument({ data: { id: docId, title: v } });
-						}}
-						className="text-sm"
-					/>
-				</div>,
-				document.getElementById("header-actions") as HTMLElement,
-			)}
 			{createPortal(
 				<ToggleGroup
 					type="single"
@@ -97,13 +73,10 @@ export default function MermaidEditor({ docId }: { docId: string }) {
 									<CodeEditor
 										defaultValue={code}
 										onChange={(val) => {
-											if (debounceRef.current) {
-												clearTimeout(debounceRef.current);
-											}
-											debounceRef.current = window.setTimeout(() => {
+											debounceSave(() => {
 												setCode(val || "");
-												updateDocument({ data: { id: docId, content: val } });
-											}, 600);
+												updateDocument({ data: { id: doc.id, content: val } });
+											});
 										}}
 										language="mermaid"
 									/>

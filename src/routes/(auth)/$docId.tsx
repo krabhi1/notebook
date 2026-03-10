@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
+import { EditableText } from "@/components/ui/editable-text";
 import { useDocument } from "@/hooks/use-document";
 
 const MermaidEditor = lazy(
@@ -15,7 +17,7 @@ export const Route = createFileRoute("/(auth)/$docId")({
 
 function RouteComponent() {
 	const { docId } = Route.useParams();
-	const { doc, isLoading } = useDocument(docId);
+	const { doc, isLoading, updateDocument } = useDocument(docId);
 
 	if (isLoading) {
 		return (
@@ -34,10 +36,22 @@ function RouteComponent() {
 
 	return (
 		<Suspense fallback={<div>Loading suspense</div>}>
+			{createPortal(
+				<div className="flex" id="header-title">
+					<EditableText
+						initialValue={doc.title}
+						onSave={(v) => {
+							return updateDocument({ data: { id: docId, title: v } });
+						}}
+						className="text-sm"
+					/>
+				</div>,
+				document.getElementById("header-actions") as HTMLElement,
+			)}
 			{doc.type === "mermaid" ? (
-				<MermaidEditor docId={docId} />
+				<MermaidEditor doc={doc} />
 			) : (
-				<ExcalidrawEditor docId={docId} />
+				<ExcalidrawEditor doc={doc} />
 			)}
 		</Suspense>
 	);

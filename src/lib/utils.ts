@@ -1,14 +1,21 @@
 import { type ClassValue, clsx } from "clsx";
-import { useEffect, useState } from "react";
+import { useCallback, useRef } from "react";
 import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
-export function useDebounce<T>(value: T, delay = 300) {
-	const [debouncedValue, setDebouncedValue] = useState(value);
-	useEffect(() => {
-		const handler = setTimeout(() => setDebouncedValue(value), delay);
-		return () => clearTimeout(handler);
-	}, [value, delay]);
-	return debouncedValue;
+export function useDebounceCallback(timeout: number) {
+	const debounceRef = useRef<number | undefined>(undefined);
+	const callback = useCallback(
+		(fn: () => void) => {
+			if (debounceRef.current) {
+				clearTimeout(debounceRef.current);
+			}
+			debounceRef.current = window.setTimeout(() => {
+				fn();
+			}, timeout);
+		},
+		[timeout],
+	);
+	return callback;
 }
