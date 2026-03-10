@@ -12,8 +12,10 @@ export const documents = sqliteTable("documents", {
 		.references(() => user.id, { onDelete: "cascade" })
 		.notNull(),
 	title: text("title").notNull().default("Untitled"),
-	type: text("type").notNull().default("mermaid"),
 	content: text("content").notNull().default(""),
+	type: text({ enum: ["mermaid", "excalidraw"] })
+		.notNull()
+		.default("mermaid"),
 	createdAt: integer("created_at", { mode: "timestamp" })
 		.notNull()
 		.$defaultFn(() => new Date()),

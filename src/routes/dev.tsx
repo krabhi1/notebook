@@ -25,7 +25,7 @@ function RouteComponent() {
 			</div>
 			<EditableText
 				initialValue={editValue}
-				onSave={(value) => {
+				onSave={async (value) => {
 					setEditValue(value);
 					console.log("Saved value:", value);
 				}}

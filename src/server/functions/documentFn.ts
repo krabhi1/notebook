@@ -45,13 +45,14 @@ export const createDocumentFn = createServerFn({ method: "POST" })
 	.middleware([authMiddleware])
 	.inputValidator(createDocumentSchema)
 	.handler(async ({ data, context: { user } }) => {
+		const defaultContent = DEFAULT_DOCUMENT_CONTENT[data.type];
 		const newDoc = await db
 			.insert(documents)
 			.values({
 				userId: user.id,
 				title: data.title,
 				type: data.type,
-				content: data.content || DEFAULT_DOCUMENT_CONTENT.mermaid,
+				content: data.content || defaultContent,
 				createdAt: new Date(),
 			})
 			.returning();

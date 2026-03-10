@@ -60,7 +60,7 @@ export function useDocuments() {
 	});
 
 	return {
-		documents: query.data || [],
+		docs: query.data || [],
 		isLoading: query.isLoading,
 		isCreating: createMutation.isPending,
 		isDeleting: deleteMutation.isPending,
@@ -109,7 +109,7 @@ export function useDocument(id: string) {
 	});
 
 	return {
-		document: query.data,
+		doc: query.data,
 		isLoading: query.isLoading,
 		isUpdating: updateMutation.isPending,
 		isDeleting: deleteMutation.isPending,

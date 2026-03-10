@@ -23,7 +23,7 @@ export const Route = createFileRoute("/(auth)/")({
 
 function RouteComponent() {
 	const {
-		documents,
+		docs,
 		createDocument,
 		deleteDocument,
 		isDeleting,
@@ -35,15 +35,26 @@ function RouteComponent() {
 	const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
 	return (
 		<div className=" flex flex-col gap-4 h-full overflow-y-scroll px-6 py-6">
-			<Button
-				onClick={() => {
-					createDocument({ data: {} });
-				}}
-				loading={isCreating}
-				className="w-fit"
-			>
-				Create Document
-			</Button>
+			<div className="flex items-center justify-end gap-2">
+				<Button
+					onClick={() => {
+						createDocument({ data: { type: "mermaid", title: "Untitled" } });
+					}}
+					loading={isCreating}
+					className="w-fit"
+				>
+					New Mermaid
+				</Button>
+				<Button
+					onClick={() => {
+						createDocument({ data: { type: "excalidraw", title: "Untitled" } });
+					}}
+					loading={isCreating}
+					className="w-fit"
+				>
+					New Excalidraw
+				</Button>
+			</div>
 			{isLoading ? (
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ">
 					{Array.from({ length: 6 }).map((_, i) => (
@@ -60,7 +71,7 @@ function RouteComponent() {
 				</div>
 			) : (
 				<div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-4 gap-4 ">
-					{documents.map((doc) => (
+					{docs.map((doc) => (
 						<DocumentCard
 							key={doc.id}
 							id={doc.id}

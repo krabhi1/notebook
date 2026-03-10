@@ -23,6 +23,7 @@
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.13.8",
     "@cloudflare/vitest-pool-workers": "^0.12.7",
+    "@excalidraw/excalidraw": "^0.18.0",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/colors": "^3.0.0",
     "@radix-ui/react-alert-dialog": "^1.1.15",
