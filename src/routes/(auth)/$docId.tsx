@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { EditableText } from "@/components/ui/editable-text";
@@ -13,6 +13,7 @@ const ExcalidrawEditor = lazy(
 
 export const Route = createFileRoute("/(auth)/$docId")({
 	component: RouteComponent,
+	ssr: false,
 });
 
 function RouteComponent() {
@@ -35,24 +36,26 @@ function RouteComponent() {
 	}
 
 	return (
-		<Suspense fallback={<div>Loading suspense</div>}>
-			{createPortal(
-				<div className="flex" id="header-title">
-					<EditableText
-						initialValue={doc.title}
-						onSave={(v) => {
-							return updateDocument({ data: { id: docId, title: v } });
-						}}
-						className="text-sm"
-					/>
-				</div>,
-				document.getElementById("header-actions") as HTMLElement,
-			)}
-			{doc.type === "mermaid" ? (
-				<MermaidEditor doc={doc} />
-			) : (
-				<ExcalidrawEditor doc={doc} />
-			)}
-		</Suspense>
+		<ClientOnly>
+			<Suspense>
+				{createPortal(
+					<div className="flex" id="header-title">
+						<EditableText
+							initialValue={doc.title}
+							onSave={(v) => {
+								return updateDocument({ data: { id: docId, title: v } });
+							}}
+							className="text-sm"
+						/>
+					</div>,
+					document.getElementById("header-actions") as HTMLElement,
+				)}
+				{doc.type === "mermaid" ? (
+					<MermaidEditor doc={doc} />
+				) : (
+					<ExcalidrawEditor doc={doc} />
+				)}
+			</Suspense>
+		</ClientOnly>
 	);
 }

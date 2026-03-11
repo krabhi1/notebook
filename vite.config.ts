@@ -24,7 +24,7 @@ const config = defineConfig({
 		tanstackStart({
 			// prerender: {
 			// 	enabled: true,
-			// 	autoStaticPathsDiscovery: true,
+			//      autoStaticPathsDiscovery: true,
 			// },
 		}),
 		viteReact(),
