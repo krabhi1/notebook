@@ -64,9 +64,6 @@ export function ResetPasswordDialog({
 			}
 
 			onOpenChange(false);
-			// After resetting, we usually want them to log in with the new password
-			// to ensure everything is synced, or we can just go home if better-auth
-			// logs them in automatically (check behavior).
 			navigate({ to: "/login" });
 		} catch (_err) {
 			setError("An unexpected error occurred. Please try again.");
@@ -77,14 +74,14 @@ export function ResetPasswordDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-surface p-6 w-full max-w-sm shadow-xl z-50 border border-border">
+			<DialogContent className="bg-card p-6 w-full max-w-sm shadow-xl z-50 border border-border">
 				<DialogHeader>
-					<DialogTitle className="text-xl font-bold mb-2 text-text">
+					<DialogTitle className="text-xl font-bold mb-2 text-foreground">
 						Set New Password
 					</DialogTitle>
-					<DialogDescription className="text-sm text-text-muted mb-6">
+					<DialogDescription className="text-sm text-muted-foreground mb-6">
 						Enter the 6-digit code sent to{" "}
-						<strong className="text-text">{email}</strong> and choose a new
+						<strong className="text-foreground">{email}</strong> and pick a new
 						password.
 					</DialogDescription>
 				</DialogHeader>
@@ -93,7 +90,7 @@ export function ResetPasswordDialog({
 					<div>
 						<label
 							htmlFor={otpId}
-							className="block text-sm font-medium mb-1 text-text-muted"
+							className="block text-sm font-medium mb-1 text-muted-foreground"
 						>
 							Verification Code
 						</label>
@@ -104,7 +101,7 @@ export function ResetPasswordDialog({
 							onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
 							placeholder="000000"
 							maxLength={6}
-							className="text-center tracking-widest font-mono"
+							className="text-center tracking-widest font-mono bg-input text-foreground"
 							required
 						/>
 					</div>
@@ -112,7 +109,7 @@ export function ResetPasswordDialog({
 					<div>
 						<label
 							htmlFor={passwordId}
-							className="block text-sm font-medium mb-1 text-text-muted"
+							className="block text-sm font-medium mb-1 text-muted-foreground"
 						>
 							New Password
 						</label>
@@ -122,6 +119,7 @@ export function ResetPasswordDialog({
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 							placeholder="••••••••"
+							className="bg-input text-foreground"
 							required
 						/>
 					</div>
@@ -129,7 +127,7 @@ export function ResetPasswordDialog({
 					<div>
 						<label
 							htmlFor={confirmId}
-							className="block text-sm font-medium mb-1 text-text-muted"
+							className="block text-sm font-medium mb-1 text-muted-foreground"
 						>
 							Confirm New Password
 						</label>
@@ -139,12 +137,13 @@ export function ResetPasswordDialog({
 							value={confirmPassword}
 							onChange={(e) => setConfirmPassword(e.target.value)}
 							placeholder="••••••••"
+							className="bg-input text-foreground"
 							required
 						/>
 					</div>
 
 					{error && (
-						<p className="text-error text-sm bg-panel p-2 border border-border">
+						<p className="text-destructive text-sm bg-muted p-2 border border-border">
 							{error}
 						</p>
 					)}
@@ -152,7 +151,7 @@ export function ResetPasswordDialog({
 					<Button
 						type="submit"
 						disabled={otp.length !== 6 || !password || isSubmitting}
-						className="w-full"
+						className="w-full bg-primary text-primary-foreground"
 					>
 						{isSubmitting ? "Resetting..." : "Update Password"}
 					</Button>
@@ -161,7 +160,7 @@ export function ResetPasswordDialog({
 				<DialogClose asChild>
 					<button
 						type="button"
-						className="absolute top-4 right-4 text-text-muted hover:text-text transition-colors p-1"
+						className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors p-1"
 						aria-label="Close"
 					>
 						<svg

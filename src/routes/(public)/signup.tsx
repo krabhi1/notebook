@@ -84,9 +84,9 @@ function RouteComponent() {
 	});
 
 	return (
-		<div className="flex items-center justify-center min-h-screen p-4 bg-surface">
-			<div className="w-full max-w-sm p-8 border border-border bg-panel">
-				<h1 className="text-2xl font-bold mb-6 text-center text-text">
+		<div className="flex items-center justify-center min-h-screen p-4 bg-background">
+			<div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-xl shadow-black/5">
+				<h1 className="text-2xl font-bold mb-6 text-center text-foreground">
 					Create an Account
 				</h1>
 
@@ -97,7 +97,7 @@ function RouteComponent() {
 						<span className="w-full border-t border-border" />
 					</div>
 					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-panel px-2 text-text-muted">
+						<span className="bg-card px-2 text-muted-foreground">
 							Or continue with email
 						</span>
 					</div>
@@ -113,7 +113,7 @@ function RouteComponent() {
 				>
 					{formError && (
 						<p
-							className="text-error text-sm bg-panel p-2 border border-border"
+							className="text-destructive text-sm bg-muted p-2 border border-border rounded-md"
 							role="alert"
 						>
 							{formError}
@@ -123,7 +123,7 @@ function RouteComponent() {
 					<div>
 						<label
 							htmlFor={nameId}
-							className="block text-sm font-medium mb-1 text-text-muted"
+							className="block text-sm font-medium mb-1 text-muted-foreground"
 						>
 							Name
 						</label>
@@ -136,9 +136,10 @@ function RouteComponent() {
 										value={field.state.value}
 										onChange={(e) => field.handleChange(e.target.value)}
 										placeholder="John Doe"
+										className="bg-input text-foreground"
 									/>
 									{field.state.meta.errors.length > 0 && (
-										<p className="text-error text-xs mt-1">
+										<p className="text-destructive text-xs mt-1">
 											{field.state.meta.errors
 												.map((err) => err?.message ?? err)
 												.join(", ")}
@@ -152,7 +153,7 @@ function RouteComponent() {
 					<div>
 						<label
 							htmlFor={emailId}
-							className="block text-sm font-medium mb-1 text-text-muted"
+							className="block text-sm font-medium mb-1 text-muted-foreground"
 						>
 							Email
 						</label>
@@ -165,9 +166,10 @@ function RouteComponent() {
 										value={field.state.value}
 										onChange={(e) => field.handleChange(e.target.value)}
 										placeholder="name@example.com"
+										className="bg-input text-foreground"
 									/>
 									{field.state.meta.errors.length > 0 && (
-										<p className="text-error text-xs mt-1">
+										<p className="text-destructive text-xs mt-1">
 											{field.state.meta.errors
 												.map((err) => err?.message ?? err)
 												.join(", ")}
@@ -181,7 +183,7 @@ function RouteComponent() {
 					<div>
 						<label
 							htmlFor={passwordId}
-							className="block text-sm font-medium mb-1 text-text-muted"
+							className="block text-sm font-medium mb-1 text-muted-foreground"
 						>
 							Password
 						</label>
@@ -194,9 +196,10 @@ function RouteComponent() {
 										value={field.state.value}
 										onChange={(e) => field.handleChange(e.target.value)}
 										placeholder="••••••••"
+										className="bg-input text-foreground"
 									/>
 									{field.state.meta.errors.length > 0 && (
-										<p className="text-error text-xs mt-1">
+										<p className="text-destructive text-xs mt-1">
 											{field.state.meta.errors
 												.map((err) => err?.message ?? err)
 												.join(", ")}
@@ -214,7 +217,7 @@ function RouteComponent() {
 							<Button
 								type="submit"
 								disabled={!canSubmit || isSubmitting}
-								className="w-full"
+								className="w-full bg-primary text-primary-foreground"
 							>
 								{isSubmitting ? "Creating Account..." : "Sign Up"}
 							</Button>
@@ -222,13 +225,12 @@ function RouteComponent() {
 					</form.Subscribe>
 				</form>
 
-				<p className="mt-6 text-center text-sm text-text-muted">
+				<p className="mt-6 text-center text-sm text-muted-foreground">
 					Already have an account?{" "}
-					<Link
-						to="/login"
-						className="text-accent font-medium hover:text-accent-hover"
-					>
-						Login
+					<Link to="/login">
+						<Button variant="link" size="sm">
+							Log in
+						</Button>
 					</Link>
 				</p>
 			</div>

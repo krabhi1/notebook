@@ -14,7 +14,7 @@ export const Route = createFileRoute("/(auth)")({
 function RouteComponent() {
 	return (
 		<AuthProvider>
-			<div className="h-dvh w-dvw overflow-hidden flex flex-col bg-surface">
+			<div className="h-dvh w-dvw overflow-hidden flex flex-col bg-background">
 				<AppHeader />
 				<Outlet />
 			</div>

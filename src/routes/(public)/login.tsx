@@ -48,7 +48,6 @@ function LoginComponent() {
 			});
 
 			if (error) {
-				// Handle unverified email by triggering OTP flow
 				if (error.code === "EMAIL_NOT_VERIFIED") {
 					const otpResult = await authClient.emailOtp.sendVerificationOtp({
 						email: value.email,
@@ -75,9 +74,9 @@ function LoginComponent() {
 	});
 
 	return (
-		<div className="flex items-center justify-center min-h-screen p-4 bg-surface">
-			<div className="w-full max-w-sm p-8 border border-border bg-panel">
-				<h1 className="text-2xl font-bold mb-6 text-center text-text">
+		<div className="flex items-center justify-center min-h-screen p-4 bg-background">
+			<div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-xl shadow-black/5">
+				<h1 className="text-2xl font-bold mb-6 text-center text-foreground">
 					Welcome Back
 				</h1>
 
@@ -88,7 +87,7 @@ function LoginComponent() {
 						<span className="w-full border-t border-border" />
 					</div>
 					<div className="relative flex justify-center text-xs uppercase">
-						<span className="bg-panel px-2 text-text-muted">
+						<span className="bg-card px-2 text-muted-foreground">
 							Or continue with email
 						</span>
 					</div>
@@ -104,7 +103,7 @@ function LoginComponent() {
 				>
 					{formError && (
 						<p
-							className="text-error text-sm bg-panel p-2 border border-border"
+							className="text-destructive text-sm bg-muted p-2 border border-border rounded-md"
 							role="alert"
 						>
 							{formError}
@@ -114,7 +113,7 @@ function LoginComponent() {
 					<div>
 						<label
 							htmlFor={emailId}
-							className="block text-sm font-medium mb-1 text-text-muted"
+							className="block text-sm font-medium mb-1 text-muted-foreground"
 						>
 							Email
 						</label>
@@ -127,9 +126,11 @@ function LoginComponent() {
 										value={field.state.value}
 										onChange={(e) => field.handleChange(e.target.value)}
 										placeholder="name@example.com"
+										autoFocus
+										className="bg-input text-foreground"
 									/>
 									{field.state.meta.errors.length > 0 && (
-										<p className="text-error text-xs mt-1">
+										<p className="text-destructive text-xs mt-1">
 											{field.state.meta.errors
 												.map((err) => err?.message ?? err)
 												.join(", ")}
@@ -144,16 +145,17 @@ function LoginComponent() {
 						<div className="flex items-center justify-between mb-1">
 							<label
 								htmlFor={passwordId}
-								className="block text-sm font-medium text-text-muted"
+								className="block text-sm font-medium text-muted-foreground"
 							>
 								Password
 							</label>
 							<Link
 								to="/forgot-password"
 								search={{ email: form.getFieldValue("email") }}
-								className="text-xs font-medium text-accent hover:text-accent-hover focus:outline-none"
 							>
-								Forgot password?
+								<Button variant="link" size="sm">
+									Forgot password?
+								</Button>
 							</Link>
 						</div>
 						<form.Field name="password">
@@ -165,9 +167,10 @@ function LoginComponent() {
 										value={field.state.value}
 										onChange={(e) => field.handleChange(e.target.value)}
 										placeholder="••••••••"
+										className="bg-input text-foreground"
 									/>
 									{field.state.meta.errors.length > 0 && (
-										<p className="text-error text-xs mt-1">
+										<p className="text-destructive text-xs mt-1">
 											{field.state.meta.errors
 												.map((err) => err?.message ?? err)
 												.join(", ")}
@@ -185,7 +188,7 @@ function LoginComponent() {
 							<Button
 								type="submit"
 								disabled={!canSubmit || isSubmitting}
-								className="w-full"
+								className="w-full bg-primary text-primary-foreground"
 							>
 								{isSubmitting ? "Logging in..." : "Login"}
 							</Button>
@@ -193,13 +196,12 @@ function LoginComponent() {
 					</form.Subscribe>
 				</form>
 
-				<p className="mt-6 text-center text-sm text-text-muted">
+				<p className="mt-6 text-center text-sm text-muted-foreground">
 					Don't have an account?{" "}
-					<Link
-						to="/signup"
-						className="text-accent font-medium hover:text-accent-hover"
-					>
-						Sign up
+					<Link to="/signup">
+						<Button variant="link" size="sm">
+							Sign up
+						</Button>
 					</Link>
 				</p>
 			</div>

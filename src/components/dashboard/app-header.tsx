@@ -37,14 +37,14 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 		<header
 			className={cn(
 				className,
-				"border-b border-border px-6 h-16 flex items-center justify-between bg-surface/80 backdrop-blur-md sticky top-0 z-50",
+				"border-b border-border px-6 h-16 flex items-center justify-between bg-background/80 backdrop-blur-md sticky top-0 z-50",
 			)}
 			{...props}
 		>
 			<div className="flex items-center gap-3 ">
 				<Link
 					to="/"
-					className="text-text text-lg font-bold hover:opacity-80 transition-opacity"
+					className="text-foreground text-lg font-bold hover:opacity-80 transition-opacity"
 				>
 					<span className="hidden sm:inline">Notebook</span>
 					<span className="inline sm:hidden">N</span>
@@ -91,10 +91,10 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 								</AvatarFallback>
 							</Avatar>
 							<div className="flex flex-col space-y-0.5">
-								<p className="text-sm font-semibold text-text truncate max-w-45">
+								<p className="text-sm font-semibold text-foreground truncate max-w-45">
 									{user.name}
 								</p>
-								<p className="text-xs text-text-muted truncate max-w-45">
+								<p className="text-xs text-muted-foreground truncate max-w-45">
 									{user.email}
 								</p>
 							</div>
@@ -109,7 +109,7 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 
 						<DropdownMenuItem
 							onClick={toggleTheme}
-							className="text-text cursor-pointer flex items-center gap-2"
+							className="text-foreground cursor-pointer flex items-center gap-2"
 						>
 							{isDark ? (
 								<Sun className="size-4" />
@@ -123,7 +123,7 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 
 						<DropdownMenuItem
 							onClick={signOut}
-							className="text-error cursor-pointer focus:bg-error/10 focus:text-error"
+							className="text-destructive cursor-pointer focus:bg-destructive/10 focus:text-destructive"
 						>
 							Sign Out
 						</DropdownMenuItem>

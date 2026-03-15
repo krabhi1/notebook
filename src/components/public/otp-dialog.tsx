@@ -30,7 +30,6 @@ export function OtpDialog({ open, onOpenChange, email }: OtpDialogProps) {
 		setIsVerifying(true);
 
 		try {
-			// Using signIn.emailOtp as it verifies and logs the user in simultaneously
 			const { error } = await authClient.signIn.emailOtp({
 				email,
 				otp,
@@ -52,15 +51,15 @@ export function OtpDialog({ open, onOpenChange, email }: OtpDialogProps) {
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="bg-surface p-6 w-full max-w-sm shadow-xl z-50 border border-border">
+			<DialogContent className="bg-card p-6 w-full max-w-sm shadow-xl z-50 border border-border">
 				<DialogHeader>
-					<DialogTitle className="text-xl font-bold mb-2 text-text">
+					<DialogTitle className="text-xl font-bold mb-2 text-foreground">
 						Verify Your Email
 					</DialogTitle>
-					<DialogDescription className="text-sm text-text-muted mb-6">
+					<DialogDescription className="text-sm text-muted-foreground mb-6">
 						We've sent a 6-digit verification code to{" "}
-						<strong className="text-text">{email}</strong>. Please enter it
-						below to continue.
+						<strong className="text-foreground">{email}</strong>. Please enter
+						it below to continue.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -68,7 +67,7 @@ export function OtpDialog({ open, onOpenChange, email }: OtpDialogProps) {
 					<div>
 						<label
 							htmlFor={id}
-							className="block text-sm font-medium mb-2 text-text-muted"
+							className="block text-sm font-medium mb-2 text-muted-foreground"
 						>
 							Verification Code
 						</label>
@@ -79,13 +78,13 @@ export function OtpDialog({ open, onOpenChange, email }: OtpDialogProps) {
 							onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
 							placeholder="000000"
 							maxLength={6}
-							className="text-center tracking-[0.5em] text-2xl font-mono"
+							className="text-center tracking-[0.5em] text-2xl font-mono bg-input text-foreground"
 							autoFocus
 						/>
 					</div>
 
 					{error && (
-						<p className="text-error text-sm bg-panel p-2 border border-border">
+						<p className="text-destructive text-sm bg-muted p-2 border border-border">
 							{error}
 						</p>
 					)}
@@ -94,7 +93,7 @@ export function OtpDialog({ open, onOpenChange, email }: OtpDialogProps) {
 						type="button"
 						onClick={handleVerify}
 						disabled={otp.length !== 6 || isVerifying}
-						className="w-full"
+						className="w-full bg-primary text-primary-foreground"
 					>
 						{isVerifying ? "Verifying..." : "Verify & Continue"}
 					</Button>
@@ -103,7 +102,7 @@ export function OtpDialog({ open, onOpenChange, email }: OtpDialogProps) {
 				<DialogClose asChild>
 					<button
 						type="button"
-						className="absolute top-4 right-4 text-text-muted hover:text-text transition-colors p-1"
+						className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors p-1"
 						aria-label="Close"
 					>
 						<svg

@@ -17,28 +17,33 @@ export function DocumentCard({
 	onUpdate?: (id: string, title: string) => Promise<unknown>;
 }) {
 	return (
-		<div className="border rounded-md p-3 max-h-60 h-60 gap-2 flex flex-col">
+		<div className="flex h-60 max-h-60 flex-col gap-3 overflow-hidden rounded-lg border border-border bg-card/75 p-3 shadow-sm shadow-black/5">
 			<EditableText
 				initialValue={title}
-				onSave={(v) => {
+				onSave={async (v) => {
 					return onUpdate?.(id, v);
 				}}
 				className="font-semibold w-fit md:w-fit"
 			/>
-			<pre className="block p-2 bg-surface-raised flex-1 text-xs overflow-hidden">
+			<pre className="flex-1 overflow-hidden rounded-md border border-border/60  p-2 text-xs text-muted-foreground">
 				{content}
 			</pre>
 			<footer className="flex justify-end gap-2">
 				<Link to={`${id}`}>
-					<Button size={"sm"}>
-						<EyeIcon /> Open
+					<Button
+						size="sm"
+						variant="outline"
+						className="border-border text-foreground"
+					>
+						<EyeIcon className="mr-1 size-4" />
+						Open
 					</Button>
 				</Link>
-
 				<Button
-					variant={"destructive"}
-					size={"icon-sm"}
+					variant="destructive"
+					size="icon-sm"
 					onClick={() => onDelete?.(id)}
+					className="border-destructive text-destructive"
 				>
 					<Trash2Icon />
 				</Button>
