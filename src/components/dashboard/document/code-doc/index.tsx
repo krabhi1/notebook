@@ -37,9 +37,11 @@ export default function CodeDocument({
 }) {
 	const { createFile, updateFile, isCreating } = useFiles(doc.id);
 	const debounceSave = useDebounceCallback(2000);
+	const debounceRun = useDebounceCallback(1000);
 	const [layout, setLayout] = useState<"horizontal" | "vertical">("horizontal");
 	const { run, error, logs } = useRunJsWorker();
 	const monacoEditorInstanceRef = useRef<MonacoEditorInstance | null>(null);
+	const [isRunning, setIsRunning] = useState(false);
 	useEffect(() => {
 		//load the layout preference from local storage
 		const savedLayout = localStorage.getItem("mermaid-editor-layout");
@@ -65,16 +67,28 @@ export default function CodeDocument({
 	}
 	async function runCode() {
 		if (!activeFile) return;
-		if (monacoEditorInstanceRef.current) {
-			const { monaco, editor } = monacoEditorInstanceRef.current;
-			const model = editor.getModel();
-			if (!model) return;
-			const worker = await monaco.languages.typescript.getTypeScriptWorker();
-			const client = await worker(model.uri);
-			const result = await client.getEmitOutput(model.uri.toString());
-			const jsCode = result.outputFiles[0].text;
-			run(jsCode);
+		setIsRunning(true);
+		const startTime = Date.now();
+		const language = getLanguageFromFileName(activeFile.name);
+		if (language === "typescript") {
+			if (monacoEditorInstanceRef.current) {
+				const { monaco, editor } = monacoEditorInstanceRef.current;
+				const model = editor.getModel();
+				if (!model) return;
+				const worker = await monaco.languages.typescript.getTypeScriptWorker();
+				const client = await worker(model.uri);
+				const result = await client.getEmitOutput(model.uri.toString());
+				const jsCode = result.outputFiles[0].text;
+				run(jsCode);
+			}
+		} else if (language === "javascript") {
+			run(activeFile.content || "");
+		} else {
+			console.log("Only JavaScript and TypeScript files can be run");
 		}
+		const sleepTime = Math.max(500, Date.now() - startTime);
+		await new Promise((resolve) => setTimeout(resolve, sleepTime));
+		setIsRunning(false);
 	}
 
 	return (
@@ -83,6 +97,7 @@ export default function CodeDocument({
 				<div className="flex items-center space-x-2">
 					<Button
 						size="sm"
+						loading={isRunning}
 						onClick={() => {
 							runCode();
 						}}
@@ -167,6 +182,9 @@ export default function CodeDocument({
 														path={activeFile.name}
 														defaultValue={activeFile.content || ""}
 														onChange={(val) => {
+															debounceRun(() => {
+																runCode();
+															});
 															debounceSave(() => {
 																updateFile({
 																	data: { id: activeFile.id, content: val },
