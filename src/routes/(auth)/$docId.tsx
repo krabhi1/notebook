@@ -3,12 +3,16 @@ import { lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { EditableText } from "@/components/ui/editable-text";
 import { useDocument } from "@/hooks/use-document";
+import { useFiles } from "@/hooks/use-file";
 
-const MermaidEditor = lazy(
-	() => import("@/components/dashboard/document/mermaid-editor"),
+const MermaidDocument = lazy(
+	() => import("@/components/dashboard/document/mermaid-doc"),
 );
-const ExcalidrawEditor = lazy(
-	() => import("@/components/dashboard/document/excalidraw-editor"),
+const ExcalidrawDocument = lazy(
+	() => import("@/components/dashboard/document/excalidraw-doc"),
+);
+const CodeDocument = lazy(
+	() => import("@/components/dashboard/document/code-doc"),
 );
 
 export const Route = createFileRoute("/(auth)/$docId")({
@@ -18,8 +22,9 @@ export const Route = createFileRoute("/(auth)/$docId")({
 
 function RouteComponent() {
 	const { docId } = Route.useParams();
-	const { doc, isLoading, updateDocument } = useDocument(docId);
-
+	const { doc, isLoading: isDocLoading, updateDocument } = useDocument(docId);
+	const { files, isLoading: isFilesLoading } = useFiles(docId);
+	const isLoading = isDocLoading || isFilesLoading;
 	if (isLoading) {
 		return (
 			<div className="h-full w-full flex items-center justify-center">
@@ -50,11 +55,14 @@ function RouteComponent() {
 					</div>,
 					document.getElementById("header-actions") as HTMLElement,
 				)}
-				{doc.type === "mermaid" ? (
+				{/*{doc.type === "mermaid" ? (
 					<MermaidEditor doc={doc} />
 				) : (
 					<ExcalidrawEditor doc={doc} />
-				)}
+				)}*/}
+				{doc.type === "excalidraw" && <ExcalidrawDocument doc={doc} />}
+				{doc.type === "mermaid" && <MermaidDocument doc={doc} />}
+				{doc.type === "code" && <CodeDocument doc={doc} files={files} />}
 			</Suspense>
 		</ClientOnly>
 	);

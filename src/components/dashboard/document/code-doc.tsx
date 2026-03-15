@@ -2,7 +2,7 @@ import { SplitSquareHorizontal, SplitSquareVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import CodeEditor from "@/components/code-editor";
-import { MermaidViewer } from "@/components/mermaid-viewer";
+import { Button } from "@/components/ui/button";
 import {
 	ResizableHandle,
 	ResizablePanel,
@@ -10,12 +10,20 @@ import {
 } from "@/components/ui/resizable";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDocument } from "@/hooks/use-document";
+import { useFiles } from "@/hooks/use-file";
 import { useDebounceCallback } from "@/lib/utils";
-import type { Document } from "@/server/db/schema";
+import type { Document, File } from "@/server/db/schema";
 
-export default function MermaidEditor({ doc }: { doc: Document }) {
+export default function CodeDocument({
+	doc,
+	files,
+}: {
+	doc: Document;
+	files: File[];
+}) {
 	// Everything comes from one place
 	const { updateDocument } = useDocument(doc.id);
+	const { createFile, isCreating } = useFiles(doc.id);
 	const debounceSave = useDebounceCallback(1000);
 	const [layout, setLayout] = useState<"horizontal" | "vertical">("horizontal");
 	useEffect(() => {
@@ -33,6 +41,20 @@ export default function MermaidEditor({ doc }: { doc: Document }) {
 		if (doc?.content) setCode(doc.content);
 	}, [doc?.content]);
 
+	function createNewFile() {
+		const fileName = `file-${Date.now()}.js`;
+		createFile({
+			data: {
+				documentId: doc.id,
+				name: fileName,
+				content: "",
+				meta: {
+					language: "javascript",
+				},
+			},
+		});
+	}
+
 	return (
 		<>
 			{createPortal(
@@ -45,7 +67,7 @@ export default function MermaidEditor({ doc }: { doc: Document }) {
 							localStorage.setItem("mermaid-editor-layout", v);
 						}
 					}}
-					defaultValue={layout}
+					value={layout}
 				>
 					<ToggleGroupItem value="horizontal">
 						<SplitSquareHorizontal />
@@ -67,7 +89,13 @@ export default function MermaidEditor({ doc }: { doc: Document }) {
 						>
 							<div className="h-full flex flex-col min-h-0">
 								<div className="px-3 py-1.5 text-xs font-medium text-muted-foreground border-b bg-muted/30 shrink-0">
-									Editor
+									<Button
+										loading={isCreating}
+										size="sm"
+										onClick={createNewFile}
+									>
+										New File
+									</Button>
 								</div>
 								<div className="flex-1 min-h-0 w-full overflow-hidden">
 									<CodeEditor
@@ -78,7 +106,7 @@ export default function MermaidEditor({ doc }: { doc: Document }) {
 												updateDocument({ data: { id: doc.id, content: val } });
 											});
 										}}
-										language="mermaid"
+										language="javascript"
 									/>
 								</div>
 							</div>
@@ -96,7 +124,7 @@ export default function MermaidEditor({ doc }: { doc: Document }) {
 									Preview
 								</div>
 								<div className="flex-1 min-h-0 overflow-hidden relative">
-									<MermaidViewer code={code} />
+									{JSON.stringify(files)}
 								</div>
 							</div>
 						</ResizablePanel>

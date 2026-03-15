@@ -154,5 +154,5 @@ export const deleteFileFn = createServerFn({ method: "POST" })
 			.set({ deletedAt: new Date() })
 			.where(eq(files.id, id));
 
-		return { success: true };
+		return { success: true, id };
 	});
