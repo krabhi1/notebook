@@ -19,6 +19,8 @@ export type CodeEditorProps = EditorProps & {
 };
 const CodeEditor = ({
 	loadingText = "Loading...",
+	beforeMount,
+	onMount,
 	...props
 }: CodeEditorProps) => {
 	useEffect(() => {
@@ -53,9 +55,23 @@ const CodeEditor = ({
 							{loadingText}
 						</div>
 					}
-					beforeMount={(m) => {
+					beforeMount={(monaco) => {
 						// initEditor will register the mermaid language and theme with monaco, and also add the necessary typings for autocompletion
-						initEditor(m);
+						initEditor(monaco);
+						beforeMount?.(monaco);
+						monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+							onlyVisible: true,
+						});
+					}}
+					onMount={(editor, monaco) => {
+						onMount?.(editor, monaco);
+						editor.addCommand(
+							monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+							() => {
+								// Leave this empty to "swallow" the event
+								console.log("Ctrl+S was blocked");
+							},
+						);
 					}}
 					options={{
 						minimap: { enabled: false },

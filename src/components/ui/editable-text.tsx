@@ -5,20 +5,23 @@ type EditableTextProps = {
 	initialValue: string;
 	onSave?: (value: string) => Promise<unknown>;
 	className?: string;
-};
+	className2?: string;
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export function EditableText({
 	initialValue,
 	onSave,
 	className,
+	className2,
+	...props
 }: EditableTextProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [value, setValue] = useState(initialValue);
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
-		setValue(initialValue);
-	}, [initialValue]);
+		if (!isEditing) setValue(initialValue);
+	}, [initialValue, isEditing]);
 
 	useEffect(() => {
 		if (!isEditing) return;
@@ -55,7 +58,7 @@ export function EditableText({
 				onBlur={finishEditing}
 				onKeyDown={handleKeyDown}
 				className={cn(
-					"border border-border rounded  px-1.5 py-1 focus:outline-none w-40 md:w-auto",
+					"border border-border rounded  px-1.5 py-1 focus:outline-none min-w-40 ",
 					className,
 				)}
 			/>
@@ -64,15 +67,15 @@ export function EditableText({
 
 	return (
 		// biome-ignore lint/a11y/noStaticElementInteractions: todo
-		// biome-ignore lint/a11y/useKeyWithClickEvents: todo
-		<span
-			onClick={() => setIsEditing(true)}
+		<div
+			onDoubleClick={() => setIsEditing(true)}
 			className={cn(
-				"px-1.5 py-1 border border-transparent! focus:outline-none w-40 md:w-auto overflow-clip md:overflow-auto  text-ellipsis whitespace-nowrap cursor-pointer",
-				className,
+				"px-1.5 py-1 border border-transparent! focus:outline-none   overflow-clip   text-ellipsis whitespace-nowrap cursor-pointer",
+				className2,
 			)}
+			{...props}
 		>
 			{value || "Untitled"}
-		</span>
+		</div>
 	);
 }

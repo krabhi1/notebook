@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { EditableText } from "@/components/ui/editable-text";
 import type { File } from "@/server/db/schema";
 export default function FileSidebar({
 	files,
@@ -8,6 +9,7 @@ export default function FileSidebar({
 	setOpenFileIds,
 	activeFileId,
 	setActiveFileId,
+	onSaveFileName,
 }: {
 	files: File[];
 	createNewFile: () => void;
@@ -16,6 +18,7 @@ export default function FileSidebar({
 	setOpenFileIds: (ids: string[]) => void;
 	activeFileId: string | null;
 	setActiveFileId: (id: string | null) => void;
+	onSaveFileName: (id: string, newName: string) => Promise<unknown>;
 }) {
 	return (
 		<div className="h-full w-full  bg-background shadow-sm overflow-hidden flex flex-col">
@@ -25,24 +28,28 @@ export default function FileSidebar({
 					New File
 				</Button>
 			</div>
-			<div className="flex-1 min-h-0 overflow-hidden">
+			<div className="flex-1  h-full overflow-y-auto ">
 				{files.map((file) => (
-					<button
-						key={file.id}
-						type="button"
-						className={`px-3 py-2 text-sm hover:bg-muted cursor-pointer w-full text-left ${
-							activeFileId === file.id ? "bg-muted" : ""
-						}`}
-						onClick={() => {
-							const isOpen = openFileIds.includes(file.id);
-							if (!isOpen) {
-								setOpenFileIds([...openFileIds, file.id]);
-							}
-							setActiveFileId(file.id);
-						}}
-					>
-						{file.name}
-					</button>
+					<div key={file.id}>
+						<EditableText
+							key={file.id}
+							initialValue={file.name}
+							className="w-full border-x-0"
+							className2={`px-3 py-2 text-sm hover:bg-muted cursor-pointer w-full text-left ${
+								activeFileId === file.id ? "bg-muted-foreground/20!" : ""
+							}`}
+							onSave={(newName) => {
+								return onSaveFileName(file.id, newName);
+							}}
+							onClick={() => {
+								const isOpen = openFileIds.includes(file.id);
+								if (!isOpen) {
+									setOpenFileIds([...openFileIds, file.id]);
+								}
+								setActiveFileId(file.id);
+							}}
+						/>
+					</div>
 				))}
 			</div>
 		</div>

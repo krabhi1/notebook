@@ -1,8 +1,10 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: ignore */
 import { SplitSquareHorizontal, SplitSquareVertical } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import CodeEditor from "@/components/code-editor";
+import CodeEditor, {
+	type MonacoEditorInstance,
+} from "@/components/code-editor";
 import FileSidebar from "@/components/dashboard/document/code-doc/file-sidebar";
 import TabBar from "@/components/dashboard/document/code-doc/tabbar";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,15 @@ import { useRunJsWorker } from "@/hooks/use-runjs";
 import { type Log, useDebounceCallback } from "@/lib/utils";
 import type { Document, File } from "@/server/db/schema";
 
+const EXTENSION_MAP = {
+	ts: "typescript",
+	js: "javascript",
+};
+function getLanguageFromFileName(fileName: string) {
+	const ext = fileName.split(".").pop();
+	if (!ext) return "plaintext";
+	return EXTENSION_MAP[ext as keyof typeof EXTENSION_MAP] || "plaintext";
+}
 export default function CodeDocument({
 	doc,
 	files,
@@ -25,9 +36,10 @@ export default function CodeDocument({
 	files: File[];
 }) {
 	const { createFile, updateFile, isCreating } = useFiles(doc.id);
-	const debounceSave = useDebounceCallback(800);
+	const debounceSave = useDebounceCallback(2000);
 	const [layout, setLayout] = useState<"horizontal" | "vertical">("horizontal");
 	const { run, error, logs } = useRunJsWorker();
+	const monacoEditorInstanceRef = useRef<MonacoEditorInstance | null>(null);
 	useEffect(() => {
 		//load the layout preference from local storage
 		const savedLayout = localStorage.getItem("mermaid-editor-layout");
@@ -42,17 +54,27 @@ export default function CodeDocument({
 	const openFiles = files.filter((f) => openFileIds.includes(f.id));
 
 	function createNewFile() {
-		const fileName = `file-${Date.now()}.js`;
+		const fileName = `file-${files.length}.ts`;
 		createFile({
 			data: {
 				documentId: doc.id,
 				name: fileName,
 				content: "",
-				meta: {
-					language: "javascript",
-				},
 			},
 		});
+	}
+	async function runCode() {
+		if (!activeFile) return;
+		if (monacoEditorInstanceRef.current) {
+			const { monaco, editor } = monacoEditorInstanceRef.current;
+			const model = editor.getModel();
+			if (!model) return;
+			const worker = await monaco.languages.typescript.getTypeScriptWorker();
+			const client = await worker(model.uri);
+			const result = await client.getEmitOutput(model.uri.toString());
+			const jsCode = result.outputFiles[0].text;
+			run(jsCode);
+		}
 	}
 
 	return (
@@ -62,7 +84,7 @@ export default function CodeDocument({
 					<Button
 						size="sm"
 						onClick={() => {
-							run(activeFile?.content || "");
+							runCode();
 						}}
 						className="mr-2"
 					>
@@ -94,7 +116,7 @@ export default function CodeDocument({
 			<div className="h-full w-full p-2 flex flex-col min-h-0">
 				<div className="border h-full w-full rounded-lg bg-background shadow-sm overflow-hidden flex flex-col min-h-0">
 					<ResizablePanelGroup orientation="horizontal">
-						<ResizablePanel defaultSize={20} minSize={10}>
+						<ResizablePanel defaultSize={25} minSize={25}>
 							<FileSidebar
 								files={files}
 								createNewFile={createNewFile}
@@ -103,6 +125,11 @@ export default function CodeDocument({
 								setOpenFileIds={setOpenFileIds}
 								activeFileId={activeFileId}
 								setActiveFileId={setActiveFileId}
+								onSaveFileName={(id, newName) => {
+									return updateFile({
+										data: { id, name: newName },
+									});
+								}}
 							/>
 						</ResizablePanel>
 						<ResizableHandle />
@@ -131,6 +158,12 @@ export default function CodeDocument({
 												}
 												return (
 													<CodeEditor
+														onMount={(editor, monaco) => {
+															monacoEditorInstanceRef.current = {
+																editor,
+																monaco,
+															};
+														}}
 														path={activeFile.name}
 														defaultValue={activeFile.content || ""}
 														onChange={(val) => {
@@ -140,7 +173,7 @@ export default function CodeDocument({
 																});
 															});
 														}}
-														language={activeFile.meta.language as string}
+														language={getLanguageFromFileName(activeFile.name)}
 													/>
 												);
 											})()}

@@ -1,8 +1,8 @@
 import { useIsMutating } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
-import { Loader2Icon, Moon, Sun } from "lucide-react";
+import { CloudUploadIcon, Moon, Sun } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -29,10 +29,20 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 	const signOut = context.signOut;
 	const params = useParams({ strict: false });
 	const docId = params.docId;
-	const isSaving = useIsMutating({
-		mutationKey: ["documents", "update", docId],
-	});
+	const isSaving = useIsMutating() > 0;
+	const [showIcon, setShowIcon] = useState(false);
+	useEffect(() => {
+		if (isSaving) {
+			setShowIcon(true);
+		} else {
+			// When saving stops, wait 2 seconds before hiding
+			const timer = setTimeout(() => {
+				setShowIcon(false);
+			}, 2000);
 
+			return () => clearTimeout(timer);
+		}
+	}, [isSaving]);
 	return (
 		<header
 			className={cn(
@@ -54,8 +64,8 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 
 			<div className="flex items-center gap-2 shrink-0">
 				<div>
-					{docId && isSaving > 0 && (
-						<Loader2Icon className="animate-spin size-4" />
+					{docId && showIcon && (
+						<CloudUploadIcon className=" animate-pulse size-4" />
 					)}
 				</div>
 				<div id="header-right-actions" />

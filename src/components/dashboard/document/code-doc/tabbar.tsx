@@ -15,12 +15,12 @@ export default function TabBar({
 	setOpenFileIds: (ids: string[]) => void;
 }) {
 	return (
-		<div className="flex overflow-x-auto border-b bg-muted/30 shrink-0">
+		<div className="flex overflow-x-auto border-b bg-muted/30 shrink-0 ">
 			{openFiles.map((file) => (
 				<button
 					key={file.id}
 					className={`px-3 py-1.5 text-xs font-medium flex items-center gap-1 hover:bg-muted shrink-0 ${
-						activeFileId === file.id ? "bg-muted" : ""
+						activeFileId === file.id ? "bg-muted-foreground/20!" : ""
 					}`}
 					onClick={() => setActiveFileId(file.id)}
 					type="button"
