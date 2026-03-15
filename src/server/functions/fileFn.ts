@@ -64,7 +64,6 @@ export const createFileFn = createServerFn({ method: "POST" })
 			const document = await db
 				.select()
 				.from(documents)
-				.innerJoin(documents, eq(files.documentId, documents.id))
 				.where(
 					and(
 						eq(documents.id, documentId),
@@ -154,5 +153,5 @@ export const deleteFileFn = createServerFn({ method: "POST" })
 			.set({ deletedAt: new Date() })
 			.where(eq(files.id, id));
 
-		return { success: true };
+		return { success: true, id };
 	});

@@ -32,14 +32,14 @@ export const getFileSchema = z.object({
 export const createFileSchema = z.object({
 	documentId: z.string(),
 	name: z.string().max(255),
-	meta: MetaSchema,
+	meta: MetaSchema.optional(),
 	content: z.string().max(1048576).optional(),
 });
 
 export const updateFileSchema = z.object({
 	id: z.string(),
 	name: z.string().max(255).optional(),
-	meta: MetaSchema,
+	meta: MetaSchema.optional(),
 	content: z.string().max(1048576).optional(),
 });
 

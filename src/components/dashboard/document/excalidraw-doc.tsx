@@ -11,7 +11,7 @@ import { useRef, useState } from "react";
 import { useDebounceCallback } from "@/lib/utils";
 import type { Document } from "@/server/db/schema";
 
-export default function ExcalidrawEditor({ doc }: { doc: Document }) {
+export default function ExcalidrawDocument({ doc }: { doc: Document }) {
 	const { updateDocument } = useDocument(doc.id);
 	const debounceSave = useDebounceCallback(1000);
 	// Seed the hash so it doesn't auto-save on mount

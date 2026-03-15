@@ -13,7 +13,7 @@ import { useDocument } from "@/hooks/use-document";
 import { useDebounceCallback } from "@/lib/utils";
 import type { Document } from "@/server/db/schema";
 
-export default function MermaidEditor({ doc }: { doc: Document }) {
+export default function MermaidDocument({ doc }: { doc: Document }) {
 	// Everything comes from one place
 	const { updateDocument } = useDocument(doc.id);
 	const debounceSave = useDebounceCallback(1000);
@@ -45,7 +45,7 @@ export default function MermaidEditor({ doc }: { doc: Document }) {
 							localStorage.setItem("mermaid-editor-layout", v);
 						}
 					}}
-					defaultValue={layout}
+					value={layout}
 				>
 					<ToggleGroupItem value="horizontal">
 						<SplitSquareHorizontal />
