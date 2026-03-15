@@ -3,9 +3,12 @@ self.onmessage = (e) => {
 
 	// 1. Create a proxy for the console
 	const customConsole = {
-		log: (...args) => logs.push({ level: "log", content: args }),
-		error: (...args) => logs.push({ level: "error", content: args }),
-		warn: (...args) => logs.push({ level: "warn", content: args }),
+		log: (...args) =>
+			logs.push({ level: "log", content: structuredClone(args) }),
+		error: (...args) =>
+			logs.push({ level: "error", content: structuredClone(args) }),
+		warn: (...args) =>
+			logs.push({ level: "warn", content: structuredClone(args) }),
 	};
 
 	try {
@@ -19,10 +22,10 @@ self.onmessage = (e) => {
     `,
 		);
 
-		runner(customConsole);
+		const result = runner(customConsole);
 
-		// 3. Send the captured logs back
-		self.postMessage({ type: "success", logs });
+		// 3. Send the captured logs and result back
+		self.postMessage({ type: "success", logs, result });
 	} catch (err) {
 		self.postMessage({ type: "error", message: err.message, logs });
 	}
