@@ -64,7 +64,6 @@ export const createFileFn = createServerFn({ method: "POST" })
 			const document = await db
 				.select()
 				.from(documents)
-				.innerJoin(documents, eq(files.documentId, documents.id))
 				.where(
 					and(
 						eq(documents.id, documentId),

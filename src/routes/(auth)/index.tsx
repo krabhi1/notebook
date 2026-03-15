@@ -56,7 +56,7 @@ function RouteComponent() {
 				</Button>
 				<Button
 					onClick={() => {
-						createDocument({ data: { type: "code", title: "main.ts" } });
+						createDocument({ data: { type: "code", title: "Untitled" } });
 					}}
 					loading={isCreating}
 					className="w-fit"

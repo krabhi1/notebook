@@ -1,5 +1,5 @@
 {
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "src/worker/run-js.js"],
   "exclude": ["temp"],
   "compilerOptions": {
     "target": "ES2022",

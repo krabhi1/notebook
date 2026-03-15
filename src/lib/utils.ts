@@ -19,3 +19,9 @@ export function useDebounceCallback(timeout: number) {
 	);
 	return callback;
 }
+
+export type Log = {
+	level: "log" | "error" | "warn";
+	// biome-ignore lint/suspicious/noExplicitAny:  ignore
+	content: Array<any>;
+};
