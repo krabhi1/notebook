@@ -1,28 +1,20 @@
-import { SplitSquareHorizontal, SplitSquareVertical } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import CodeEditor, {
-	type MonacoEditorInstance,
-} from "@/components/code-editor";
+import { useRef } from "react";
+import type { MonacoEditorInstance } from "@/components/code-editor";
+import EditorActions from "@/components/dashboard/document/code-doc/editor-actions";
+import EditorMain from "@/components/dashboard/document/code-doc/editor-main";
 import FileSidebar from "@/components/dashboard/document/code-doc/file-sidebar";
 import { OutputPanel } from "@/components/dashboard/document/code-doc/output-panel";
-import TabBar from "@/components/dashboard/document/code-doc/tabbar";
-import { Button } from "@/components/ui/button";
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useCodeRunner } from "@/hooks/use-code-runner";
+import { useEditorLayout } from "@/hooks/use-editor-layout";
+import { useEditorState } from "@/hooks/use-editor-state";
 import { useFiles } from "@/hooks/use-file";
-import { useRunJsWorker } from "@/hooks/use-runjs";
-import { useDebounceCallback } from "@/lib/utils";
 import type { Document, File } from "@/server/db/schema";
 
-function getFileExtension(fileName: string) {
-	return fileName.split(".").pop();
-}
-const SUPPORTED_RUNNER = ["js", "ts"];
 export default function CodeDocument({
 	doc,
 	files,
@@ -31,101 +23,51 @@ export default function CodeDocument({
 	files: File[];
 }) {
 	const { createFile, updateFile, isCreating } = useFiles(doc.id);
-	const debounceSave = useDebounceCallback(2000);
-	const debounceRun = useDebounceCallback(1000);
-	const [layout, setLayout] = useState<"horizontal" | "vertical">("horizontal");
-	const { run, error, logs } = useRunJsWorker();
+	const [layout, setLayout] = useEditorLayout();
 	const monacoEditorInstanceRef = useRef<MonacoEditorInstance | null>(null);
-	const [isRunning, setIsRunning] = useState(false);
-	useEffect(() => {
-		//load the layout preference from local storage
-		const savedLayout = localStorage.getItem("mermaid-editor-layout");
-		if (savedLayout === "horizontal" || savedLayout === "vertical") {
-			setLayout(savedLayout);
-		}
-	}, []);
 
-	const [openFileIds, setOpenFileIds] = useState<string[]>([]);
-	const [activeFileId, setActiveFileId] = useState<string | null>(null);
-	const activeFile = files.find((f) => f.id === activeFileId);
-	const openFiles = files.filter((f) => openFileIds.includes(f.id));
+	const {
+		openFileIds,
+		setOpenFileIds,
+		activeFileId,
+		setActiveFileId,
+		openFiles,
+		activeFile,
+	} = useEditorState(doc.id, files);
+
+	const { runCode, isRunning, error, logs, isRunnable } = useCodeRunner(
+		activeFile,
+		monacoEditorInstanceRef,
+	);
 
 	function createNewFile() {
 		const fileName = `file-${files.length + 1}.ts`;
-		createFile({
-			data: {
-				documentId: doc.id,
-				name: fileName,
-				content: "",
+		createFile(
+			{
+				data: {
+					documentId: doc.id,
+					name: fileName,
+					content: "",
+				},
 			},
-		});
-	}
-	async function runCode() {
-		if (!activeFile) return;
-		const langExt = getFileExtension(activeFile.name);
-		//if langExt in SUPPORTED_RUNNER
-		if (!langExt || !SUPPORTED_RUNNER.includes(langExt)) {
-			return;
-		}
-		setIsRunning(true);
-		const startTime = Date.now();
-		if (langExt === "ts") {
-			if (monacoEditorInstanceRef.current) {
-				const { monaco, editor } = monacoEditorInstanceRef.current;
-				const model = editor.getModel();
-				if (!model) return;
-				const worker = await monaco.languages.typescript.getTypeScriptWorker();
-				const client = await worker(model.uri);
-				const result = await client.getEmitOutput(model.uri.toString());
-				const jsCode = result.outputFiles[0].text;
-				console.log({ jsCode });
-				run(jsCode);
-			}
-		} else if (langExt === "js") {
-			run(activeFile.content || "");
-		}
-		const sleepTime = Math.max(500, Date.now() - startTime);
-		await new Promise((resolve) => setTimeout(resolve, sleepTime));
-		setIsRunning(false);
+			{
+				onSuccess: (newFile) => {
+					setOpenFileIds((prev) => [...prev, newFile.id]);
+					setActiveFileId(newFile.id);
+				},
+			},
+		);
 	}
 
 	return (
 		<>
-			{createPortal(
-				<div className="flex items-center space-x-2">
-					<Button
-						size="sm"
-						loading={isRunning}
-						onClick={() => {
-							runCode();
-						}}
-						className="mr-2"
-					>
-						Run
-					</Button>
-					<ToggleGroup
-						type="single"
-						size="sm"
-						variant="outline"
-						onValueChange={(v) => {
-							if (v === "horizontal" || v === "vertical") {
-								setLayout(v);
-								localStorage.setItem("mermaid-editor-layout", v);
-							}
-						}}
-						value={layout}
-					>
-						<ToggleGroupItem value="horizontal">
-							<SplitSquareHorizontal />
-						</ToggleGroupItem>
-						<ToggleGroupItem value="vertical">
-							<SplitSquareVertical />
-						</ToggleGroupItem>
-					</ToggleGroup>
-				</div>,
-
-				document.getElementById("header-right-actions") as HTMLElement,
-			)}
+			<EditorActions
+				isRunning={isRunning}
+				isRunnable={isRunnable}
+				onRun={runCode}
+				layout={layout}
+				onLayoutChange={setLayout}
+			/>
 			<div className="h-full w-full p-2 flex flex-col min-h-0">
 				<div className="border h-full w-full rounded-lg bg-background shadow-sm overflow-hidden flex flex-col min-h-0">
 					<ResizablePanelGroup orientation="horizontal">
@@ -149,52 +91,26 @@ export default function CodeDocument({
 						<ResizablePanel defaultSize={80} minSize={30} className="min-h-0">
 							<ResizablePanelGroup orientation={layout}>
 								<ResizablePanel defaultSize={70} minSize={20}>
-									<div className="h-full flex flex-col min-h-0">
-										<TabBar
-											openFiles={openFiles}
-											openFileIds={openFileIds}
-											activeFileId={activeFileId}
-											setActiveFileId={setActiveFileId}
-											setOpenFileIds={setOpenFileIds}
-										/>
-										<div className="flex-1 min-h-0 w-full overflow-hidden">
-											{(() => {
-												const activeFile = openFiles.find(
-													(f) => f.id === activeFileId,
-												);
-												if (!activeFile) {
-													return (
-														<div className="flex-1 flex items-center justify-center text-muted-foreground">
-															No file open
-														</div>
-													);
-												}
-												const path = `${activeFile.documentId}/${activeFile.id}/${activeFile.name}`;
-												return (
-													<CodeEditor
-														onMount={(editor, monaco) => {
-															monacoEditorInstanceRef.current = {
-																editor,
-																monaco,
-															};
-														}}
-														path={path}
-														defaultValue={activeFile.content || ""}
-														onChange={(val) => {
-															debounceRun(() => {
-																runCode();
-															});
-															debounceSave(() => {
-																updateFile({
-																	data: { id: activeFile.id, content: val },
-																});
-															});
-														}}
-													/>
-												);
-											})()}
-										</div>
-									</div>
+									<EditorMain
+										activeFile={activeFile}
+										openFiles={openFiles}
+										openFileIds={openFileIds}
+										activeFileId={activeFileId}
+										setActiveFileId={setActiveFileId}
+										setOpenFileIds={setOpenFileIds}
+										onMount={(editor, monaco) => {
+											monacoEditorInstanceRef.current = {
+												editor,
+												monaco,
+											};
+										}}
+										onUpdateFile={(id, content) => {
+											updateFile({
+												data: { id, content },
+											});
+										}}
+										onRunCode={runCode}
+									/>
 								</ResizablePanel>
 
 								<ResizableHandle withHandle />

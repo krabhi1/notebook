@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/resizable";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDocument } from "@/hooks/use-document";
+import { useEditorLayout } from "@/hooks/use-editor-layout";
 import { useDebounceCallback } from "@/lib/utils";
 import type { Document } from "@/server/db/schema";
 
@@ -17,14 +18,7 @@ export default function MermaidDocument({ doc }: { doc: Document }) {
 	// Everything comes from one place
 	const { updateDocument } = useDocument(doc.id);
 	const debounceSave = useDebounceCallback(1000);
-	const [layout, setLayout] = useState<"horizontal" | "vertical">("horizontal");
-	useEffect(() => {
-		//load the layout preference from local storage
-		const savedLayout = localStorage.getItem("mermaid-editor-layout");
-		if (savedLayout === "horizontal" || savedLayout === "vertical") {
-			setLayout(savedLayout);
-		}
-	}, []);
+	const [layout, setLayout] = useEditorLayout();
 
 	const [code, setCode] = useState("");
 

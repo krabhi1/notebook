@@ -15,7 +15,12 @@ export default function TabBar({
 	setOpenFileIds: (ids: string[]) => void;
 }) {
 	return (
-		<div className="flex overflow-x-auto border-b bg-muted/30 shrink-0 ">
+		<div
+			onWheel={(e) => {
+				e.currentTarget.scrollLeft += e.deltaY;
+			}}
+			className="flex overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden border-b bg-muted/30 shrink-0 "
+		>
 			{openFiles.map((file) => (
 				<button
 					key={file.id}
