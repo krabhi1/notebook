@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/suspicious/noArrayIndexKey: ignore */
 import { SplitSquareHorizontal, SplitSquareVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -6,6 +5,7 @@ import CodeEditor, {
 	type MonacoEditorInstance,
 } from "@/components/code-editor";
 import FileSidebar from "@/components/dashboard/document/code-doc/file-sidebar";
+import { OutputPanel } from "@/components/dashboard/document/code-doc/output-panel";
 import TabBar from "@/components/dashboard/document/code-doc/tabbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,18 +16,13 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useFiles } from "@/hooks/use-file";
 import { useRunJsWorker } from "@/hooks/use-runjs";
-import { type Log, useDebounceCallback } from "@/lib/utils";
+import { useDebounceCallback } from "@/lib/utils";
 import type { Document, File } from "@/server/db/schema";
 
-const EXTENSION_MAP = {
-	ts: "typescript",
-	js: "javascript",
-};
-function getLanguageFromFileName(fileName: string) {
-	const ext = fileName.split(".").pop();
-	if (!ext) return "plaintext";
-	return EXTENSION_MAP[ext as keyof typeof EXTENSION_MAP] || "plaintext";
+function getFileExtension(fileName: string) {
+	return fileName.split(".").pop();
 }
+const SUPPORTED_RUNNER = ["js", "ts"];
 export default function CodeDocument({
 	doc,
 	files,
@@ -67,10 +62,14 @@ export default function CodeDocument({
 	}
 	async function runCode() {
 		if (!activeFile) return;
+		const langExt = getFileExtension(activeFile.name);
+		//if langExt in SUPPORTED_RUNNER
+		if (!langExt || !SUPPORTED_RUNNER.includes(langExt)) {
+			return;
+		}
 		setIsRunning(true);
 		const startTime = Date.now();
-		const language = getLanguageFromFileName(activeFile.name);
-		if (language === "typescript") {
+		if (langExt === "ts") {
 			if (monacoEditorInstanceRef.current) {
 				const { monaco, editor } = monacoEditorInstanceRef.current;
 				const model = editor.getModel();
@@ -79,12 +78,11 @@ export default function CodeDocument({
 				const client = await worker(model.uri);
 				const result = await client.getEmitOutput(model.uri.toString());
 				const jsCode = result.outputFiles[0].text;
+				console.log({ jsCode });
 				run(jsCode);
 			}
-		} else if (language === "javascript") {
+		} else if (langExt === "js") {
 			run(activeFile.content || "");
-		} else {
-			console.log("Only JavaScript and TypeScript files can be run");
 		}
 		const sleepTime = Math.max(500, Date.now() - startTime);
 		await new Promise((resolve) => setTimeout(resolve, sleepTime));
@@ -171,6 +169,7 @@ export default function CodeDocument({
 														</div>
 													);
 												}
+												const path = `${activeFile.documentId}/${activeFile.id}/${activeFile.name}`;
 												return (
 													<CodeEditor
 														onMount={(editor, monaco) => {
@@ -179,7 +178,7 @@ export default function CodeDocument({
 																monaco,
 															};
 														}}
-														path={activeFile.name}
+														path={path}
 														defaultValue={activeFile.content || ""}
 														onChange={(val) => {
 															debounceRun(() => {
@@ -191,7 +190,6 @@ export default function CodeDocument({
 																});
 															});
 														}}
-														language={getLanguageFromFileName(activeFile.name)}
 													/>
 												);
 											})()}
@@ -214,30 +212,5 @@ export default function CodeDocument({
 				</div>
 			</div>
 		</>
-	);
-}
-
-function OutputPanel({ logs, error }: { logs: Log[]; error: string | null }) {
-	return (
-		<div className="h-full flex flex-col min-h-0">
-			<div className="px-3 py-1.5 text-xs font-medium text-muted-foreground border-b bg-muted/30 shrink-0">
-				Output
-			</div>
-			<div className="flex-1 min-h-0 relative text-sm font-mono p-2 overflow-auto text-">
-				{error ? (
-					<div className="text-red-500">{error}</div>
-				) : (
-					logs.map((log, index) => (
-						<div key={index}>
-							{log.content.map((item, i) => (
-								<div key={i}>
-									{typeof item === "string" ? item : JSON.stringify(item)}
-								</div>
-							))}
-						</div>
-					))
-				)}
-			</div>
-		</div>
 	);
 }

@@ -1,32 +1,105 @@
-self.onmessage = (e) => {
-	const logs = [];
+/**
+ * Web Worker for executing JavaScript code safely.
+ * Enhanced to support:
+ * 1. ES Modules (via dynamic import)
+ * 2. Immediate log streaming (for async support)
+ * 3. Structured cloning of logs (to prevent reference issues)
+ * 4. Async error and rejection capturing
+ * 5. Extraction of serializable results from module exports
+ */
 
-	// 1. Create a proxy for the console
+self.onmessage = async (e) => {
+	const code = e.data;
+
+	// Capture logs and stream them immediately to the main thread
+	const createLogHandler =
+		(level) =>
+		(...args) => {
+			try {
+				const clonedArgs = structuredClone(args);
+				self.postMessage({ type: "log", level, content: clonedArgs });
+			} catch (err) {
+				// Fallback if structuredClone fails (e.g., for non-serializable objects)
+				self.postMessage({
+					type: "log",
+					level: "error",
+					content: [`[Unserializable ${level}]: ${err.message}`],
+				});
+			}
+		};
+
 	const customConsole = {
-		log: (...args) =>
-			logs.push({ level: "log", content: structuredClone(args) }),
-		error: (...args) =>
-			logs.push({ level: "error", content: structuredClone(args) }),
-		warn: (...args) =>
-			logs.push({ level: "warn", content: structuredClone(args) }),
+		log: createLogHandler("log"),
+		error: createLogHandler("error"),
+		warn: createLogHandler("warn"),
+		info: createLogHandler("info"),
+		debug: createLogHandler("debug"),
 	};
 
+	// Override global console for the duration of this worker's life
+	self.console = customConsole;
+
+	// Catch unhandled async errors
+	const errorHandler = (event) => {
+		self.postMessage({
+			type: "error",
+			message: event.message || "Unhandled error",
+		});
+	};
+	const rejectionHandler = (event) => {
+		self.postMessage({
+			type: "error",
+			message: event.reason?.message || "Unhandled promise rejection",
+		});
+	};
+
+	self.addEventListener("error", errorHandler);
+	self.addEventListener("unhandledrejection", rejectionHandler);
+
+	let url = null;
 	try {
-		// 2. Wrap the code in a function that provides the 'console' variable
-		// We use a Function constructor and pass our custom console as an argument
-		const runner = new Function(
-			"console",
-			`
-      "use strict";
-      ${e.data}
-    `,
-		);
+		// Wrap code in a blob to treat it as an ES module
+		const blob = new Blob([`"use strict";\n${code}`], {
+			type: "application/javascript",
+		});
+		url = URL.createObjectURL(blob);
 
-		const result = runner(customConsole);
+		const moduleNamespace = await import(url);
 
-		// 3. Send the captured logs and result back
-		self.postMessage({ type: "success", logs, result });
+		// Extract serializable results to avoid "Module could not be cloned" error
+		let result;
+		if (moduleNamespace) {
+			// Prefer default export, otherwise look for specific common export names or the first named export
+			const keys = Object.keys(moduleNamespace);
+			if ("default" in moduleNamespace) {
+				result = moduleNamespace.default;
+			} else if (keys.length > 0) {
+				result = moduleNamespace[keys[0]];
+			}
+		}
+
+		// Only send back result if it is likely cloneable (primitive or plain object)
+		const isCloneable = (val) => {
+			if (val === null || typeof val !== "object") return true;
+			try {
+				structuredClone(val);
+				return true;
+			} catch {
+				return false;
+			}
+		};
+
+		self.postMessage({
+			type: "success",
+			result: isCloneable(result)
+				? result
+				: `[Non-serializable Result: ${typeof result}]`,
+		});
 	} catch (err) {
-		self.postMessage({ type: "error", message: err.message, logs });
+		self.postMessage({ type: "error", message: err.message });
+	} finally {
+		if (url) URL.revokeObjectURL(url);
+		self.removeEventListener("error", errorHandler);
+		self.removeEventListener("unhandledrejection", rejectionHandler);
 	}
 };
