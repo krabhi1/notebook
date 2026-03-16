@@ -56,7 +56,7 @@ export default function CodeDocument({
 	const openFiles = files.filter((f) => openFileIds.includes(f.id));
 
 	function createNewFile() {
-		const fileName = `file-${files.length}.ts`;
+		const fileName = `file-${files.length + 1}.ts`;
 		createFile({
 			data: {
 				documentId: doc.id,

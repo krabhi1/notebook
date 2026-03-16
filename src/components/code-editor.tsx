@@ -60,7 +60,9 @@ const CodeEditor = ({
 						initEditor(monaco);
 						beforeMount?.(monaco);
 						monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-							onlyVisible: true,
+							target: monaco.languages.typescript.ScriptTarget.ESNext, // Use modern JS target
+							module: monaco.languages.typescript.ModuleKind.ESNext, // Use ESNext modules
+							esModuleInterop: true, // Enable interoperability
 						});
 					}}
 					onMount={(editor, monaco) => {
