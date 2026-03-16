@@ -53,6 +53,7 @@ export const createDocumentFn = createServerFn({ method: "POST" })
 				title: data.title,
 				type: data.type,
 				content: data.content || defaultContent,
+				folderId: data.folderId || null,
 				createdAt: new Date(),
 			})
 			.returning();
@@ -65,7 +66,12 @@ export const updateDocumentFn = createServerFn({ method: "POST" })
 	.handler(async ({ data: { id, ...updates }, context: { user } }) => {
 		const updated = await db
 			.update(documents)
-			.set({ ...updates, updatedAt: new Date() })
+			.set({
+				...updates,
+				folderId:
+					updates.folderId === undefined ? undefined : updates.folderId || null,
+				updatedAt: new Date(),
+			})
 			.where(
 				and(
 					eq(documents.id, id),

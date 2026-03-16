@@ -2,9 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { DocumentCard } from "@/components/dashboard/document-card";
 import { DocumentDeleteDialog } from "@/components/dashboard/document-delete-dialog";
-import { Button } from "@/components/ui/button";
+import { FolderCard } from "@/components/dashboard/folder-card";
+import { NewResourceButton } from "@/components/dashboard/new-resource-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDocuments } from "@/hooks/use-document";
+import { useFolders } from "@/hooks/use-folder";
 
 export const Route = createFileRoute("/(auth)/")({
 	loader: async ({ context }) => {
@@ -22,79 +24,90 @@ export const Route = createFileRoute("/(auth)/")({
 });
 
 function RouteComponent() {
+	const { docs, deleteDocument, isDeleting, isLoading, updateDocument } =
+		useDocuments();
 	const {
-		docs,
-		createDocument,
-		deleteDocument,
-		isDeleting,
-		isLoading,
-		isCreating,
-		updateDocument,
-	} = useDocuments();
+		folders,
+		updateFolder,
+		deleteFolder,
+		isLoading: isFoldersLoading,
+	} = useFolders();
+
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+
+	const rootFolders = folders.filter((f) => !f.parentId);
+	const rootDocs = docs.filter((d) => !d.folderId);
+
 	return (
-		<div className=" flex flex-col gap-4 h-full overflow-y-scroll px-6 py-6">
-			<div className="flex items-center justify-end gap-2">
-				<Button
-					onClick={() => {
-						createDocument({ data: { type: "mermaid", title: "Untitled" } });
-					}}
-					loading={isCreating}
-					className="w-fit"
-				>
-					New Mermaid
-				</Button>
-				<Button
-					onClick={() => {
-						createDocument({ data: { type: "excalidraw", title: "Untitled" } });
-					}}
-					loading={isCreating}
-					className="w-fit"
-				>
-					New Excalidraw
-				</Button>
-				<Button
-					onClick={() => {
-						createDocument({ data: { type: "code", title: "Untitled" } });
-					}}
-					loading={isCreating}
-					className="w-fit"
-				>
-					New Code
-				</Button>
+		<div className="flex flex-col gap-8 h-full overflow-y-scroll px-8 py-8 max-w-7xl mx-auto w-full">
+			<div className="flex items-center justify-between mb-2">
+				<h1 className="text-2xl font-bold tracking-tight">My Drive</h1>
+				<div className="flex items-center gap-2">
+					<NewResourceButton />
+				</div>
 			</div>
-			{isLoading ? (
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ">
-					{Array.from({ length: 6 }).map((_, i) => (
+			{isLoading || isFoldersLoading ? (
+				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+					{Array.from({ length: 8 }).map((_, i) => (
 						<div
-							// biome-ignore lint/suspicious/noArrayIndexKey:  static array
+							// biome-ignore lint/suspicious/noArrayIndexKey: fixed
 							key={i}
-							className="p-4 border rounded-lg h-60 flex flex-col justify-between"
+							className="p-4 rounded-xl border border-border/50 h-16 flex items-center gap-4 bg-muted/5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
 						>
-							<Skeleton className="h-4 w-3/4 mb-2" />
-							<Skeleton className="flex-1 w-full mb-2" />
-							<Skeleton className="h-6 w-1/2 ml-auto" />
+							<Skeleton className="h-10 w-10 rounded-lg" />
+							<div className="space-y-2">
+								<Skeleton className="h-3 w-24" />
+								<Skeleton className="h-2 w-12" />
+							</div>
 						</div>
 					))}
 				</div>
 			) : (
-				<div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-4 gap-4 ">
-					{docs.map((doc) => (
-						<DocumentCard
-							key={doc.id}
-							id={doc.id}
-							title={doc.title}
-							content={doc.content}
-							onDelete={() => {
-								setSelectedDocId(doc.id);
-								setDeleteDialogOpen(true);
-							}}
-							onUpdate={(id, title) => {
-								return updateDocument({ data: { id, title } });
-							}}
-						/>
-					))}
+				<div className="flex flex-col gap-10">
+					{rootFolders.length > 0 && (
+						<div className="flex flex-col gap-4">
+							<h2 className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.1em] px-1">
+								Folders
+							</h2>
+							<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+								{rootFolders.map((folder) => (
+									<FolderCard
+										key={folder.id}
+										id={folder.id}
+										title={folder.title}
+										onDelete={() => deleteFolder({ data: { id: folder.id } })}
+										onUpdate={(id, title) =>
+											updateFolder({ data: { id, title } })
+										}
+									/>
+								))}
+							</div>
+						</div>
+					)}
+
+					<div className="flex flex-col gap-4">
+						<h2 className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.1em] px-1">
+							Files
+						</h2>
+						<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+							{rootDocs.map((doc) => (
+								<DocumentCard
+									key={doc.id}
+									id={doc.id}
+									title={doc.title}
+									type={doc.type}
+									onDelete={() => {
+										setSelectedDocId(doc.id);
+										setDeleteDialogOpen(true);
+									}}
+									onUpdate={(id, title) => {
+										return updateDocument({ data: { id, title } });
+									}}
+								/>
+							))}
+						</div>
+					</div>
 				</div>
 			)}
 			{selectedDocId && (

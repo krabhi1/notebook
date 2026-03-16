@@ -1,53 +1,147 @@
-import { Link } from "@tanstack/react-router";
-import { EyeIcon, Trash2Icon } from "lucide-react";
+import { Link, useParams } from "@tanstack/react-router";
+import {
+	Edit2,
+	FileCode2,
+	FileJson,
+	FileText,
+	Layout,
+	MoreVertical,
+	Trash,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { EditableText } from "@/components/ui/editable-text";
+import { cn } from "@/lib/utils";
+
+interface DocumentCardProps {
+	id: string;
+	title: string;
+	type?: "mermaid" | "excalidraw" | "code";
+	onDelete?: (id: string) => void;
+	onUpdate?: (id: string, title: string) => Promise<unknown>;
+	className?: string;
+}
+
+const TypeIcon = ({ type }: { type?: string }) => {
+	switch (type) {
+		case "code":
+			return <FileCode2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />;
+		case "mermaid":
+			return (
+				<FileJson className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+			);
+		case "excalidraw":
+			return (
+				<Layout className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+			);
+		default:
+			return (
+				<FileText className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+			);
+	}
+};
+
+const TypeBg = ({ type }: { type?: string }) => {
+	switch (type) {
+		case "code":
+			return "bg-blue-100 dark:bg-blue-900/30";
+		case "mermaid":
+			return "bg-purple-100 dark:bg-purple-900/30";
+		case "excalidraw":
+			return "bg-orange-100 dark:bg-orange-900/30";
+		default:
+			return "bg-slate-100 dark:bg-slate-900/30";
+	}
+};
 
 export function DocumentCard({
 	id,
 	title,
-	content,
+	type,
 	onDelete,
 	onUpdate,
-}: {
-	id: string;
-	title: string;
-	content: string;
-	onDelete?: (id: string) => void;
-	onUpdate?: (id: string, title: string) => Promise<unknown>;
-}) {
+	className,
+}: DocumentCardProps) {
+	const params = useParams({ strict: false });
+	const currentPath = params._splat || "";
+	const newPath = currentPath ? `${currentPath}/${id}` : id;
+
 	return (
-		<div className="flex h-60 max-h-60 flex-col gap-3 overflow-hidden rounded-lg border border-border bg-card/75 p-3 shadow-sm shadow-black/5">
-			<EditableText
-				initialValue={title}
-				onSave={async (v) => {
-					return onUpdate?.(id, v);
-				}}
-				className="font-semibold w-fit md:w-fit"
-			/>
-			<pre className="flex-1 overflow-hidden rounded-md border border-border/60  p-2 text-xs text-muted-foreground">
-				{content}
-			</pre>
-			<footer className="flex justify-end gap-2">
-				<Link to={`${id}`}>
-					<Button
-						size="sm"
-						variant="outline"
-						className="border-border text-foreground"
-					>
-						<EyeIcon className="mr-1 size-4" />
-						Open
-					</Button>
-				</Link>
-				<Button
-					variant="destructive"
-					size="icon-sm"
-					onClick={() => onDelete?.(id)}
-					className="border-destructive text-destructive"
+		<div
+			className={cn(
+				"group flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 bg-card hover:bg-accent/40 transition-all cursor-default select-none shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm",
+				className,
+			)}
+		>
+			<Link
+				to="/d/$"
+				params={{ _splat: newPath }}
+				className="flex items-center gap-3 flex-1 min-w-0"
+			>
+				<div
+					className={cn(
+						"flex items-center justify-center h-10 w-10 rounded-lg shrink-0 transition-transform group-hover:scale-110",
+						TypeBg({ type }),
+					)}
 				>
-					<Trash2Icon />
-				</Button>
-			</footer>
+					<TypeIcon type={type} />
+				</div>
+				<div className="flex flex-col min-w-0">
+					<EditableText
+						initialValue={title}
+						onSave={async (value) => {
+							return onUpdate?.(id, value);
+						}}
+						onClick={(e) => e.stopPropagation()}
+						className="text-[13px] font-semibold truncate bg-transparent border-none p-0 focus-visible:ring-0 text-foreground/90"
+					/>
+					<span className="text-[10px] text-muted-foreground/70 font-medium uppercase tracking-tight">
+						{type || "Document"}
+					</span>
+				</div>
+			</Link>
+
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						variant="ghost"
+						size="icon"
+						className="h-8 w-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 hover:bg-accent rounded-full"
+						onClick={(e) => e.stopPropagation()}
+					>
+						<MoreVertical className="h-4 w-4 text-muted-foreground" />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent
+					align="end"
+					className="w-48 p-1 rounded-xl shadow-lg border-border/50"
+				>
+					<DropdownMenuItem
+						className="rounded-lg gap-2 text-sm"
+						onClick={(e) => {
+							e.stopPropagation();
+						}}
+					>
+						<Edit2 className="h-4 w-4 opacity-70" />
+						<span>Rename</span>
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						className="text-destructive focus:text-destructive rounded-lg gap-2 text-sm"
+						onClick={(e) => {
+							e.stopPropagation();
+							onDelete?.(id);
+						}}
+					>
+						<Trash className="h-4 w-4 opacity-70" />
+						<span>Delete</span>
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
 		</div>
 	);
 }
