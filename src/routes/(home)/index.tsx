@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import {
 	DROP_TYPE_FOLDER,
 	type DragItemData,
-	type FolderDropData,
+	type DropTargetData,
 	isDescendantFolder,
 } from "@/components/dashboard/dnd-utils";
 import { DocumentCard } from "@/components/dashboard/document-card";
@@ -69,7 +69,7 @@ function RouteComponent() {
 	};
 
 	const handleDragOver = (event: DragOverEvent) => {
-		const dropData = event.over?.data.current as FolderDropData | undefined;
+		const dropData = event.over?.data.current as DropTargetData | undefined;
 		if (dropData?.type === DROP_TYPE_FOLDER) {
 			setOverFolderId(dropData.folderId);
 			return;
@@ -84,13 +84,15 @@ function RouteComponent() {
 
 	const handleDragEnd = async (event: DragEndEvent) => {
 		const dragData = event.active.data.current as DragItemData | undefined;
-		const dropData = event.over?.data.current as FolderDropData | undefined;
+		const dropData = event.over?.data.current as DropTargetData | undefined;
 
 		resetDragState();
 
-		if (!dragData || !dropData || dropData.type !== DROP_TYPE_FOLDER) {
+		if (!dragData || !dropData) {
 			return;
 		}
+
+		if (dropData.type !== DROP_TYPE_FOLDER) return;
 
 		const targetFolderId = dropData.folderId;
 

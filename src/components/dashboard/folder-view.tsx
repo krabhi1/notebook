@@ -12,14 +12,16 @@ import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import {
 	DROP_TYPE_FOLDER,
+	DROP_TYPE_ROOT,
 	type DragItemData,
-	type FolderDropData,
+	type DropTargetData,
 	isDescendantFolder,
 } from "@/components/dashboard/dnd-utils";
 import { DocumentCard } from "@/components/dashboard/document-card";
 import { DocumentDeleteDialog } from "@/components/dashboard/document-delete-dialog";
 import { FolderCard } from "@/components/dashboard/folder-card";
 import { NewResourceButton } from "@/components/dashboard/new-resource-button";
+import { RootDropZone } from "@/components/dashboard/root-drop-zone";
 import { useDocuments } from "@/hooks/use-document";
 import { useFolders } from "@/hooks/use-folder";
 import type { Folder } from "@/server/db/schema";
@@ -46,6 +48,7 @@ export function FolderView({
 	const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
 	const [activeItem, setActiveItem] = useState<DragItemData | null>(null);
 	const [overFolderId, setOverFolderId] = useState<string | null>(null);
+	const [isOverRoot, setIsOverRoot] = useState(false);
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: { distance: 8 },
@@ -62,28 +65,48 @@ export function FolderView({
 	};
 
 	const handleDragOver = (event: DragOverEvent) => {
-		const dropData = event.over?.data.current as FolderDropData | undefined;
+		const dropData = event.over?.data.current as DropTargetData | undefined;
 		if (dropData?.type === DROP_TYPE_FOLDER) {
 			setOverFolderId(dropData.folderId);
+			setIsOverRoot(false);
+			return;
+		}
+		if (dropData?.type === DROP_TYPE_ROOT) {
+			setOverFolderId(null);
+			setIsOverRoot(true);
 			return;
 		}
 		setOverFolderId(null);
+		setIsOverRoot(false);
 	};
 
 	const resetDragState = () => {
 		setActiveItem(null);
 		setOverFolderId(null);
+		setIsOverRoot(false);
 	};
 
 	const handleDragEnd = async (event: DragEndEvent) => {
 		const dragData = event.active.data.current as DragItemData | undefined;
-		const dropData = event.over?.data.current as FolderDropData | undefined;
+		const dropData = event.over?.data.current as DropTargetData | undefined;
 
 		resetDragState();
 
-		if (!dragData || !dropData || dropData.type !== DROP_TYPE_FOLDER) {
+		if (!dragData || !dropData) {
 			return;
 		}
+
+		if (dropData.type === DROP_TYPE_ROOT) {
+			if (dragData.sourceParentId === null) return;
+			if (dragData.type === "document") {
+				await updateDocument({ data: { id: dragData.id, folderId: null } });
+				return;
+			}
+			await updateFolder({ data: { id: dragData.id, parentId: null } });
+			return;
+		}
+
+		if (dropData.type !== DROP_TYPE_FOLDER) return;
 
 		const targetFolderId = dropData.folderId;
 
@@ -151,6 +174,7 @@ export function FolderView({
 				onDragEnd={handleDragEnd}
 			>
 				<div className="flex flex-col gap-10">
+					<RootDropZone visible={activeItem !== null} isOver={isOverRoot} />
 					{subFolders.length > 0 && (
 						<div className="flex flex-col gap-4">
 							<h2 className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.1em] px-1">

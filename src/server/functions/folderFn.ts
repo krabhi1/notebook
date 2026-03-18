@@ -63,7 +63,12 @@ export const updateFolderFn = createServerFn({ method: "POST" })
 	.handler(async ({ data: { id, ...updates }, context: { user } }) => {
 		const updated = await db
 			.update(folders)
-			.set({ ...updates, updatedAt: new Date() })
+			.set({
+				...updates,
+				parentId:
+					updates.parentId === undefined ? undefined : updates.parentId || null,
+				updatedAt: new Date(),
+			})
 			.where(
 				and(
 					eq(folders.id, id),

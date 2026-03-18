@@ -9,11 +9,18 @@ export type DragItemData = {
 };
 
 export const DROP_TYPE_FOLDER = "folder-drop";
+export const DROP_TYPE_ROOT = "root-drop";
 
 export type FolderDropData = {
 	type: typeof DROP_TYPE_FOLDER;
 	folderId: string;
 };
+
+export type RootDropData = {
+	type: typeof DROP_TYPE_ROOT;
+};
+
+export type DropTargetData = FolderDropData | RootDropData;
 
 export function isDescendantFolder(
 	folders: Folder[],

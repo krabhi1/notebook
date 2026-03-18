@@ -28,7 +28,7 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 	const user = context.user;
 	const signOut = context.signOut;
 	const params = useParams({ strict: false });
-	const docId = params.docId;
+	const resourceId = params._splat?.split("/").filter(Boolean).at(-1);
 	const isSaving = useIsMutating() > 0;
 	const [showIcon, setShowIcon] = useState(false);
 	useEffect(() => {
@@ -64,7 +64,7 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 
 			<div className="flex items-center gap-2 shrink-0">
 				<div>
-					{docId && showIcon && (
+					{resourceId && showIcon && (
 						<CloudUploadIcon className=" animate-pulse size-4" />
 					)}
 				</div>

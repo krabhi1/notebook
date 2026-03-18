@@ -17,7 +17,7 @@ export const updateDocumentSchema = z.object({
 	id: z.string(),
 	title: z.string().max(255).optional(),
 	content: z.string().max(1048576).optional(),
-	folderId: z.string().optional(),
+	folderId: z.string().nullable().optional(),
 });
 
 // Folders
@@ -34,7 +34,7 @@ export const createFolderSchema = z.object({
 export const updateFolderSchema = z.object({
 	id: z.string(),
 	title: z.string().max(255).optional(),
-	parentId: z.string().optional(),
+	parentId: z.string().nullable().optional(),
 });
 
 // Files
