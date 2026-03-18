@@ -1,6 +1,5 @@
 import { ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
-import { useFiles } from "@/hooks/use-file";
 import type { Document, File } from "@/server/db/schema";
 
 const MermaidDocument = lazy(
@@ -12,16 +11,7 @@ const ExcalidrawDocument = lazy(
 const CodeDocument = lazy(
 	() => import("@/components/dashboard/document/code-doc"),
 );
-export function DocumentView({
-	doc,
-	initialFiles,
-}: {
-	doc: Document;
-	initialFiles: File[];
-}) {
-	const { files } = useFiles(doc.id as string);
-	const _currentFiles = files.length > 0 ? files : initialFiles;
-
+export function DocumentView({ doc, files }: { doc: Document; files: File[] }) {
 	return (
 		<ClientOnly>
 			<Suspense>

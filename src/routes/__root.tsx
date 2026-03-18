@@ -1,3 +1,4 @@
+import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
@@ -6,7 +7,10 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 
-export const Route = createRootRouteWithContext()({
+type RootRouteContext = {
+	queryClient: QueryClient;
+};
+export const Route = createRootRouteWithContext<RootRouteContext>()({
 	head: () => ({
 		meta: [
 			{
