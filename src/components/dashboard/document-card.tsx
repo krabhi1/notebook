@@ -106,6 +106,9 @@ export function DocumentCard({
 					<EditableText
 						initialValue={title}
 						floating={true}
+						triggerMode="none"
+						editing={isEditing}
+						onEditingChange={setIsEditing}
 						onSave={async (value) => {
 							return onUpdate?.(id, value);
 						}}

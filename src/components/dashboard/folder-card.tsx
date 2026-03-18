@@ -59,10 +59,12 @@ export function FolderCard({
 					<EditableText
 						initialValue={title}
 						floating={true}
+						triggerMode="none"
+						editing={isEditing}
+						onEditingChange={setIsEditing}
 						onSave={async (value) => {
 							return onUpdate(id, value);
 						}}
-						onClick={(e) => e.stopPropagation()}
 					/>
 					<span className="text-[10px] text-muted-foreground/70 font-medium uppercase tracking-tight">
 						Folder

@@ -7,7 +7,10 @@ type EditableTextProps = {
 	className?: string;
 	className2?: string;
 	floating?: boolean;
-} & React.HTMLAttributes<HTMLDivElement>;
+	editing?: boolean;
+	onEditingChange?: (editing: boolean) => void;
+	triggerMode?: "click" | "doubleClick" | "none";
+} & React.HTMLAttributes<HTMLElement>;
 
 export function EditableText({
 	initialValue,
@@ -15,17 +18,30 @@ export function EditableText({
 	className,
 	className2,
 	floating = false,
+	editing,
+	onEditingChange,
+	triggerMode,
 	...props
 }: EditableTextProps) {
-	const [isEditing, setIsEditing] = useState(false);
+	const [internalEditing, setInternalEditing] = useState(false);
 	const [value, setValue] = useState(initialValue);
 	const [positionStyle, setPositionStyle] = useState<React.CSSProperties>({});
 	const inputRef = useRef<HTMLInputElement>(null);
-	const containerRef = useRef<HTMLDivElement>(null);
+	const isControlled = editing !== undefined;
+	const isEditing = isControlled ? editing : internalEditing;
+	const mode = triggerMode ?? (floating ? "doubleClick" : "click");
+	const isInteractive = mode !== "none";
+
+	const setEditing = (next: boolean) => {
+		if (!isControlled) {
+			setInternalEditing(next);
+		}
+		onEditingChange?.(next);
+	};
 
 	useEffect(() => {
-		if (!isEditing) setValue(initialValue);
-	}, [initialValue, isEditing]);
+		setValue(initialValue);
+	}, [initialValue]);
 
 	useLayoutEffect(() => {
 		if (!isEditing || !floating || !inputRef.current) return;
@@ -53,11 +69,15 @@ export function EditableText({
 	}, [isEditing, floating]);
 
 	const finishEditing = async () => {
-		setIsEditing(false);
+		setEditing(false);
 		setPositionStyle({});
-		if (value.trim() === "" || value === initialValue) return;
+		const nextValue = value.trim();
+		if (nextValue === "" || nextValue === initialValue) {
+			setValue(initialValue);
+			return;
+		}
 		try {
-			await onSave?.(value);
+			await onSave?.(nextValue);
 		} catch (_) {
 			// Revert to initial value on error
 			setValue(initialValue);
@@ -68,7 +88,7 @@ export function EditableText({
 		if (event.key === "Enter") {
 			finishEditing();
 		} else if (event.key === "Escape") {
-			setIsEditing(false);
+			setEditing(false);
 			setPositionStyle({});
 			setValue(initialValue);
 		}
@@ -95,31 +115,58 @@ export function EditableText({
 		return inputElement;
 	}
 
+	const { onClick, onDoubleClick, onKeyDown, ...restProps } = props;
+
+	if (!isInteractive) {
+		return (
+			<div className="relative inline-block w-full">
+				<div
+					className={cn(
+						"px-1.5 py-1 border border-transparent! focus:outline-none overflow-clip text-ellipsis whitespace-nowrap",
+						className2,
+					)}
+					{...restProps}
+				>
+					{value}
+				</div>
+				{isEditing && floating && inputElement}
+			</div>
+		);
+	}
+
 	return (
-		<div ref={containerRef} className="relative inline-block w-full">
-			{/* biome-ignore lint/a11y/noStaticElementInteractions: todo */}
-			{/* biome-ignore lint/a11y/useKeyWithClickEvents: todo */}
-			<div
-				onDoubleClick={(e) => {
-					if (floating) {
-						e.stopPropagation();
-						setIsEditing(true);
+		<div className="relative inline-block w-full">
+			<button
+				type="button"
+				onDoubleClick={(event) => {
+					event.stopPropagation();
+					if (mode === "doubleClick") {
+						setEditing(true);
 					}
+					onDoubleClick?.(event);
 				}}
-				onClick={(e) => {
-					e.stopPropagation();
-					if (!floating) {
-						setIsEditing(true);
+				onClick={(event) => {
+					event.stopPropagation();
+					if (mode === "click") {
+						setEditing(true);
 					}
+					onClick?.(event);
+				}}
+				onKeyDown={(event) => {
+					if (event.key === "Enter" || event.key === " ") {
+						event.preventDefault();
+						setEditing(true);
+					}
+					onKeyDown?.(event);
 				}}
 				className={cn(
-					"px-1.5 py-1 border border-transparent! focus:outline-none overflow-clip text-ellipsis whitespace-nowrap cursor-pointer",
+					"w-full text-left px-1.5 py-1 border border-transparent! focus:outline-none overflow-clip text-ellipsis whitespace-nowrap cursor-pointer",
 					className2,
 				)}
-				{...props}
+				{...restProps}
 			>
 				{value || "Untitled"}
-			</div>
+			</button>
 			{isEditing && floating && inputElement}
 		</div>
 	);
