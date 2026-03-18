@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDocuments } from "@/hooks/use-document";
 import { useFolders } from "@/hooks/use-folder";
 
-export const Route = createFileRoute("/(auth)/")({
+export const Route = createFileRoute("/(home)/")({
 	loader: async ({ context }) => {
 		const { session } = context;
 		return { session };

@@ -1,26 +1,12 @@
-import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
 	Scripts,
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
-import type { Session } from "@/lib/auth-client";
-import { getSession } from "@/server/utils";
 import appCss from "../styles.css?url";
 
-interface MyRouterContext {
-	queryClient: QueryClient;
-	session: Session | null;
-}
-
-export const Route = createRootRouteWithContext<MyRouterContext>()({
-	beforeLoad: async () => {
-		const session = await getSession();
-		return {
-			session,
-		};
-	},
+export const Route = createRootRouteWithContext()({
 	head: () => ({
 		meta: [
 			{

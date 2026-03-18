@@ -6,7 +6,7 @@ import {
 	useMemo,
 } from "react";
 import { authClient } from "@/lib/auth-client";
-import { Route } from "@/routes/__root";
+import { Route } from "@/routes/(home)/route";
 import type { User } from "@/server/auth";
 
 interface AuthContextType {
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 			authClient.signOut({
 				fetchOptions: {
 					onSuccess: () => {
-						navigate({ to: "/" });
+						navigate({ to: "/$" });
 					},
 				},
 			}),

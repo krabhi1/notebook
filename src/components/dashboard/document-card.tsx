@@ -79,7 +79,7 @@ export function DocumentCard({
 			)}
 		>
 			<Link
-				to="/d/$"
+				to="/$"
 				params={{ _splat: newPath }}
 				className="flex items-center gap-3 flex-1 min-w-0"
 			>

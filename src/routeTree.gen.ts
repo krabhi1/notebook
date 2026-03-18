@@ -10,28 +10,27 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DevRouteImport } from './routes/dev'
-import { Route as authRouteRouteImport } from './routes/(auth)/route'
-import { Route as authIndexRouteImport } from './routes/(auth)/index'
+import { Route as homeRouteRouteImport } from './routes/(home)/route'
+import { Route as homeIndexRouteImport } from './routes/(home)/index'
 import { Route as publicSignupRouteImport } from './routes/(public)/signup'
 import { Route as publicLoginRouteImport } from './routes/(public)/login'
 import { Route as publicForgotPasswordRouteImport } from './routes/(public)/forgot-password'
-import { Route as authDocIdRouteImport } from './routes/(auth)/$docId'
+import { Route as homeSplatRouteImport } from './routes/(home)/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as authDSplatRouteImport } from './routes/(auth)/d/$'
 
 const DevRoute = DevRouteImport.update({
   id: '/dev',
   path: '/dev',
   getParentRoute: () => rootRouteImport,
 } as any)
-const authRouteRoute = authRouteRouteImport.update({
-  id: '/(auth)',
+const homeRouteRoute = homeRouteRouteImport.update({
+  id: '/(home)',
   getParentRoute: () => rootRouteImport,
 } as any)
-const authIndexRoute = authIndexRouteImport.update({
+const homeIndexRoute = homeIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => authRouteRoute,
+  getParentRoute: () => homeRouteRoute,
 } as any)
 const publicSignupRoute = publicSignupRouteImport.update({
   id: '/(public)/signup',
@@ -48,90 +47,79 @@ const publicForgotPasswordRoute = publicForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const authDocIdRoute = authDocIdRouteImport.update({
-  id: '/$docId',
-  path: '/$docId',
-  getParentRoute: () => authRouteRoute,
+const homeSplatRoute = homeSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => homeRouteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const authDSplatRoute = authDSplatRouteImport.update({
-  id: '/d/$',
-  path: '/d/$',
-  getParentRoute: () => authRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/dev': typeof DevRoute
-  '/$docId': typeof authDocIdRoute
+  '/$': typeof homeSplatRoute
   '/forgot-password': typeof publicForgotPasswordRoute
   '/login': typeof publicLoginRoute
   '/signup': typeof publicSignupRoute
-  '/': typeof authIndexRoute
-  '/d/$': typeof authDSplatRoute
+  '/': typeof homeIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/dev': typeof DevRoute
-  '/$docId': typeof authDocIdRoute
+  '/$': typeof homeSplatRoute
   '/forgot-password': typeof publicForgotPasswordRoute
   '/login': typeof publicLoginRoute
   '/signup': typeof publicSignupRoute
-  '/': typeof authIndexRoute
-  '/d/$': typeof authDSplatRoute
+  '/': typeof homeIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/(auth)': typeof authRouteRouteWithChildren
+  '/(home)': typeof homeRouteRouteWithChildren
   '/dev': typeof DevRoute
-  '/(auth)/$docId': typeof authDocIdRoute
+  '/(home)/$': typeof homeSplatRoute
   '/(public)/forgot-password': typeof publicForgotPasswordRoute
   '/(public)/login': typeof publicLoginRoute
   '/(public)/signup': typeof publicSignupRoute
-  '/(auth)/': typeof authIndexRoute
-  '/(auth)/d/$': typeof authDSplatRoute
+  '/(home)/': typeof homeIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/dev'
-    | '/$docId'
+    | '/$'
     | '/forgot-password'
     | '/login'
     | '/signup'
     | '/'
-    | '/d/$'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/dev'
-    | '/$docId'
+    | '/$'
     | '/forgot-password'
     | '/login'
     | '/signup'
     | '/'
-    | '/d/$'
     | '/api/auth/$'
   id:
     | '__root__'
-    | '/(auth)'
+    | '/(home)'
     | '/dev'
-    | '/(auth)/$docId'
+    | '/(home)/$'
     | '/(public)/forgot-password'
     | '/(public)/login'
     | '/(public)/signup'
-    | '/(auth)/'
-    | '/(auth)/d/$'
+    | '/(home)/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  authRouteRoute: typeof authRouteRouteWithChildren
+  homeRouteRoute: typeof homeRouteRouteWithChildren
   DevRoute: typeof DevRoute
   publicForgotPasswordRoute: typeof publicForgotPasswordRoute
   publicLoginRoute: typeof publicLoginRoute
@@ -148,19 +136,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DevRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)': {
-      id: '/(auth)'
+    '/(home)': {
+      id: '/(home)'
       path: ''
       fullPath: ''
-      preLoaderRoute: typeof authRouteRouteImport
+      preLoaderRoute: typeof homeRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/': {
-      id: '/(auth)/'
+    '/(home)/': {
+      id: '/(home)/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof authIndexRouteImport
-      parentRoute: typeof authRouteRoute
+      preLoaderRoute: typeof homeIndexRouteImport
+      parentRoute: typeof homeRouteRoute
     }
     '/(public)/signup': {
       id: '/(public)/signup'
@@ -183,12 +171,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof publicForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/$docId': {
-      id: '/(auth)/$docId'
-      path: '/$docId'
-      fullPath: '/$docId'
-      preLoaderRoute: typeof authDocIdRouteImport
-      parentRoute: typeof authRouteRoute
+    '/(home)/$': {
+      id: '/(home)/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof homeSplatRouteImport
+      parentRoute: typeof homeRouteRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -197,34 +185,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(auth)/d/$': {
-      id: '/(auth)/d/$'
-      path: '/d/$'
-      fullPath: '/d/$'
-      preLoaderRoute: typeof authDSplatRouteImport
-      parentRoute: typeof authRouteRoute
-    }
   }
 }
 
-interface authRouteRouteChildren {
-  authDocIdRoute: typeof authDocIdRoute
-  authIndexRoute: typeof authIndexRoute
-  authDSplatRoute: typeof authDSplatRoute
+interface homeRouteRouteChildren {
+  homeSplatRoute: typeof homeSplatRoute
+  homeIndexRoute: typeof homeIndexRoute
 }
 
-const authRouteRouteChildren: authRouteRouteChildren = {
-  authDocIdRoute: authDocIdRoute,
-  authIndexRoute: authIndexRoute,
-  authDSplatRoute: authDSplatRoute,
+const homeRouteRouteChildren: homeRouteRouteChildren = {
+  homeSplatRoute: homeSplatRoute,
+  homeIndexRoute: homeIndexRoute,
 }
 
-const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
-  authRouteRouteChildren,
+const homeRouteRouteWithChildren = homeRouteRoute._addFileChildren(
+  homeRouteRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  authRouteRoute: authRouteRouteWithChildren,
+  homeRouteRoute: homeRouteRouteWithChildren,
   DevRoute: DevRoute,
   publicForgotPasswordRoute: publicForgotPasswordRoute,
   publicLoginRoute: publicLoginRoute,
