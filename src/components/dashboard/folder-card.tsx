@@ -50,7 +50,6 @@ export function FolderCard({
 						onSave={async (value) => {
 							return onUpdate(id, value);
 						}}
-						onClick={(e) => e.stopPropagation()}
 						className="text-[13px] font-semibold truncate bg-transparent border-none p-0 focus-visible:ring-0 text-foreground/90"
 					/>
 					<span className="text-[10px] text-muted-foreground/70 font-medium uppercase tracking-tight">

@@ -33,7 +33,7 @@ export function FolderView({
 	const subDocs = allDocs.filter((d) => d.folderId === folderId);
 
 	return (
-		<div className="flex flex-col gap-8 h-full overflow-y-scroll px-8 py-8 max-w-7xl mx-auto w-full">
+		<div className="flex flex-col gap-8 h-full overflow-y-auto px-8 py-8 max-w-7xl mx-auto w-full">
 			<div className="flex flex-col gap-4 shrink-0">
 				<nav className="flex items-center text-sm text-muted-foreground gap-2 shrink-0 flex-wrap">
 					<Link

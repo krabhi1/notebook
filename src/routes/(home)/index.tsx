@@ -40,7 +40,7 @@ function RouteComponent() {
 	const rootDocs = docs.filter((d) => !d.folderId);
 
 	return (
-		<div className="flex flex-col gap-8 h-full overflow-y-scroll px-8 py-8 max-w-7xl mx-auto w-full">
+		<div className="flex flex-col gap-8 h-full overflow-y-auto px-8 py-8 max-w-7xl mx-auto w-full">
 			<div className="flex items-center justify-between mb-2">
 				<h1 className="text-2xl font-bold tracking-tight">My Drive</h1>
 				<div className="flex items-center gap-2">
