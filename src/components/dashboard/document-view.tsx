@@ -15,7 +15,8 @@ export function DocumentView({ doc, files }: { doc: Document; files: File[] }) {
 	return (
 		<ClientOnly>
 			<Suspense>
-				{/*{createPortal(
+				<div className="flex-1 min-h-0 overflow-hidden">
+					{/*{createPortal(
 					<div className="flex" id="header-title">
 						<EditableText
 							initialValue={doc.title}
@@ -27,9 +28,10 @@ export function DocumentView({ doc, files }: { doc: Document; files: File[] }) {
 					</div>,
 					document.getElementById("header-actions") as HTMLElement,
 				)}*/}
-				{doc.type === "excalidraw" && <ExcalidrawDocument doc={doc} />}
-				{doc.type === "mermaid" && <MermaidDocument doc={doc} />}
-				{doc.type === "code" && <CodeDocument doc={doc} files={files} />}
+					{doc.type === "excalidraw" && <ExcalidrawDocument doc={doc} />}
+					{doc.type === "mermaid" && <MermaidDocument doc={doc} />}
+					{doc.type === "code" && <CodeDocument doc={doc} files={files} />}
+				</div>
 			</Suspense>
 		</ClientOnly>
 	);

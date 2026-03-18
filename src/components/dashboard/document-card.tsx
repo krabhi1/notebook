@@ -1,4 +1,4 @@
-import { Link, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams } from "@tanstack/react-router";
 import {
 	Edit2,
 	FileCode2,
@@ -8,6 +8,7 @@ import {
 	MoreVertical,
 	Trash,
 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -67,21 +68,31 @@ export function DocumentCard({
 	onUpdate,
 	className,
 }: DocumentCardProps) {
+	const [isEditing, setIsEditing] = useState(false);
+	const navigate = useNavigate();
 	const params = useParams({ strict: false });
 	const currentPath = params._splat || "";
 	const newPath = currentPath ? `${currentPath}/${id}` : id;
 
+	const handleNavigate = () => {
+		if (isEditing) return;
+		navigate({
+			to: "/$",
+			params: { _splat: newPath },
+		});
+	};
+
 	return (
 		<div
 			className={cn(
-				"group flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 bg-card hover:bg-accent/40 transition-all cursor-default select-none shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm",
+				"group flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 bg-card hover:bg-accent/40 cursor-pointer select-none  hover:shadow-sm  ",
 				className,
 			)}
 		>
-			<Link
-				to="/$"
-				params={{ _splat: newPath }}
-				className="flex items-center gap-3 flex-1 min-w-0"
+			<button
+				type="button"
+				onClick={handleNavigate}
+				className="flex items-center gap-3 flex-1 min-w-0 text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
 			>
 				<div
 					className={cn(
@@ -94,17 +105,16 @@ export function DocumentCard({
 				<div className="flex flex-col min-w-0">
 					<EditableText
 						initialValue={title}
+						floating={true}
 						onSave={async (value) => {
 							return onUpdate?.(id, value);
 						}}
-						onClick={(e) => e.stopPropagation()}
-						className="text-[13px] font-semibold truncate bg-transparent border-none p-0 focus-visible:ring-0 text-foreground/90"
 					/>
 					<span className="text-[10px] text-muted-foreground/70 font-medium uppercase tracking-tight">
 						{type || "Document"}
 					</span>
 				</div>
-			</Link>
+			</button>
 
 			<DropdownMenu>
 				<DropdownMenuTrigger asChild>
@@ -125,6 +135,7 @@ export function DocumentCard({
 						className="rounded-lg gap-2 text-sm"
 						onClick={(e) => {
 							e.stopPropagation();
+							setIsEditing(true);
 						}}
 					>
 						<Edit2 className="h-4 w-4 opacity-70" />
