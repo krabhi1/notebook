@@ -7,6 +7,7 @@ import {
 	useSensor,
 	useSensors,
 } from "@dnd-kit/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
@@ -22,9 +23,9 @@ import { DocumentDeleteDialog } from "@/components/dashboard/document-delete-dia
 import { FolderCard } from "@/components/dashboard/folder-card";
 import { NewResourceButton } from "@/components/dashboard/new-resource-button";
 import { RootDropZone } from "@/components/dashboard/root-drop-zone";
-import { useDocuments } from "@/hooks/use-document";
-import { useFolders } from "@/hooks/use-folder";
-import type { Folder } from "@/server/db/schema";
+import { documentsQueryKey, useDocuments } from "@/hooks/use-document";
+import { foldersQueryKey, useFolders } from "@/hooks/use-folder";
+import type { Document, Folder } from "@/server/db/schema";
 export function FolderView({
 	folderId,
 	title,
@@ -36,6 +37,7 @@ export function FolderView({
 	parents: Folder[];
 	pathSegments: string[];
 }) {
+	const queryClient = useQueryClient();
 	const { folders: allFolders, updateFolder, deleteFolder } = useFolders();
 	const {
 		docs: allDocs,
@@ -99,10 +101,34 @@ export function FolderView({
 		if (dropData.type === DROP_TYPE_ROOT) {
 			if (dragData.sourceParentId === null) return;
 			if (dragData.type === "document") {
-				await updateDocument({ data: { id: dragData.id, folderId: null } });
+				const previousDocs =
+					queryClient.getQueryData<Document[]>(documentsQueryKey);
+				queryClient.setQueryData<Document[]>(documentsQueryKey, (current) =>
+					current?.map((doc) =>
+						doc.id === dragData.id ? { ...doc, folderId: null } : doc,
+					),
+				);
+				try {
+					await updateDocument({ data: { id: dragData.id, folderId: null } });
+				} catch (_) {
+					queryClient.setQueryData(documentsQueryKey, previousDocs);
+					return;
+				}
 				return;
 			}
-			await updateFolder({ data: { id: dragData.id, parentId: null } });
+			const previousFolders =
+				queryClient.getQueryData<Folder[]>(foldersQueryKey);
+			queryClient.setQueryData<Folder[]>(foldersQueryKey, (current) =>
+				current?.map((folder) =>
+					folder.id === dragData.id ? { ...folder, parentId: null } : folder,
+				),
+			);
+			try {
+				await updateFolder({ data: { id: dragData.id, parentId: null } });
+			} catch (_) {
+				queryClient.setQueryData(foldersQueryKey, previousFolders);
+				return;
+			}
 			return;
 		}
 
@@ -112,9 +138,21 @@ export function FolderView({
 
 		if (dragData.type === "document") {
 			if (dragData.sourceParentId === targetFolderId) return;
-			await updateDocument({
-				data: { id: dragData.id, folderId: targetFolderId },
-			});
+			const previousDocs =
+				queryClient.getQueryData<Document[]>(documentsQueryKey);
+			queryClient.setQueryData<Document[]>(documentsQueryKey, (current) =>
+				current?.map((doc) =>
+					doc.id === dragData.id ? { ...doc, folderId: targetFolderId } : doc,
+				),
+			);
+			try {
+				await updateDocument({
+					data: { id: dragData.id, folderId: targetFolderId },
+				});
+			} catch (_) {
+				queryClient.setQueryData(documentsQueryKey, previousDocs);
+				return;
+			}
 			return;
 		}
 
@@ -130,7 +168,22 @@ export function FolderView({
 
 		if (dragData.sourceParentId === targetFolderId) return;
 
-		await updateFolder({ data: { id: dragData.id, parentId: targetFolderId } });
+		const previousFolders = queryClient.getQueryData<Folder[]>(foldersQueryKey);
+		queryClient.setQueryData<Folder[]>(foldersQueryKey, (current) =>
+			current?.map((folder) =>
+				folder.id === dragData.id
+					? { ...folder, parentId: targetFolderId }
+					: folder,
+			),
+		);
+		try {
+			await updateFolder({
+				data: { id: dragData.id, parentId: targetFolderId },
+			});
+		} catch (_) {
+			queryClient.setQueryData(foldersQueryKey, previousFolders);
+			return;
+		}
 	};
 
 	return (

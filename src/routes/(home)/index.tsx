@@ -7,6 +7,7 @@ import {
 	useSensor,
 	useSensors,
 } from "@dnd-kit/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,8 +22,9 @@ import { DocumentDeleteDialog } from "@/components/dashboard/document-delete-dia
 import { FolderCard } from "@/components/dashboard/folder-card";
 import { NewResourceButton } from "@/components/dashboard/new-resource-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDocuments } from "@/hooks/use-document";
-import { useFolders } from "@/hooks/use-folder";
+import { documentsQueryKey, useDocuments } from "@/hooks/use-document";
+import { foldersQueryKey, useFolders } from "@/hooks/use-folder";
+import type { Document, Folder } from "@/server/db/schema";
 
 export const Route = createFileRoute("/(home)/")({
 	loader: async ({ context }) => {
@@ -40,6 +42,7 @@ export const Route = createFileRoute("/(home)/")({
 });
 
 function RouteComponent() {
+	const queryClient = useQueryClient();
 	const { docs, deleteDocument, isDeleting, isLoading, updateDocument } =
 		useDocuments();
 	const {
@@ -98,9 +101,21 @@ function RouteComponent() {
 
 		if (dragData.type === "document") {
 			if (dragData.sourceParentId === targetFolderId) return;
-			await updateDocument({
-				data: { id: dragData.id, folderId: targetFolderId },
-			});
+			const previousDocs =
+				queryClient.getQueryData<Document[]>(documentsQueryKey);
+			queryClient.setQueryData<Document[]>(documentsQueryKey, (current) =>
+				current?.map((doc) =>
+					doc.id === dragData.id ? { ...doc, folderId: targetFolderId } : doc,
+				),
+			);
+			try {
+				await updateDocument({
+					data: { id: dragData.id, folderId: targetFolderId },
+				});
+			} catch (_) {
+				queryClient.setQueryData(documentsQueryKey, previousDocs);
+				return;
+			}
 			return;
 		}
 
@@ -116,16 +131,28 @@ function RouteComponent() {
 
 		if (dragData.sourceParentId === targetFolderId) return;
 
-		await updateFolder({ data: { id: dragData.id, parentId: targetFolderId } });
+		const previousFolders = queryClient.getQueryData<Folder[]>(foldersQueryKey);
+		queryClient.setQueryData<Folder[]>(foldersQueryKey, (current) =>
+			current?.map((folder) =>
+				folder.id === dragData.id
+					? { ...folder, parentId: targetFolderId }
+					: folder,
+			),
+		);
+		try {
+			await updateFolder({
+				data: { id: dragData.id, parentId: targetFolderId },
+			});
+		} catch (_) {
+			queryClient.setQueryData(foldersQueryKey, previousFolders);
+			return;
+		}
 	};
 
 	return (
 		<div className="flex flex-col gap-8 flex-1 overflow-y-auto px-8 py-8 max-w-7xl mx-auto w-full">
-			<div className="flex items-center justify-between mb-2">
-				<h1 className="text-2xl font-bold tracking-tight">My Drive</h1>
-				<div className="flex items-center gap-2">
-					<NewResourceButton />
-				</div>
+			<div className="flex justify-end mb-2">
+				<NewResourceButton />
 			</div>
 			{isLoading || isFoldersLoading ? (
 				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
