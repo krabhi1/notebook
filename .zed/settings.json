@@ -17,6 +17,7 @@
         "source.fixAll.biome": true,
         "source.organizeImports.biome": true,
       },
+      "language_servers": ["tsgo"],
     },
     "TSX": {
       "formatter": { "language_server": { "name": "biome" } },
@@ -24,10 +25,18 @@
         "source.fixAll.biome": true,
         "source.organizeImports.biome": true,
       },
+      "language_servers": ["tsgo"],
     },
     "JSON": {
       "formatter": { "language_server": { "name": "biome" } },
     },
   },
-  "language_servers": ["!eslint", "!typescript-language-server", "..."],
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/node_modules",
+    "**/target",
+    "**/dist",
+    "**/.wrangler",
+    "**/.tanstack",
+  ],
 }
