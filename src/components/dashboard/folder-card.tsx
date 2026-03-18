@@ -1,6 +1,12 @@
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Edit2, Folder as FolderIcon, MoreVertical, Trash } from "lucide-react";
 import { useState } from "react";
+import {
+	DROP_TYPE_FOLDER,
+	type DragItemData,
+	type FolderDropData,
+} from "@/components/dashboard/dnd-utils";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -16,6 +22,9 @@ interface FolderCardProps {
 	title: string;
 	onDelete: () => void;
 	onUpdate: (id: string, title: string) => Promise<unknown>;
+	dragData?: DragItemData;
+	disableNavigation?: boolean;
+	isDropTarget?: boolean;
 	className?: string;
 }
 
@@ -24,6 +33,9 @@ export function FolderCard({
 	title,
 	onDelete,
 	onUpdate,
+	dragData,
+	disableNavigation = false,
+	isDropTarget = false,
 	className,
 }: FolderCardProps) {
 	const [isEditing, setIsEditing] = useState(false);
@@ -31,9 +43,31 @@ export function FolderCard({
 	const params = useParams({ strict: false });
 	const currentPath = params._splat || "";
 	const newPath = currentPath ? `${currentPath}/${id}` : id;
+	const {
+		attributes,
+		listeners,
+		setNodeRef: setDragNodeRef,
+		transform,
+		isDragging,
+	} = useDraggable({
+		id: `folder:${id}`,
+		disabled: !dragData,
+		data: dragData,
+	});
+	const { setNodeRef: setDropNodeRef } = useDroppable({
+		id: `folder-drop:${id}`,
+		data: { type: DROP_TYPE_FOLDER, folderId: id } satisfies FolderDropData,
+	});
+	const setNodeRef = (node: HTMLDivElement | null) => {
+		setDragNodeRef(node);
+		setDropNodeRef(node);
+	};
+	const transformStyle = transform
+		? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+		: undefined;
 
 	const handleNavigate = () => {
-		if (isEditing) return;
+		if (isEditing || isDragging || disableNavigation) return;
 		navigate({
 			to: "/$",
 			params: { _splat: newPath },
@@ -42,14 +76,20 @@ export function FolderCard({
 
 	return (
 		<div
+			ref={setNodeRef}
+			style={{ transform: transformStyle }}
 			className={cn(
 				"group flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 bg-card hover:bg-accent/40  cursor-pointer select-none  hover:shadow-sm",
+				isDragging && "opacity-60",
+				isDropTarget && "ring-2 ring-primary/60 bg-accent/60",
 				className,
 			)}
 		>
 			<button
 				type="button"
 				onClick={handleNavigate}
+				{...listeners}
+				{...attributes}
 				className="flex items-center gap-3 flex-1 min-w-0 text-left rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
 			>
 				<div className="flex items-center justify-center h-10 w-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 shrink-0 transition-transform group-hover:scale-110">
