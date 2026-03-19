@@ -39,6 +39,7 @@ export function FolderCard({
 	className,
 }: FolderCardProps) {
 	const [isEditing, setIsEditing] = useState(false);
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const navigate = useNavigate();
 	const params = useParams({ strict: false });
 	const currentPath = params._splat || "";
@@ -79,7 +80,7 @@ export function FolderCard({
 			ref={setNodeRef}
 			style={{ transform: transformStyle }}
 			className={cn(
-				"group flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 bg-card hover:bg-accent/40  cursor-pointer select-none  hover:shadow-sm",
+				"group flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50 bg-card hover:bg-accent/40 cursor-pointer select-none hover:shadow-sm",
 				isDragging && "opacity-60",
 				isDropTarget && "ring-2 ring-primary/60 bg-accent/60",
 				className,
@@ -98,10 +99,8 @@ export function FolderCard({
 				<div className="flex flex-col min-w-0">
 					<EditableText
 						initialValue={title}
-						floating={true}
-						triggerMode="none"
-						editing={isEditing}
-						onEditingChange={setIsEditing}
+						open={isEditing}
+						onOpenChange={setIsEditing}
 						onSave={async (value) => {
 							return onUpdate(id, value);
 						}}
@@ -112,7 +111,7 @@ export function FolderCard({
 				</div>
 			</button>
 
-			<DropdownMenu>
+			<DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
 				<DropdownMenuTrigger asChild>
 					<Button
 						variant="ghost"
@@ -126,12 +125,18 @@ export function FolderCard({
 				<DropdownMenuContent
 					align="end"
 					className="w-48 p-1 rounded-xl shadow-lg border-border/50"
+					onCloseAutoFocus={(event) => {
+						event.preventDefault();
+					}}
 				>
 					<DropdownMenuItem
 						className="rounded-lg gap-2 text-sm"
-						onClick={(e) => {
-							e.stopPropagation();
-							setIsEditing(true);
+						onSelect={(event) => {
+							event.preventDefault();
+							setIsMenuOpen(false);
+							requestAnimationFrame(() => {
+								setIsEditing(true);
+							});
 						}}
 					>
 						<Edit2 className="h-4 w-4 opacity-70" />
@@ -139,8 +144,8 @@ export function FolderCard({
 					</DropdownMenuItem>
 					<DropdownMenuItem
 						className="text-destructive focus:text-destructive rounded-lg gap-2 text-sm"
-						onClick={(e) => {
-							e.stopPropagation();
+						onSelect={(event) => {
+							event.preventDefault();
 							onDelete();
 						}}
 					>
