@@ -22,9 +22,15 @@ export default function CodeDocument({
 	doc: Document;
 	files: File[];
 }) {
-	const { createFile, updateFile, isCreating } = useFiles(doc.id);
+	const {
+		files: liveFiles,
+		createFile,
+		updateFile,
+		isCreating,
+	} = useFiles(doc.id);
 	const [layout, setLayout] = useEditorLayout();
 	const monacoEditorInstanceRef = useRef<MonacoEditorInstance | null>(null);
+	const effectiveFiles = liveFiles.length > 0 ? liveFiles : files;
 
 	const {
 		openFileIds,
@@ -33,13 +39,13 @@ export default function CodeDocument({
 		setActiveFileId,
 		openFiles,
 		activeFile,
-	} = useEditorState(doc.id, files);
+	} = useEditorState(doc.id, effectiveFiles);
 
 	const { runCode, isRunning, error, logs, isRunnable, runtime, setRuntime } =
 		useCodeRunner(activeFile, monacoEditorInstanceRef);
 
 	function createNewFile() {
-		const fileName = `file-${files.length + 1}.ts`;
+		const fileName = `file-${effectiveFiles.length + 1}.ts`;
 		createFile(
 			{
 				data: {
@@ -71,7 +77,7 @@ export default function CodeDocument({
 					<ResizablePanelGroup orientation="horizontal">
 						<ResizablePanel defaultSize={25} minSize={25}>
 							<FileSidebar
-								files={files}
+								files={effectiveFiles}
 								createNewFile={createNewFile}
 								isCreating={isCreating}
 								openFileIds={openFileIds}

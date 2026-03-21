@@ -75,7 +75,7 @@ self.onmessage = async (e) => {
 		});
 		url = URL.createObjectURL(blob);
 
-		const moduleNamespace = await import(url);
+		const moduleNamespace = await import(/* @vite-ignore */ url);
 
 		// Extract serializable results to avoid "Module could not be cloned" error
 		let result;
