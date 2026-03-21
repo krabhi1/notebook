@@ -16,11 +16,13 @@ export type MonacoEditorInstance = {
 
 export type CodeEditorProps = EditorProps & {
 	loadingText?: string;
+	themeMode?: "dark" | "light";
 };
 const CodeEditor = ({
 	loadingText = "Loading...",
 	beforeMount,
 	onMount,
+	themeMode = "light",
 	...props
 }: CodeEditorProps) => {
 	useEffect(() => {
@@ -49,6 +51,7 @@ const CodeEditor = ({
 				}
 			>
 				<LazyMonacoEditor
+					theme={themeMode === "dark" ? "vs-dark" : "vs"}
 					height="100%"
 					loading={
 						<div className="text-slate-500 dark:text-gray-400">

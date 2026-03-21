@@ -18,6 +18,7 @@ interface EditorMainProps {
 	) => void;
 	onUpdateFile: (id: string, content: string) => void;
 	onRunCode: () => void;
+	themeMode?: "dark" | "light";
 }
 
 /**
@@ -34,6 +35,7 @@ export default function EditorMain({
 	onMount,
 	onUpdateFile,
 	onRunCode,
+	themeMode = "light",
 }: EditorMainProps) {
 	const debounceSave = useDebounceCallback(2000);
 	const debounceRun = useDebounceCallback(1000);
@@ -83,6 +85,7 @@ export default function EditorMain({
 							onUpdateFile(activeFile.id, content);
 						});
 					}}
+					themeMode={themeMode}
 				/>
 			</div>
 		</div>

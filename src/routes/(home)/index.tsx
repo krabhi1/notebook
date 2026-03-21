@@ -9,7 +9,8 @@ import {
 } from "@dnd-kit/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { Grid, List } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/dashboard/confirm-delete-dialog";
 import {
@@ -23,6 +24,7 @@ import { DocumentDeleteDialog } from "@/components/dashboard/document-delete-dia
 import { FolderCard } from "@/components/dashboard/folder-card";
 import { NewResourceButton } from "@/components/dashboard/new-resource-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { documentsQueryKey, useDocuments } from "@/hooks/use-document";
 import { foldersQueryKey, useFolders } from "@/hooks/use-folder";
 import type { Document, Folder } from "@/server/db/schema";
@@ -60,6 +62,14 @@ function RouteComponent() {
 	const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
 	const [activeItem, setActiveItem] = useState<DragItemData | null>(null);
 	const [overFolderId, setOverFolderId] = useState<string | null>(null);
+	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+	const VIEW_MODE_KEY = "notebook-root-view";
+	useEffect(() => {
+		const saved = window.localStorage.getItem(VIEW_MODE_KEY);
+		if (saved === "grid" || saved === "list") {
+			setViewMode(saved);
+		}
+	}, []);
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: { distance: 8 },
@@ -155,8 +165,30 @@ function RouteComponent() {
 
 	return (
 		<div className="flex flex-col gap-8 flex-1 overflow-y-auto px-8 py-8 max-w-7xl mx-auto w-full">
-			<div className="flex justify-end mb-2">
+			<div className="flex flex-wrap items-center justify-between gap-2 mb-2">
 				<NewResourceButton />
+				<div className="flex items-center gap-1">
+					<span className="text-xs text-muted-foreground">View</span>
+					<ToggleGroup
+						type="single"
+						size="sm"
+						variant="outline"
+						value={viewMode}
+						onValueChange={(value) => {
+							if (value === "grid" || value === "list") {
+								setViewMode(value);
+								window.localStorage.setItem(VIEW_MODE_KEY, value);
+							}
+						}}
+					>
+						<ToggleGroupItem value="grid" aria-label="Grid view">
+							<Grid className="size-4" />
+						</ToggleGroupItem>
+						<ToggleGroupItem value="list" aria-label="List view">
+							<List className="size-4" />
+						</ToggleGroupItem>
+					</ToggleGroup>
+				</div>
 			</div>
 			{isLoading || isFoldersLoading ? (
 				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -188,9 +220,16 @@ function RouteComponent() {
 								<h2 className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.1em] px-1">
 									Folders
 								</h2>
-								<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+								<div
+									className={
+										viewMode === "grid"
+											? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+											: "flex flex-col gap-3"
+									}
+								>
 									{rootFolders.map((folder) => (
 										<FolderCard
+											className={viewMode === "list" ? "w-full" : ""}
 											key={folder.id}
 											id={folder.id}
 											title={folder.title}
@@ -218,9 +257,16 @@ function RouteComponent() {
 							<h2 className="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.1em] px-1">
 								Files
 							</h2>
-							<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+							<div
+								className={
+									viewMode === "grid"
+										? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+										: "flex flex-col gap-3"
+								}
+							>
 								{rootDocs.map((doc) => (
 									<DocumentCard
+										className={viewMode === "list" ? "w-full" : ""}
 										key={doc.id}
 										id={doc.id}
 										title={doc.title}
