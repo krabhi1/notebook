@@ -35,10 +35,8 @@ export default function CodeDocument({
 		activeFile,
 	} = useEditorState(doc.id, files);
 
-	const { runCode, isRunning, error, logs, isRunnable } = useCodeRunner(
-		activeFile,
-		monacoEditorInstanceRef,
-	);
+	const { runCode, isRunning, error, logs, isRunnable, runtime, setRuntime } =
+		useCodeRunner(activeFile, monacoEditorInstanceRef);
 
 	function createNewFile() {
 		const fileName = `file-${files.length + 1}.ts`;
@@ -120,7 +118,13 @@ export default function CodeDocument({
 									minSize={30}
 									className="flex flex-col min-h-0"
 								>
-									<OutputPanel logs={logs} error={error} />
+									<OutputPanel
+										logs={logs}
+										error={error}
+										isRunnable={isRunnable}
+										runtime={runtime}
+										onRuntimeChange={setRuntime}
+									/>
 								</ResizablePanel>
 							</ResizablePanelGroup>
 						</ResizablePanel>

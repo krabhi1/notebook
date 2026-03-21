@@ -10,6 +10,17 @@
 
 self.onmessage = async (e) => {
 	const code = e.data;
+	const toMessage = (value, fallback) => {
+		if (value instanceof Error) return value.message;
+		if (typeof value === "string" && value.length > 0) return value;
+		if (value && typeof value === "object" && "message" in value) {
+			const maybeMessage = value.message;
+			if (typeof maybeMessage === "string" && maybeMessage.length > 0) {
+				return maybeMessage;
+			}
+		}
+		return fallback;
+	};
 
 	// Capture logs and stream them immediately to the main thread
 	const createLogHandler =
@@ -49,7 +60,7 @@ self.onmessage = async (e) => {
 	const rejectionHandler = (event) => {
 		self.postMessage({
 			type: "error",
-			message: event.reason?.message || "Unhandled promise rejection",
+			message: toMessage(event.reason, "Unhandled promise rejection"),
 		});
 	};
 
@@ -96,7 +107,10 @@ self.onmessage = async (e) => {
 				: `[Non-serializable Result: ${typeof result}]`,
 		});
 	} catch (err) {
-		self.postMessage({ type: "error", message: err.message });
+		self.postMessage({
+			type: "error",
+			message: toMessage(err, "Execution failed"),
+		});
 	} finally {
 		if (url) URL.revokeObjectURL(url);
 		self.removeEventListener("error", errorHandler);

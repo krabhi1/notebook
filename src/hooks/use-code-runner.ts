@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import type { MonacoEditorInstance } from "@/components/code-editor";
-import { useRunJsWorker } from "@/hooks/use-runjs";
+import { type JsRuntime, useRunJs } from "@/hooks/use-runjs";
 import type { File } from "@/server/db/schema";
 
 function getFileExtension(fileName: string) {
@@ -17,8 +17,9 @@ export function useCodeRunner(
 	activeFile: File | undefined,
 	monacoEditorInstanceRef: React.RefObject<MonacoEditorInstance | null>,
 ) {
-	const { run, error, logs, result } = useRunJsWorker();
+	const { run, error, logs, result, reportError } = useRunJs();
 	const [isRunning, setIsRunning] = useState(false);
+	const [runtime, setRuntime] = useState<JsRuntime>("web");
 	const isRunnable = useMemo(() => {
 		if (!activeFile) return false;
 		const langExt = getFileExtension(activeFile.name);
@@ -46,15 +47,21 @@ export function useCodeRunner(
 					const emitOutput = await client.getEmitOutput(model.uri.toString());
 
 					// Get the transpiled JS from the first output file
-					const jsCode = emitOutput.outputFiles[0].text;
-					run(jsCode);
+					const firstOutput = emitOutput.outputFiles?.[0];
+					if (!firstOutput?.text) {
+						reportError("TypeScript transpilation failed: no JS output");
+						return;
+					}
+					const jsCode = firstOutput.text;
+					await run(jsCode, runtime);
 				}
 			} else if (langExt === "js") {
 				// Run JavaScript directly
-				run(activeFile.content || "");
+				await run(activeFile.content || "", runtime);
 			}
 		} catch (err) {
-			console.error("Failed to run code:", err);
+			const message = err instanceof Error ? err.message : "Failed to run code";
+			reportError(message);
 		} finally {
 			// Ensure the loading state persists for at least 500ms for better UX
 			const executionTime = Date.now() - startTime;
@@ -65,7 +72,14 @@ export function useCodeRunner(
 			}
 			setIsRunning(false);
 		}
-	}, [activeFile, isRunnable, run, monacoEditorInstanceRef]);
+	}, [
+		activeFile,
+		isRunnable,
+		monacoEditorInstanceRef,
+		reportError,
+		run,
+		runtime,
+	]);
 
 	return {
 		runCode,
@@ -74,5 +88,7 @@ export function useCodeRunner(
 		logs,
 		result,
 		isRunnable,
+		runtime,
+		setRuntime,
 	};
 }
