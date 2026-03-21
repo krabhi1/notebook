@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ConfirmDeleteDialog } from "@/components/dashboard/confirm-delete-dialog";
 import {
 	DROP_TYPE_FOLDER,
 	type DragItemData,
@@ -50,10 +51,13 @@ function RouteComponent() {
 		updateFolder,
 		deleteFolder,
 		isLoading: isFoldersLoading,
+		isDeleting: isDeletingFolder,
 	} = useFolders();
 
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+	const [deleteFolderDialogOpen, setDeleteFolderDialogOpen] = useState(false);
+	const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
 	const [activeItem, setActiveItem] = useState<DragItemData | null>(null);
 	const [overFolderId, setOverFolderId] = useState<string | null>(null);
 	const sensors = useSensors(
@@ -197,7 +201,10 @@ function RouteComponent() {
 											}}
 											isDropTarget={overFolderId === folder.id}
 											disableNavigation={activeItem !== null}
-											onDelete={() => deleteFolder({ data: { id: folder.id } })}
+											onDelete={() => {
+												setSelectedFolder(folder);
+												setDeleteFolderDialogOpen(true);
+											}}
 											onUpdate={(id, title) =>
 												updateFolder({ data: { id, title } })
 											}
@@ -256,6 +263,32 @@ function RouteComponent() {
 						);
 					}}
 					isDeleting={isDeleting}
+				/>
+			)}
+			{selectedFolder && (
+				<ConfirmDeleteDialog
+					title="Delete Folder"
+					description={`Are you sure you want to delete the folder “${selectedFolder.title}”?`}
+					open={deleteFolderDialogOpen}
+					onOpenChange={(open) => {
+						if (!open) {
+							setSelectedFolder(null);
+						}
+						setDeleteFolderDialogOpen(open);
+					}}
+					onConfirm={async () => {
+						await deleteFolder(
+							{ data: { id: selectedFolder.id } },
+							{
+								onSuccess: () => {
+									setDeleteFolderDialogOpen(false);
+									setSelectedFolder(null);
+								},
+							},
+						);
+					}}
+					isDeleting={isDeletingFolder}
+					confirmLabel="Delete"
 				/>
 			)}
 		</div>

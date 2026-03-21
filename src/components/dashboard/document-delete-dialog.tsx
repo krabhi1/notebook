@@ -1,10 +1,4 @@
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 
 export function DocumentDeleteDialog({
 	id,
@@ -20,27 +14,14 @@ export function DocumentDeleteDialog({
 	isDeleting: boolean;
 }) {
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle>Delete Document</DialogTitle>
-				</DialogHeader>
-				<p>Are you sure you want to delete this document?</p>
-				<div className="flex justify-end gap-2">
-					<Button variant="outline" onClick={() => onOpenChange(false)}>
-						Cancel
-					</Button>
-					<Button
-						variant="destructive"
-						onClick={() => {
-							onDelete(id);
-						}}
-						loading={isDeleting}
-					>
-						Delete
-					</Button>
-				</div>
-			</DialogContent>
-		</Dialog>
+		<ConfirmDeleteDialog
+			title="Delete Document"
+			description="Are you sure you want to delete this document?"
+			confirmLabel="Delete"
+			open={open}
+			onOpenChange={onOpenChange}
+			isDeleting={isDeleting}
+			onConfirm={() => onDelete(id)}
+		/>
 	);
 }
