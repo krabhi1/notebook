@@ -33,7 +33,7 @@ export function NewResourceButton({
 	const handleCreateFolder = () => {
 		createFolder({
 			data: {
-				title: Date.now().toString().slice(-3),
+				title: "Folder",
 				parentId: folderId || undefined,
 			},
 		});

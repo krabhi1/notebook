@@ -1,7 +1,6 @@
 import { useIsMutating } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { CloudUploadIcon, Moon, Sun } from "lucide-react";
-import type React from "react";
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -12,18 +11,13 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useThemeMode } from "@/hooks/use-theme-mode";
 import { cn } from "@/lib/utils";
 import { useAuthContext } from "@/providers/auth-provider";
 
 function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 	const context = useAuthContext();
-	const [isDark, setIsDark] = useState(false);
-
-	const toggleTheme = () => {
-		const newIsDark = !isDark;
-		setIsDark(newIsDark);
-		document.documentElement.classList.toggle("dark", newIsDark);
-	};
+	const { isDark, toggle } = useThemeMode();
 
 	const user = context.user;
 	const signOut = context.signOut;
@@ -118,7 +112,7 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 					</DropdownMenuItem>*/}
 
 						<DropdownMenuItem
-							onClick={toggleTheme}
+							onClick={toggle}
 							className="text-foreground cursor-pointer flex items-center gap-2"
 						>
 							{isDark ? (
