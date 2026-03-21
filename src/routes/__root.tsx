@@ -5,6 +5,7 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
+import { AppProvider } from "@/providers/app-provider";
 import appCss from "../styles.css?url";
 
 type RootRouteContext = {
@@ -59,8 +60,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<HeadContent />
 			</head>
 			<body className="overflow-hidden">
-				{children}
-				<Toaster />
+				<AppProvider>
+					{children}
+					<Toaster />
+				</AppProvider>
 				{/*<TanStackDevtools
 					config={{
 						position: "bottom-right",

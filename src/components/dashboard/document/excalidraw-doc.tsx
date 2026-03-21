@@ -8,14 +8,14 @@ import { useDocument } from "@/hooks/use-document";
 import "@excalidraw/excalidraw/index.css";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import { useRef, useState } from "react";
-import { useThemeMode } from "@/hooks/use-theme-mode";
 import { useDebounceCallback } from "@/lib/utils";
+import { useAppContext } from "@/providers/app-provider";
 import type { Document } from "@/server/db/schema";
 
 export default function ExcalidrawDocument({ doc }: { doc: Document }) {
 	const { updateDocument } = useDocument(doc.id);
 	const debounceSave = useDebounceCallback(1000);
-	const { isDark } = useThemeMode();
+	const { isDark } = useAppContext();
 	// Seed the hash so it doesn't auto-save on mount
 	const lastVersion = useRef(doc.content ? hashString(doc.content) : -1);
 

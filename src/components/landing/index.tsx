@@ -25,10 +25,10 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { useThemeMode } from "@/hooks/use-theme-mode";
+import { useAppContext } from "@/providers/app-provider";
 
 export default function Landing() {
-	const { isDark, toggle } = useThemeMode();
+	const { isDark, toggleMode } = useAppContext();
 
 	return (
 		<div className="h-dvh overflow-y-auto scroll-smooth bg-white font-sans text-zinc-900 tracking-tight dark:bg-zinc-950 dark:text-zinc-100">
@@ -45,7 +45,7 @@ export default function Landing() {
 					<Button
 						variant="ghost"
 						size="icon"
-						onClick={toggle}
+						onClick={toggleMode}
 						className="rounded-lg text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
 					>
 						{isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}

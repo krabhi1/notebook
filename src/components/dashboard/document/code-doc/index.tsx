@@ -13,7 +13,7 @@ import { useCodeRunner } from "@/hooks/use-code-runner";
 import { useEditorLayout } from "@/hooks/use-editor-layout";
 import { useEditorState } from "@/hooks/use-editor-state";
 import { useFiles } from "@/hooks/use-file";
-import { useThemeMode } from "@/hooks/use-theme-mode";
+import { useAppContext } from "@/providers/app-provider";
 import type { Document, File } from "@/server/db/schema";
 
 export default function CodeDocument({
@@ -42,7 +42,7 @@ export default function CodeDocument({
 		activeFile,
 	} = useEditorState(doc.id, effectiveFiles);
 
-	const { mode } = useThemeMode();
+	const { mode } = useAppContext();
 	const { runCode, isRunning, error, logs, isRunnable, runtime, setRuntime } =
 		useCodeRunner(activeFile, monacoEditorInstanceRef);
 

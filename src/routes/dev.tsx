@@ -4,7 +4,7 @@ import CodeEditor from "@/components/code-editor";
 import { Button } from "@/components/ui/button";
 import { EditableText } from "@/components/ui/editable-text";
 import { Input } from "@/components/ui/input";
-import { useThemeMode } from "@/hooks/use-theme-mode";
+import { useAppContext } from "@/providers/app-provider";
 
 export const Route = createFileRoute("/dev")({
 	component: RouteComponent,
@@ -12,12 +12,12 @@ export const Route = createFileRoute("/dev")({
 
 function RouteComponent() {
 	const [editValue, setEditValue] = useState("Hello World");
-	const { isDark, toggle } = useThemeMode();
+	const { isDark, toggleMode } = useAppContext();
 
 	return (
 		<div className="p-6 flex flex-col gap-3 border items-start ">
 			<div>
-				<Button onClick={toggle}>
+				<Button onClick={toggleMode}>
 					{isDark ? "Switch to Light" : "Switch to Dark"}
 				</Button>
 			</div>

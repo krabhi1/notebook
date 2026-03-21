@@ -11,13 +11,13 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useThemeMode } from "@/hooks/use-theme-mode";
 import { cn } from "@/lib/utils";
+import { useAppContext } from "@/providers/app-provider";
 import { useAuthContext } from "@/providers/auth-provider";
 
 function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 	const context = useAuthContext();
-	const { isDark, toggle } = useThemeMode();
+	const { isDark, toggleMode } = useAppContext();
 
 	const user = context.user;
 	const signOut = context.signOut;
@@ -112,7 +112,7 @@ function AppHeader({ className, ...props }: React.ComponentProps<"header">) {
 					</DropdownMenuItem>*/}
 
 						<DropdownMenuItem
-							onClick={toggle}
+							onClick={toggleMode}
 							className="text-foreground cursor-pointer flex items-center gap-2"
 						>
 							{isDark ? (
