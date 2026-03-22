@@ -52,6 +52,23 @@ pnpm typecheck
 
 If either command fails, fix the issues before committing.
 
+If a formatting or lint error appears during work, run:
+
+```bash
+pnpm check --fix --unsafe
+```
+
+## Shadcn Components
+
+- This repo uses shadcn with `components.json` at the repo root.
+- To add a UI component, use the shadcn add command:
+
+```bash
+pnpm dlx shadcn@latest add <component-name>
+```
+
+- Prefer reusing the existing `src/components/ui/*` primitives before creating new wrappers.
+
 ## Implementation Notes
 
 - Prefer reusing existing hooks, UI primitives, and server functions.

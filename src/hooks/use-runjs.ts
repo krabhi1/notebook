@@ -18,6 +18,9 @@ export function useRunJs() {
 	const [error, setError] = useState<string | null>(null);
 	const [result, setResult] = useState<any>(null);
 	const [logs, setLogs] = useState<Log[]>([]);
+	const [previewIframe, setPreviewIframe] = useState<HTMLIFrameElement | null>(
+		null,
+	);
 	const appendLog = useCallback((log: Log) => {
 		setLogs((prev) => {
 			const next = [...prev, log];
@@ -35,15 +38,19 @@ export function useRunJs() {
 		workerRef.current = null;
 	}, []);
 
+	const cleanupIframeListener = useCallback(() => {
+		if (!iframeMessageHandlerRef.current) return;
+		window.removeEventListener("message", iframeMessageHandlerRef.current);
+		iframeMessageHandlerRef.current = null;
+	}, []);
+
 	const cleanupIframe = useCallback(() => {
-		if (iframeMessageHandlerRef.current) {
-			window.removeEventListener("message", iframeMessageHandlerRef.current);
-			iframeMessageHandlerRef.current = null;
-		}
+		cleanupIframeListener();
 		if (!iframeRef.current) return;
 		iframeRef.current.remove();
 		iframeRef.current = null;
-	}, []);
+		setPreviewIframe(null);
+	}, [cleanupIframeListener]);
 
 	useEffect(() => {
 		return () => {
@@ -120,6 +127,7 @@ export function useRunJs() {
 
 				const iframe = document.createElement("iframe");
 				iframe.style.display = "none";
+				iframe.setAttribute("title", "JS preview");
 				iframe.setAttribute("sandbox", "allow-scripts");
 
 				const codeJson = JSON.stringify(code).replaceAll(
@@ -290,6 +298,7 @@ try {
 
 					if (data.type === "error") {
 						setError(data.message ?? "Execution failed");
+						cleanupIframeListener();
 						finish();
 						return;
 					}
@@ -299,6 +308,7 @@ try {
 					}
 					if (data.type === "success") {
 						setResult(data.result);
+						cleanupIframeListener();
 						finish();
 					}
 				};
@@ -307,12 +317,13 @@ try {
 					if (settled) return;
 					settled = true;
 					clearTimeout(timeoutId);
-					cleanupIframe();
+					cleanupIframeListener();
 					resolve();
 				};
 				const timeoutId = window.setTimeout(() => {
 					if (runId !== activeRunIdRef.current) return;
 					setError(`Execution timed out after ${EXECUTION_TIMEOUT_MS / 1000}s`);
+					cleanupIframeListener();
 					finish();
 				}, EXECUTION_TIMEOUT_MS);
 
@@ -321,8 +332,9 @@ try {
 				iframe.srcdoc = srcDoc;
 				document.body.appendChild(iframe);
 				iframeRef.current = iframe;
+				setPreviewIframe(iframe);
 			}),
-		[appendLog, cleanupIframe, cleanupWorker],
+		[appendLog, cleanupIframe, cleanupIframeListener, cleanupWorker],
 	);
 
 	const run = useCallback(
@@ -343,5 +355,5 @@ try {
 		[runInIframe, runInWorker],
 	);
 
-	return { run, error, logs, result, reportError };
+	return { run, error, logs, result, reportError, previewIframe };
 }

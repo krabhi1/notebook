@@ -51,8 +51,16 @@ export default function CodeDocument({
 	} = useEditorState(doc.id, effectiveFiles);
 
 	const { mode } = useAppContext();
-	const { runCode, isRunning, error, logs, isRunnable, runtime, setRuntime } =
-		useCodeRunner(activeFile, monacoEditorInstanceRef);
+	const {
+		runCode,
+		isRunning,
+		error,
+		logs,
+		isRunnable,
+		runtime,
+		setRuntime,
+		previewIframe,
+	} = useCodeRunner(activeFile, monacoEditorInstanceRef);
 
 	function createNewFile() {
 		const fileName = `file-${effectiveFiles.length + 1}.ts`;
@@ -158,6 +166,7 @@ export default function CodeDocument({
 										isRunnable={isRunnable}
 										runtime={runtime}
 										onRuntimeChange={setRuntime}
+										previewIframe={previewIframe}
 									/>
 								</ResizablePanel>
 							</ResizablePanelGroup>

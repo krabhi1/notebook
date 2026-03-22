@@ -17,7 +17,7 @@ export function useCodeRunner(
 	activeFile: File | undefined,
 	monacoEditorInstanceRef: React.RefObject<MonacoEditorInstance | null>,
 ) {
-	const { run, error, logs, result, reportError } = useRunJs();
+	const { run, error, logs, result, reportError, previewIframe } = useRunJs();
 	const [isRunning, setIsRunning] = useState(false);
 	const [runtime, setRuntime] = useState<JsRuntime>("web");
 	const isRunnable = useMemo(() => {
@@ -87,6 +87,7 @@ export function useCodeRunner(
 		error,
 		logs,
 		result,
+		previewIframe,
 		isRunnable,
 		runtime,
 		setRuntime,
