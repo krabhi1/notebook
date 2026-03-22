@@ -9,6 +9,10 @@ import {
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import {
+	useCodeDocAutoRun,
+	useCodeDocWrap,
+} from "@/hooks/use-code-doc-settings";
 import { useCodeRunner } from "@/hooks/use-code-runner";
 import { useEditorLayout } from "@/hooks/use-editor-layout";
 import { useEditorState } from "@/hooks/use-editor-state";
@@ -27,9 +31,13 @@ export default function CodeDocument({
 		files: liveFiles,
 		createFile,
 		updateFile,
+		deleteFile,
 		isCreating,
+		isDeleting,
 	} = useFiles(doc.id);
 	const [layout, setLayout] = useEditorLayout();
+	const [wrapCode, setWrapCode] = useCodeDocWrap(doc.id);
+	const [autoRun, setAutoRun] = useCodeDocAutoRun(doc.id);
 	const monacoEditorInstanceRef = useRef<MonacoEditorInstance | null>(null);
 	const effectiveFiles = liveFiles.length > 0 ? liveFiles : files;
 
@@ -65,6 +73,15 @@ export default function CodeDocument({
 		);
 	}
 
+	async function handleDeleteFile(fileId: string) {
+		await deleteFile({ data: { id: fileId } });
+		setOpenFileIds(openFileIds.filter((id) => id !== fileId));
+		if (activeFileId === fileId) {
+			const remainingOpenFileIds = openFileIds.filter((id) => id !== fileId);
+			setActiveFileId(remainingOpenFileIds.at(-1) ?? null);
+		}
+	}
+
 	return (
 		<>
 			<EditorActions
@@ -73,6 +90,10 @@ export default function CodeDocument({
 				onRun={runCode}
 				layout={layout}
 				onLayoutChange={setLayout}
+				wrapCode={wrapCode}
+				onWrapCodeChange={setWrapCode}
+				autoRun={autoRun}
+				onAutoRunChange={setAutoRun}
 			/>
 			<div className="h-full w-full p-2 flex flex-col min-h-0">
 				<div className="border h-full w-full rounded-lg bg-background shadow-sm overflow-hidden flex flex-col min-h-0">
@@ -82,6 +103,7 @@ export default function CodeDocument({
 								files={effectiveFiles}
 								createNewFile={createNewFile}
 								isCreating={isCreating}
+								isDeleting={isDeleting}
 								openFileIds={openFileIds}
 								setOpenFileIds={setOpenFileIds}
 								activeFileId={activeFileId}
@@ -91,6 +113,7 @@ export default function CodeDocument({
 										data: { id, name: newName },
 									});
 								}}
+								onDeleteFile={handleDeleteFile}
 							/>
 						</ResizablePanel>
 						<ResizableHandle />
@@ -117,6 +140,8 @@ export default function CodeDocument({
 										}}
 										themeMode={mode}
 										onRunCode={runCode}
+										wrapCode={wrapCode}
+										autoRun={autoRun}
 									/>
 								</ResizablePanel>
 

@@ -1,6 +1,18 @@
-import { SplitSquareHorizontal, SplitSquareVertical } from "lucide-react";
+import {
+	ChevronDown,
+	SplitSquareHorizontal,
+	SplitSquareVertical,
+	WrapText,
+} from "lucide-react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuCheckboxItem,
+	DropdownMenuContent,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Toggle } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface EditorActionsProps {
@@ -9,6 +21,10 @@ interface EditorActionsProps {
 	isRunnable: boolean;
 	layout: "horizontal" | "vertical";
 	onLayoutChange: (layout: "horizontal" | "vertical") => void;
+	wrapCode: boolean;
+	onWrapCodeChange: (wrapCode: boolean) => void;
+	autoRun: boolean;
+	onAutoRunChange: (autoRun: boolean) => void;
 }
 
 /**
@@ -21,6 +37,10 @@ export default function EditorActions({
 	layout,
 	onLayoutChange,
 	isRunnable,
+	wrapCode,
+	onWrapCodeChange,
+	autoRun,
+	onAutoRunChange,
 }: EditorActionsProps) {
 	const headerActionsContainer = document.getElementById(
 		"header-right-actions",
@@ -31,15 +51,40 @@ export default function EditorActions({
 	return createPortal(
 		<div className="flex items-center space-x-2">
 			{isRunnable && (
-				<Button
-					size="sm"
-					loading={isRunning}
-					onClick={onRun}
-					className="mr-2"
-					variant="default"
-				>
-					Run
-				</Button>
+				<DropdownMenu>
+					<div className="flex items-center">
+						<Button
+							size="sm"
+							loading={isRunning}
+							onClick={onRun}
+							className="rounded-r-none border-r-0"
+							variant="default"
+						>
+							Run
+						</Button>
+						<DropdownMenuTrigger asChild>
+							<Button
+								size="sm"
+								variant="default"
+								className="rounded-l-none px-2"
+								aria-label="Run options"
+							>
+								<ChevronDown className="h-4 w-4" />
+							</Button>
+						</DropdownMenuTrigger>
+					</div>
+					<DropdownMenuContent align="end" className="w-44 p-1 rounded-xl">
+						<DropdownMenuCheckboxItem
+							checked={autoRun}
+							onCheckedChange={(checked) => {
+								onAutoRunChange(checked === true);
+							}}
+							className="rounded-lg gap-2 text-sm"
+						>
+							<span>Auto run</span>
+						</DropdownMenuCheckboxItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			)}
 			<ToggleGroup
 				type="single"
@@ -59,6 +104,15 @@ export default function EditorActions({
 					<SplitSquareVertical className="h-4 w-4" />
 				</ToggleGroupItem>
 			</ToggleGroup>
+			<Toggle
+				pressed={wrapCode}
+				onPressedChange={onWrapCodeChange}
+				variant="outline"
+				size="sm"
+				aria-label="Toggle code wrapping"
+			>
+				<WrapText className="h-4 w-4" />
+			</Toggle>
 		</div>,
 		headerActionsContainer,
 	);

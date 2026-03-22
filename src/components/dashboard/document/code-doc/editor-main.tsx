@@ -19,6 +19,8 @@ interface EditorMainProps {
 	onUpdateFile: (id: string, content: string) => void;
 	onRunCode: () => void;
 	themeMode?: "dark" | "light";
+	wrapCode: boolean;
+	autoRun: boolean;
 }
 
 /**
@@ -36,6 +38,8 @@ export default function EditorMain({
 	onUpdateFile,
 	onRunCode,
 	themeMode = "light",
+	wrapCode,
+	autoRun,
 }: EditorMainProps) {
 	const debounceSave = useDebounceCallback(2000);
 	const debounceRun = useDebounceCallback(1000);
@@ -72,13 +76,16 @@ export default function EditorMain({
 					onMount={onMount}
 					path={editorPath}
 					defaultValue={activeFile.content || ""}
+					options={{ wordWrap: wrapCode ? "on" : "off" }}
 					onChange={(val) => {
 						const content = val || "";
 
-						// Automatically trigger the runner after a short delay
-						debounceRun(() => {
-							onRunCode();
-						});
+						if (autoRun) {
+							// Automatically trigger the runner after a short delay
+							debounceRun(() => {
+								onRunCode();
+							});
+						}
 
 						// Save the file content to the database after a longer delay
 						debounceSave(() => {
