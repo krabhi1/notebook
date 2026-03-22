@@ -18,6 +18,7 @@ interface EditorMainProps {
 	) => void;
 	onUpdateFile: (id: string, content: string) => void;
 	onRunCode: () => void;
+	onReady?: () => void;
 	themeMode?: "dark" | "light";
 	wrapCode: boolean;
 	autoRun: boolean;
@@ -37,6 +38,7 @@ export default function EditorMain({
 	onMount,
 	onUpdateFile,
 	onRunCode,
+	onReady,
 	themeMode = "light",
 	wrapCode,
 	autoRun,
@@ -73,10 +75,13 @@ export default function EditorMain({
 			/>
 			<div className="flex-1 min-h-0 w-full overflow-hidden">
 				<CodeEditor
-					onMount={onMount}
 					path={editorPath}
 					defaultValue={activeFile.content || ""}
 					options={{ wordWrap: wrapCode ? "on" : "off" }}
+					onMount={(editor, monaco) => {
+						onMount(editor, monaco);
+						onReady?.();
+					}}
 					onChange={(val) => {
 						const content = val || "";
 

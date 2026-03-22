@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 interface MermaidViewerProps {
 	code: string;
+	onReady?: () => void;
 }
 
 // Global configuration for mermaid
@@ -20,7 +21,7 @@ mermaid.initialize({
  * MermaidViewer renders a mermaid diagram with D3-powered zoom and pan capabilities.
  * It persists the zoom and pan state even when the diagram code changes.
  */
-export function MermaidViewer({ code }: MermaidViewerProps) {
+export function MermaidViewer({ code, onReady }: MermaidViewerProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [error, setError] = useState<string | null>(null);
 	const uniqueId = Math.random().toString(36).substr(2, 9) + useId();
@@ -87,7 +88,10 @@ export function MermaidViewer({ code }: MermaidViewerProps) {
 
 		const renderDiagram = async () => {
 			const cleanCode = code.trim();
-			if (!containerRef.current || !cleanCode) return;
+			if (!containerRef.current || !cleanCode) {
+				onReady?.();
+				return;
+			}
 
 			try {
 				// Validate syntax before rendering
@@ -109,6 +113,8 @@ export function MermaidViewer({ code }: MermaidViewerProps) {
 			} catch (_) {
 				// console.error("Mermaid rendering error:", err);
 				setError("Invalid Mermaid syntax");
+			} finally {
+				onReady?.();
 			}
 		};
 
@@ -117,7 +123,7 @@ export function MermaidViewer({ code }: MermaidViewerProps) {
 		return () => {
 			isCancelled = true;
 		};
-	}, [code, uniqueId, setupZoom]);
+	}, [code, onReady, setupZoom, uniqueId]);
 
 	return (
 		<div className="relative w-full h-full min-h-75 overflow-hidden   group">

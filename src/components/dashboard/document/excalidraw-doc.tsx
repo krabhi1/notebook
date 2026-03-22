@@ -12,7 +12,13 @@ import { useDebounceCallback } from "@/lib/utils";
 import { useAppContext } from "@/providers/app-provider";
 import type { Document } from "@/server/db/schema";
 
-export default function ExcalidrawDocument({ doc }: { doc: Document }) {
+export default function ExcalidrawDocument({
+	doc,
+	onReady,
+}: {
+	doc: Document;
+	onReady?: () => void;
+}) {
 	const { updateDocument } = useDocument(doc.id);
 	const debounceSave = useDebounceCallback(1000);
 	const { isDark } = useAppContext();
@@ -57,6 +63,7 @@ export default function ExcalidrawDocument({ doc }: { doc: Document }) {
 				theme={isDark ? "dark" : "light"}
 				excalidrawAPI={(api) => {
 					setExcalidrawAPI(api);
+					onReady?.();
 				}}
 			>
 				<MainMenu>

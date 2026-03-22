@@ -14,7 +14,13 @@ import { useEditorLayout } from "@/hooks/use-editor-layout";
 import { useDebounceCallback } from "@/lib/utils";
 import type { Document } from "@/server/db/schema";
 
-export default function MermaidDocument({ doc }: { doc: Document }) {
+export default function MermaidDocument({
+	doc,
+	onReady,
+}: {
+	doc: Document;
+	onReady?: () => void;
+}) {
 	// Everything comes from one place
 	const { updateDocument } = useDocument(doc.id);
 	const debounceSave = useDebounceCallback(1000);
@@ -90,7 +96,7 @@ export default function MermaidDocument({ doc }: { doc: Document }) {
 									Preview
 								</div>
 								<div className="flex-1 min-h-0 overflow-hidden relative">
-									<MermaidViewer code={code} />
+									<MermaidViewer code={code} onReady={onReady} />
 								</div>
 							</div>
 						</ResizablePanel>

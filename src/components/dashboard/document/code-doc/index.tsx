@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { MonacoEditorInstance } from "@/components/code-editor";
 import EditorActions from "@/components/dashboard/document/code-doc/editor-actions";
 import EditorMain from "@/components/dashboard/document/code-doc/editor-main";
@@ -23,9 +23,11 @@ import type { Document, File } from "@/server/db/schema";
 export default function CodeDocument({
 	doc,
 	files,
+	onReady,
 }: {
 	doc: Document;
 	files: File[];
+	onReady?: () => void;
 }) {
 	const {
 		files: liveFiles,
@@ -49,6 +51,12 @@ export default function CodeDocument({
 		openFiles,
 		activeFile,
 	} = useEditorState(doc.id, effectiveFiles);
+
+	useEffect(() => {
+		if (!activeFile) {
+			onReady?.();
+		}
+	}, [activeFile, onReady]);
 
 	const { mode } = useAppContext();
 	const {
@@ -150,6 +158,7 @@ export default function CodeDocument({
 										onRunCode={runCode}
 										wrapCode={wrapCode}
 										autoRun={autoRun}
+										onReady={onReady}
 									/>
 								</ResizablePanel>
 
