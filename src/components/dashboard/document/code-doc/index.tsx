@@ -69,6 +69,7 @@ export default function CodeDocument({
 		setRuntime,
 		previewIframe,
 	} = useCodeRunner(activeFile, monacoEditorInstanceRef);
+	const showOutputPanel = Boolean(activeFile && isRunnable);
 
 	function createNewFile() {
 		const fileName = `file-${effectiveFiles.length + 1}.ts`;
@@ -133,9 +134,16 @@ export default function CodeDocument({
 							/>
 						</ResizablePanel>
 						<ResizableHandle />
-						<ResizablePanel defaultSize={80} minSize={30} className="min-h-0">
+						<ResizablePanel
+							defaultSize={showOutputPanel ? 80 : 100}
+							minSize={30}
+							className="min-h-0"
+						>
 							<ResizablePanelGroup orientation={layout}>
-								<ResizablePanel defaultSize={70} minSize={20}>
+								<ResizablePanel
+									defaultSize={showOutputPanel ? 70 : 100}
+									minSize={20}
+								>
 									<EditorMain
 										activeFile={activeFile}
 										openFiles={openFiles}
@@ -162,22 +170,25 @@ export default function CodeDocument({
 									/>
 								</ResizablePanel>
 
-								<ResizableHandle withHandle />
-
-								<ResizablePanel
-									defaultSize={30}
-									minSize={30}
-									className="flex flex-col min-h-0"
-								>
-									<OutputPanel
-										logs={logs}
-										error={error}
-										isRunnable={isRunnable}
-										runtime={runtime}
-										onRuntimeChange={setRuntime}
-										previewIframe={previewIframe}
-									/>
-								</ResizablePanel>
+								{showOutputPanel && (
+									<>
+										<ResizableHandle withHandle />
+										<ResizablePanel
+											defaultSize={30}
+											minSize={30}
+											className="flex flex-col min-h-0"
+										>
+											<OutputPanel
+												logs={logs}
+												error={error}
+												isRunnable={isRunnable}
+												runtime={runtime}
+												onRuntimeChange={setRuntime}
+												previewIframe={previewIframe}
+											/>
+										</ResizablePanel>
+									</>
+								)}
 							</ResizablePanelGroup>
 						</ResizablePanel>
 					</ResizablePanelGroup>
